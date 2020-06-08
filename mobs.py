@@ -13,7 +13,7 @@ class minion():
 		self.x = x
 		self.y = y
 		self.c = c
-		self.speed = dificulty
+		self.speed = dificulty * 0.5
 		self.health = 5 + (dificulty * 1.5)
 		self.damage = 1 + (dificulty * 1.25)
 
