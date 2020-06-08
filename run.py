@@ -8,6 +8,7 @@
 
 
 import pygame
+import random
 
 from pygame.locals import *
 
@@ -16,4 +17,3 @@ WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 WINDOW_FRAMERATE = 60
 WINDOW_FLAGS = None
-
