@@ -1,0 +1,19 @@
+{
+
+	"pattern": [
+
+		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
+		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
+		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
+		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
+		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]]
+
+	],
+
+	"metadata": {
+
+		"spawn": "0@1"
+
+	}
+
+}

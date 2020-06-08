@@ -1,34 +1,7 @@
-# ------------------ ALIEN ESCAPE V1.0 ------------------ #
-#
-#
-#
-#
-#
-# ------------------------------------------------------- #
-
-
-import pygame
 import random
-import sys
-import os
+import time
 import json
-
-from pygame.locals import *
-
-pygame.init()
-
-WINDOW_WIDTH = 1024
-WINDOW_HEIGHT = 1024
-WINDOW_FRAMERATE = 60
-WINDOW_FLAGS = None
-
-CANVAS_WIDTH = 600
-CANVAS_HEIGHT = WINDOW_HEIGHT
-
-RUN = True
-
-
-IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+import os
 
 
 """
@@ -68,8 +41,6 @@ class Terrain():
 		self.pattern = None
 		self.pattern_data = None
 
-		self.current_room = None
-
 
 	"""
 
@@ -90,8 +61,6 @@ class Terrain():
 			for room in range(5):
 
 				self.terrain[row][room] = self.get_pattern(random.choice(self.pattern_data['pattern'][row][room]))
-
-		self.current_room = self.pattern_data['metadata']['spawn']
 
 
 	"""
@@ -136,57 +105,6 @@ class Terrain():
 		return pattern
 
 
-	def display(self, surface):
+	def display_room(self, surface):
 
-		global IMAGE_WALL_VERTICAL
-
-		map_x = int(self.current_room.split('@')[0])
-		map_y = int(self.current_room.split('@')[1])
-
-		y = 0
-
-		for line in self.terrain[map_x][map_y][:-1]:
-
-			x = 0
-
-			for box in list(line):
-
-				if box == "o":
-
-					pygame.draw.rect(surface, (random.randint(0, 225), 255, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
-
-				elif box == "x":
-
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
-
-				elif box == "|":
-
-					surface.blit(IMAGE_WALL_VERTICAL, (x * 32, y * 32))
-					break
-
-				else:
-
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
-
-				x += 1
-
-			y += 1
-
-
-OBJ_terrain = Terrain()
-OBJ_terrain.generate()
-OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-
-
-while RUN:
-
-	for e in pygame.event.get():
-
-		if e.type == pygame.QUIT:
-
-			RUN = False
-			sys.exit(0)
-
-	OBJ_terrain.display(OBJ_window)
-
-	pygame.display.flip()
+		
