@@ -1,21 +1,21 @@
 import random
 import os
 
-class mobs():
-	def __init__(self, x, y, c, speed, health, damage):
+dificulty = 2
+nbMobs = dificulty * 2
 
+
+
+minions = []
+class minion():
+	def __init__(self, x, y, c):
+		global dificulty
 		self.x = x
 		self.y = y
 		self.c = c
-		self.speed = speed
-		self.health = health
-		self.damage = damage
-
-class minion(mobs):
-	def __init__(self):
-		mobs.__init__(self)
-
-
+		self.speed = dificulty
+		self.health = 5 + (dificulty * 1.5)
+		self.damage = 1 + (dificulty * 1.25)
 
 
 
@@ -35,16 +35,12 @@ def save(terrain):
 		for row in terrain:
 
 			for i in range(32):
-				line = [row[0][0][i], row[1][0][i], row[2][0][i], row[3][0][i], row[4][0][i]]
+				ligne = [row[0][i], row[1][i], row[2][i], row[3][i], row[4][i]]
+				ligne = " ".join(ligne)
 
-				line = " ".join(line)
-
-				f.write(line + '\n')
+				f.write(ligne + '\n')
 
 			f.write('\n')
-
-
-
 
 
 TERRAIN = [
@@ -57,22 +53,36 @@ TERRAIN = [
 
 ]
 
-MOB_PLACE = []
+ROOM_COUNT = round(random.randint(6, 12) / 5)
 
-ROOM_COUNT = round(random.randint(5, 20) / 5)
 
 for i in range(5):
 
 	left = ROOM_COUNT
-
 	while left > 0:
 
 		gen = random.choice(TERRAIN[i])
 
 		if gen == []:
-			TERRAIN.append(loadFile('./resources/terrain/rooms/basic_pattern.terrain'))
+			max = nbMobs
+			print('-------')
+			y = 0
+			for line in loadFile('./resources/terrain/rooms/basic_pattern.terrain'):
+				x = 0
+				for char in line:
+					if char == '+':
+						if random.randint(1, 500) == 8:
+							if max > 0:
+								pixelX = x * 32 + 16
+								pixelY = i * 32 + 16
+								print(pixelX, pixelY)
+								minions.append(minion(pixelX, pixelY, i))
+								max -= 1
+					x += 1
+				gen.append(line)
 
-			print("Appended")
+			print('-------')
+			#minions.append(minion)
 
 			left -= 1
 
@@ -81,6 +91,9 @@ for i in range(5):
 	for cube in TERRAIN[i]:
 
 		if cube == []:
-			cube.append(loadFile('./resources/terrain/rooms/empty_pattern.terrain'))
+
+			for line in loadFile('./resources/terrain/rooms/empty_pattern.terrain'):
+				cube.append(line)
 
 save(TERRAIN)
+print(minions)
