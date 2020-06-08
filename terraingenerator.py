@@ -22,13 +22,15 @@ def save(terrain):
 
 			for i in range(32):
 
-				line = [row[0][0][i], row[1][0][i], row[2][0][i], row[3][0][i], row[4][0][i]]
+				line = [row[0][i], row[1][i], row[2][i], row[3][i], row[4][i]]
 
 				line = " ".join(line)
 
 				f.write(line + '\n')
 
 			f.write('\n')
+
+
 
 TERRAIN = [
 	
@@ -41,7 +43,7 @@ TERRAIN = [
 ]
 
 
-ROOM_COUNT = round(random.randint(5, 20) / 5)
+ROOM_COUNT = round(random.randint(6, 12) / 5)
 
 
 for i in range(5):
@@ -54,8 +56,8 @@ for i in range(5):
 
 		if gen == []:
 
-			gen.append(loadFile('./resources/terrain/rooms/basic_pattern.terrain'))
-			print("Appended")
+			for line in loadFile('./resources/terrain/rooms/basic_pattern.terrain'):
+				gen.append(line)
 
 			left -= 1
 
@@ -66,14 +68,12 @@ for i in range(5):
 
 		if cube == []:
 
-			cube.append(loadFile('./resources/terrain/rooms/empty_pattern.terrain'))
+			for line in loadFile('./resources/terrain/rooms/empty_pattern.terrain'):
+
+				cube.append(line)
+
 
 save(TERRAIN)
 
-"""
 
-for row in TERRAIN:
 
-	for step in row:
-
-		step.append("t")"""
