@@ -41,6 +41,7 @@ IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical
 	@get_pattern() => load and return pattern from pattern file
 
 
+<<<<<<< HEAD
 """
 class Terrain():
 
@@ -190,3 +191,6 @@ while RUN:
 	OBJ_terrain.display(OBJ_window)
 
 	pygame.display.flip()
+=======
+'''
+>>>>>>> 5446143fad03040a022cbdad98d3e1403c6e2606
