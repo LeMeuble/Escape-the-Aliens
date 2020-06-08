@@ -29,10 +29,10 @@ RUN = True
 
 
 IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
-IMAGE_GROUND = pygame.image.load('./resources/sprites/ground.png')
-IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/ground_mud.png')
-IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/ground_mud_plants.png')
-IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/ground_water.png')
+IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
+IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
+IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
+IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
 
 
 """
