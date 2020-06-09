@@ -33,6 +33,7 @@ IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
 IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
 IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
 IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
+SPRITE_MINION = pygame.image.load('./resources/sprites/mobs/minion.png')
 
 
 """
@@ -68,9 +69,13 @@ class minion():
 		self.map_y = int(temp[0].split('@')[1])
 
 	def display(self, surface):
-		pygame.draw.circle(surface, (255, 0, 0), (self.x * 32 + 16, self.y * 36 + 16), 16)
-
-		print(f'x:{self.x} transformed to x:{self.x * 32 + 16} and y:{self.y} transformed y:{self.y * 36 + 16}')
+		global SPRITE_MINION
+		if self.x > 0 and self.x < 32:
+			if self.y > 0 and self.y < 32:
+				print(self.x, self.y)
+				#pygame.draw.circle(surface, (255, 0, 0), ((self.x * 32 + 16) if (self.x * 32 + 16) < 1024 else (self.x * 32 + 16) / 2, (self.y * 36 + 16) if (self.y * 32 + 16) < 1024 else (self.y * 32 + 16) / 2), 16)
+				#pygame.draw.rect(surface, (255, 0, 0), (self.x * 32, self.y * 32, self.x * 32, self.y * 32))
+				surface.blit(SPRITE_MINION, (self.x * 32, self.y * 32))
 
 	def in_room(self, map_x, map_y):
 		if map_x == self.map_x and map_y == self.map_y:
@@ -224,8 +229,7 @@ class Terrain():
 								IMAGE_GROUND, self.rotate(IMAGE_GROUND),
 								IMAGE_GROUND, self.rotate(IMAGE_GROUND),
 								IMAGE_GROUND_MUD, self.rotate(IMAGE_GROUND_MUD),
-								IMAGE_GROUND_MUD_PLANTS, self.rotate(IMAGE_GROUND_MUD_PLANTS),
-								IMAGE_GROUND_WATER, self.rotate(IMAGE_GROUND_WATER)]
+								IMAGE_GROUND_MUD_PLANTS, self.rotate(IMAGE_GROUND_MUD_PLANTS)]
 						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
 
 					surface.blit(self.texture_map[f'{x}@{y}'], (x * 32, y * 32))
