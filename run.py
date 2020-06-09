@@ -14,16 +14,22 @@ import os
 import json
 
 from pygame.locals import *
+from win32api import GetSystemMetrics
+
 
 pygame.init()
 
-WINDOW_WIDTH = 1024
-WINDOW_HEIGHT = 1024
+WINDOW_WIDTH = GetSystemMetrics(0)
+WINDOW_HEIGHT = GetSystemMetrics(1)
 WINDOW_FRAMERATE = 60
 WINDOW_FLAGS = None
 
-CANVAS_WIDTH = 600
-CANVAS_HEIGHT = WINDOW_HEIGHT
+CANVAS_WIDTH = CANVAS_HEIGHT = WINDOW_HEIGHT
+CANVAS_POSITION = (round((WINDOW_WIDTH - CANVAS_WIDTH) / 2), round((WINDOW_HEIGHT - CANVAS_HEIGHT) / 2))
+CANVAS_RATE = round(CANVAS_WIDTH / 32)
+
+
+DEFAULT_DIFFICULTY = 2
 
 RUN = True
 
@@ -33,9 +39,21 @@ IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
 IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
 IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
 IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
-SPRITE_MINION = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (80, 80))
-BASE_PLAYER_SPRITE_EAST = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (128, 128))
-BASE_PLAYER_SPRITE_WEST = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (128, 128)), True, False)
+
+SPRITE_MINION = {}
+SPRITE_MINION['east'] = {}
+SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
+SPRITE_MINION['west'] = {}
+SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5))), True, False)
+
+SPRITE_PLAYER_LASER = {}
+SPRITE_PLAYER_LASER['east'] = {}
+SPRITE_PLAYER_LASER['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+SPRITE_PLAYER_LASER['west'] = {}
+SPRITE_PLAYER_LASER['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+
+
+
 
 
 """
@@ -63,11 +81,8 @@ class player():
 		self.facing = "east"
 
 	def display(self, surface):
-		global BASE_PLAYER_SPRITE
-		if self.facing == "east":
-			surface.blit(BASE_PLAYER_SPRITE_EAST, (self.x * 32, self.y * 32))
-		else:
-			surface.blit(BASE_PLAYER_SPRITE_WEST, (self.x * 32, self.y * 32))
+		global SPRITE_PLAYER_LASER
+		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
 
 	def increaseX(self):
 		self.x += 1
@@ -89,6 +104,7 @@ class player():
 minions = []
 
 class minion():
+
 	def __init__(self, coordinates):
 		global dificulty
 		self.coordinates = coordinates
@@ -102,11 +118,12 @@ class minion():
 		self.map_y = int(temp[0].split('@')[1])
 
 	def display(self, surface):
-		global SPRITE_MINION
-		if self.x > 0 and self.x < 32:
-			if self.y > 0 and self.y < 32:
 
-				surface.blit(SPRITE_MINION, (self.x * 32, self.y * 32))
+		global SPRITE_MINION
+
+		if self.x > 0 and self.x <= CANVAS_RATE:
+			if self.y > 0 and self.y <= CANVAS_RATE:
+				surface.blit(SPRITE_MINION['east']['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
 
 	def in_room(self, map_x, map_y):
 		if map_x == self.map_x and map_y == self.map_y:
@@ -228,11 +245,14 @@ class Terrain():
 		return pattern
 
 	def rotate(self, image):
-		rota = random.randint(1, 4)
-		image = pygame.transform.rotate(image, 90 * rota)
+
+		deg = random.randint(1, 4)
+		image = pygame.transform.rotate(image, 90 * deg)
+
 		return image
 
 	def display(self, surface):
+
 		global minions
 		global IMAGE_WALL_VERTICAL
 
@@ -249,7 +269,7 @@ class Terrain():
 
 				if box == "/":
 
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
 
 				elif box == "+":
 
@@ -263,27 +283,27 @@ class Terrain():
 								IMAGE_GROUND_MUD_PLANTS, self.rotate(IMAGE_GROUND_MUD_PLANTS)]
 						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
 
-					surface.blit(self.texture_map[f'{x}@{y}'], (x * 32, y * 32))
+					surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				elif box == "x":
 
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
 
 				elif box == "|":
 
-					surface.blit(IMAGE_GROUND, (x * 32, y * 32))
-					surface.blit(IMAGE_WALL_VERTICAL, (x * 32, y * 32))
+					surface.blit(IMAGE_GROUND, (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(IMAGE_WALL_VERTICAL, (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				elif box == "-":
 
-					surface.blit(IMAGE_GROUND, (x * 32, y * 32))
-					surface.blit(IMAGE_WALL_HORIZONTAL, (x * 32, y * 32))
+					surface.blit(IMAGE_GROUND, (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(IMAGE_WALL_HORIZONTAL, (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				else:
-					pygame.draw.rect(surface, (209, 56, 179), (x * 32, y * 32, x * 32 + 16, y * 32 + 16))
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32 + 16, y * 32, x * 32 + 32, y * 32 + 16))
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32 + 16, x * 32 + 16, y * 32 + 32))
-					pygame.draw.rect(surface, (209, 56, 179), (x * 32 + 16, y * 32 + 16, x * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE, y * CANVAS_RATE, x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE + (CANVAS_RATE/2)))
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + (CANVAS_RATE/2)))
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE + (CANVAS_RATE/2), x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE + CANVAS_RATE))
+					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE + (CANVAS_RATE/2), x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
 
 				x += 1
 
@@ -294,13 +314,16 @@ class Terrain():
 					m.display(surface)
 					count += 1
 
-			print(count)
+			#print(count)
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
-OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
+OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
 OBJ_Clock = pygame.time.Clock()
 PLAYER = player('512@00//0@00')
+
+
 while RUN:
 
 	for e in pygame.event.get():
@@ -320,7 +343,8 @@ while RUN:
 			elif e.key == pygame.K_s or e.key == K_DOWN:
 				PLAYER.decreaseY()
 
-	OBJ_terrain.display(OBJ_window)
-	PLAYER.display(OBJ_window)
+	OBJ_terrain.display(OBJ_canvas)
+	PLAYER.display(OBJ_canvas)
+	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)
 	pygame.display.flip()
 	OBJ_Clock.tick(30)
