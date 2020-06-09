@@ -76,7 +76,6 @@ for i in range(5):
 
 		if gen == []:
 			max = nbMobs
-			print('-------')
 			y = 0
 			for line in loadFile('./resources/terrain/rooms/basic_pattern.terrain'):
 				x = 0
@@ -89,7 +88,6 @@ for i in range(5):
 					x += 1
 				gen.append(line)
 
-			print('-------')
 			#minions.append(minion)
 
 			left -= 1

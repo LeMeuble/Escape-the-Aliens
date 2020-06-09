@@ -47,6 +47,40 @@ IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water
 
 
 """
+dificulty = 2
+nbMobs = dificulty * 2
+
+#class for the mobs
+
+minions = []
+
+class minion():
+	def __init__(self, coordinates):
+		global dificulty
+		self.coordinates = coordinates
+		self.speed = dificulty * 0.5
+		self.health = 5 + (dificulty * 1.5)
+		self.damage = 1 + (dificulty * 1.25)
+		temp = self.coordinates.split('//')
+		self.x = int(temp[1].split('@')[0])
+		self.y = int(temp[1].split('@')[1])
+		self.map_x = int(temp[0].split('@')[0])
+		self.map_y = int(temp[0].split('@')[1])
+
+	def display(self, surface):
+		pygame.draw.circle(surface, (255, 0, 0), (self.x * 32 + 16, self.y * 36 + 16), 16)
+
+		print(f'x:{self.x} transformed to x:{self.x * 32 + 16} and y:{self.y} transformed y:{self.y * 36 + 16}')
+
+	def in_room(self, map_x, map_y):
+		if map_x == self.map_x and map_y == self.map_y:
+			return True
+		else:
+			return False
+
+
+
+
 class Terrain():
 
 
@@ -56,7 +90,7 @@ class Terrain():
 
 	"""
 	def __init__(self):
-
+		global minions
 		#Initialize the terrain matrix charmap
 		self.terrain = [
 			[[], [], [], [], []], #row 1
@@ -83,7 +117,7 @@ class Terrain():
 
 	"""
 	def generate(self):
-
+		global minions
 		self.pattern = random.choice(os.listdir('./resources/terrain/paths'))
 
 		with open(f'./resources/terrain/paths/{self.pattern}', 'r') as f:
@@ -94,7 +128,25 @@ class Terrain():
 
 			for room in range(5):
 
+				#print(f'{row}@{room}-------------')
+
 				self.terrain[row][room] = self.get_pattern(random.choice(self.pattern_data['pattern'][row][room]))
+				ground = []
+				y = 0
+				for line in self.terrain[row][room]:
+					x = 0
+					for char in line:
+
+						if char == "+":
+
+							ground.append(f'{row}@{room}//{x}@{y}') # Coordinates format: row@room//x@y => ex: 0@0//10@5
+						x += 1
+					y += 1
+				for i in range(random.randint(0, 4)):
+
+					minions.append(minion(random.choice(ground)))
+
+				#print(f'{row}@{room}-------------')
 
 		self.current_room = self.pattern_data['metadata']['spawn']
 
@@ -133,10 +185,10 @@ class Terrain():
 
 				pattern.append(l)
 
-		'''with open(f'{path}.metadata', 'r') as f:
+		with open(f'{path}.metadata', 'r') as f:
 
 			pattern.append(json.load(f))
-'''
+
 		return pattern
 
 	def rotate(self, image):
@@ -145,7 +197,7 @@ class Terrain():
 		return image
 
 	def display(self, surface):
-
+		global minions
 		global IMAGE_WALL_VERTICAL
 
 		map_x = int(self.current_room.split('@')[0])
@@ -201,12 +253,18 @@ class Terrain():
 				x += 1
 
 			y += 1
+			count = 0
+			for m in minions:
+				if m.in_room(map_x, map_y):
+					m.display(surface)
+					count += 1
 
+			print(count)
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-
+OBJ_Clock = pygame.time.Clock()
 
 while RUN:
 
@@ -218,5 +276,5 @@ while RUN:
 			sys.exit(0)
 
 	OBJ_terrain.display(OBJ_window)
-
 	pygame.display.flip()
+	OBJ_Clock.tick(30)

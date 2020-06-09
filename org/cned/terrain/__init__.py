@@ -55,7 +55,6 @@ class Terrain():
 
 			self.pattern_data = json.load(f)
 
-
 		for row in range(5):
 
 			for room in range(5):
@@ -87,7 +86,6 @@ class Terrain():
 
 				f.write('\n')
 
-
 	def get_pattern(self, path):
 
 		pattern = []
@@ -105,6 +103,4 @@ class Terrain():
 		return pattern
 
 
-	def display_room(self, surface):
-
-		
+	#def display_room(self, surface):
