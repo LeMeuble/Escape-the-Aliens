@@ -33,7 +33,9 @@ IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
 IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
 IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
 IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
-SPRITE_MINION = pygame.image.load('./resources/sprites/mobs/minion.png')
+SPRITE_MINION = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (80, 80))
+BASE_PLAYER_SPRITE_EAST = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (128, 128))
+BASE_PLAYER_SPRITE_WEST = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (128, 128)), True, False)
 
 
 """
@@ -50,6 +52,37 @@ SPRITE_MINION = pygame.image.load('./resources/sprites/mobs/minion.png')
 """
 dificulty = 2
 nbMobs = dificulty * 2
+
+
+class player():
+	def __init__(self, coordinates):
+		self.coordinates = coordinates
+		temp = self.coordinates.split('//')
+		self.x = int(temp[1].split('@')[0])
+		self.y = int(temp[1].split('@')[1])
+		self.facing = "east"
+
+	def display(self, surface):
+		global BASE_PLAYER_SPRITE
+		if self.facing == "east":
+			surface.blit(BASE_PLAYER_SPRITE_EAST, (self.x * 32, self.y * 32))
+		else:
+			surface.blit(BASE_PLAYER_SPRITE_WEST, (self.x * 32, self.y * 32))
+
+	def increaseX(self):
+		self.x += 1
+		self.facing = "east"
+
+	def decreaseX(self):
+		self.x -= 1
+		self.facing = "west"
+
+
+	def increaseY(self):
+		self.y -= 1
+
+	def decreaseY(self):
+		self.y += 1
 
 #class for the mobs
 
@@ -72,9 +105,7 @@ class minion():
 		global SPRITE_MINION
 		if self.x > 0 and self.x < 32:
 			if self.y > 0 and self.y < 32:
-				print(self.x, self.y)
-				#pygame.draw.circle(surface, (255, 0, 0), ((self.x * 32 + 16) if (self.x * 32 + 16) < 1024 else (self.x * 32 + 16) / 2, (self.y * 36 + 16) if (self.y * 32 + 16) < 1024 else (self.y * 32 + 16) / 2), 16)
-				#pygame.draw.rect(surface, (255, 0, 0), (self.x * 32, self.y * 32, self.x * 32, self.y * 32))
+
 				surface.blit(SPRITE_MINION, (self.x * 32, self.y * 32))
 
 	def in_room(self, map_x, map_y):
@@ -269,7 +300,7 @@ OBJ_terrain = Terrain()
 OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 OBJ_Clock = pygame.time.Clock()
-
+PLAYER = player('512@00//0@00')
 while RUN:
 
 	for e in pygame.event.get():
@@ -279,6 +310,17 @@ while RUN:
 			RUN = False
 			sys.exit(0)
 
+		if e.type == pygame.KEYUP:
+			if e.key == pygame.K_d or e.key == K_RIGHT:
+				PLAYER.increaseX()
+			elif e.key == pygame.K_a or e.key == K_LEFT:
+				PLAYER.decreaseX()
+			elif e.key == pygame.K_w or e.key == K_UP:
+				PLAYER.increaseY()
+			elif e.key == pygame.K_s or e.key == K_DOWN:
+				PLAYER.decreaseY()
+
 	OBJ_terrain.display(OBJ_window)
+	PLAYER.display(OBJ_window)
 	pygame.display.flip()
 	OBJ_Clock.tick(30)
