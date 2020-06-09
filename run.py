@@ -1,4 +1,4 @@
-# ------------------ ALIEN ESCAPE V1.0 ------------------ #
+# ------------------ ESCAPE THE ALIENS V1.0 ------------------ #
 #
 #
 #
@@ -76,7 +76,6 @@ class player():
 	def decreaseX(self):
 		self.x -= 1
 		self.facing = "west"
-
 
 	def increaseY(self):
 		self.y -= 1
