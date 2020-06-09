@@ -29,6 +29,10 @@ RUN = True
 
 
 IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
+IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
+IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
+IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
 
 
 """
@@ -41,7 +45,7 @@ IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical
 	@get_pattern() => load and return pattern from pattern file
 
 
-<<<<<<< HEAD
+
 """
 class Terrain():
 
@@ -62,6 +66,8 @@ class Terrain():
 			[[], [], [], [], []]  #row 5
 
 		]
+
+		self.texture_map = {}
 
 		#Calculate the rooms rate per terrain row
 		self.rooms_rate = round(random.randint(6, 12) / 5)
@@ -151,7 +157,14 @@ class Terrain():
 
 				if box == "o":
 
-					pygame.draw.rect(surface, (random.randint(0, 225), 255, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
+
+				elif box == "+":
+
+					try: self.texture_map[f'{x}@{y}']
+					except: self.texture_map[f'{x}@{y}'] = random.choice([IMAGE_GROUND, IMAGE_GROUND_MUD, IMAGE_GROUND_MUD_PLANTS, IMAGE_GROUND_WATER])
+
+					surface.blit(self.texture_map[f'{x}@{y}'], (x * 32, y * 32))
 
 				elif box == "x":
 
@@ -159,12 +172,15 @@ class Terrain():
 
 				elif box == "|":
 
+					surface.blit(IMAGE_GROUND, (x * 32, y * 32))
 					surface.blit(IMAGE_WALL_VERTICAL, (x * 32, y * 32))
-					break
 
 				else:
 
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (209, 56, 179), (x * 32, y * 32, x * 32 + 16, y * 32 + 16))
+					pygame.draw.rect(surface, (0, 0, 0), (x * 32 + 16, y * 32, x * 32 + 32, y * 32 + 16))
+					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32 + 16, x * 32 + 16, y * 32 + 32))
+					pygame.draw.rect(surface, (209, 56, 179), (x * 32 + 16, y * 32 + 16, x  * 32 + 32, y * 32 + 32))
 
 				x += 1
 
@@ -188,4 +204,3 @@ while RUN:
 	OBJ_terrain.display(OBJ_window)
 
 	pygame.display.flip()
-
