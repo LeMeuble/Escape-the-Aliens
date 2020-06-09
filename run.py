@@ -27,7 +27,7 @@ CANVAS_HEIGHT = WINDOW_HEIGHT
 
 RUN = True
 
-
+IMAGE_WALL_HORIZONTAL = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
 IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
 IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
 IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
@@ -76,7 +76,6 @@ class Terrain():
 		self.pattern_data = None
 
 		self.current_room = None
-
 
 	"""
 
@@ -134,11 +133,16 @@ class Terrain():
 
 				pattern.append(l)
 
-		with open(f'{path}.metadata', 'r') as f:
+		'''with open(f'{path}.metadata', 'r') as f:
 
 			pattern.append(json.load(f))
-
+'''
 		return pattern
+
+	def rotate(self, image):
+		rota = random.randint(1, 4)
+		image = pygame.transform.rotate(image, 90 * rota)
+		return image
 
 	def display(self, surface):
 
@@ -155,32 +159,44 @@ class Terrain():
 
 			for box in list(line):
 
-				if box == "o":
+				if box == "/":
 
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x * 32 + 32, y * 32 + 32))
 
 				elif box == "+":
 
-					try: self.texture_map[f'{x}@{y}']
-					except: self.texture_map[f'{x}@{y}'] = random.choice([IMAGE_GROUND, IMAGE_GROUND_MUD, IMAGE_GROUND_MUD_PLANTS, IMAGE_GROUND_WATER])
+					try:
+						self.texture_map[f'{x}@{y}']
+					except:
+						LIST = [IMAGE_GROUND, self.rotate(IMAGE_GROUND),
+								IMAGE_GROUND, self.rotate(IMAGE_GROUND),
+								IMAGE_GROUND, self.rotate(IMAGE_GROUND),
+								IMAGE_GROUND_MUD, self.rotate(IMAGE_GROUND_MUD),
+								IMAGE_GROUND_MUD_PLANTS, self.rotate(IMAGE_GROUND_MUD_PLANTS),
+								IMAGE_GROUND_WATER, self.rotate(IMAGE_GROUND_WATER)]
+						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
 
 					surface.blit(self.texture_map[f'{x}@{y}'], (x * 32, y * 32))
 
 				elif box == "x":
 
-					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x  * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32, x * 32 + 32, y * 32 + 32))
 
 				elif box == "|":
 
 					surface.blit(IMAGE_GROUND, (x * 32, y * 32))
 					surface.blit(IMAGE_WALL_VERTICAL, (x * 32, y * 32))
 
-				else:
+				elif box == "-":
 
+					surface.blit(IMAGE_GROUND, (x * 32, y * 32))
+					surface.blit(IMAGE_WALL_HORIZONTAL, (x * 32, y * 32))
+
+				else:
 					pygame.draw.rect(surface, (209, 56, 179), (x * 32, y * 32, x * 32 + 16, y * 32 + 16))
 					pygame.draw.rect(surface, (0, 0, 0), (x * 32 + 16, y * 32, x * 32 + 32, y * 32 + 16))
 					pygame.draw.rect(surface, (0, 0, 0), (x * 32, y * 32 + 16, x * 32 + 16, y * 32 + 32))
-					pygame.draw.rect(surface, (209, 56, 179), (x * 32 + 16, y * 32 + 16, x  * 32 + 32, y * 32 + 32))
+					pygame.draw.rect(surface, (209, 56, 179), (x * 32 + 16, y * 32 + 16, x * 32 + 32, y * 32 + 32))
 
 				x += 1
 
