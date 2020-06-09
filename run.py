@@ -52,6 +52,11 @@ SPRITE_PLAYER_LASER['east']['frame_1'] = pygame.transform.scale(pygame.image.loa
 SPRITE_PLAYER_LASER['west'] = {}
 SPRITE_PLAYER_LASER['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
+SPRITE_PLAYER_RIFLE = {}
+SPRITE_PLAYER_RIFLE['east'] = {}
+SPRITE_PLAYER_RIFLE['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+SPRITE_PLAYER_RIFLE['west'] = {}
+SPRITE_PLAYER_RIFLE['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
 
 
@@ -82,7 +87,7 @@ class player():
 
 	def display(self, surface):
 		global SPRITE_PLAYER_LASER
-		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
+		surface.blit(SPRITE_PLAYER_RIFLE[self.facing]['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
 
 	def increaseX(self):
 		self.x += 1
