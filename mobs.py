@@ -1,12 +1,22 @@
 import random
-import os
 
 dificulty = 2
 nbMobs = dificulty * 2
 
-
+#class for the mobs
 
 minions = []
+TERRAIN = [
+
+	[[], [], [], [], []],
+	[[], [], [], [], []],
+	[[], [], [], [], []],
+	[[], [], [], [], []],
+	[[], [], [], [], []]
+
+]
+ROOM_COUNT = round(random.randint(6, 12) / 5)
+
 class minion():
 	def __init__(self, x, y, c):
 		global dificulty
@@ -18,7 +28,16 @@ class minion():
 		self.damage = 1 + (dificulty * 1.25)
 
 
+def minionSpawn():
+	if random.randint(1, 500) == 8:
+		pixelX = x * 32 + 16
+		pixelY = i * 32 + 16
+		print(pixelX, pixelY)
+		minions.append(minion(pixelX, pixelY, i))
+		return True
 
+
+#function that load a file line by line
 def loadFile(path):
 	part = []
 
@@ -43,24 +62,16 @@ def save(terrain):
 			f.write('\n')
 
 
-TERRAIN = [
-
-	[[], [], [], [], []],
-	[[], [], [], [], []],
-	[[], [], [], [], []],
-	[[], [], [], [], []],
-	[[], [], [], [], []]
-
-]
-
-ROOM_COUNT = round(random.randint(6, 12) / 5)
 
 
+#for all layers in the terrain
 for i in range(5):
 
 	left = ROOM_COUNT
+	#if there is still placable cases
 	while left > 0:
 
+		#choose a random case from terrain, set the mobs on it and place it
 		gen = random.choice(TERRAIN[i])
 
 		if gen == []:
@@ -71,13 +82,10 @@ for i in range(5):
 				x = 0
 				for char in line:
 					if char == '+':
-						if random.randint(1, 500) == 8:
-							if max > 0:
-								pixelX = x * 32 + 16
-								pixelY = i * 32 + 16
-								print(pixelX, pixelY)
-								minions.append(minion(pixelX, pixelY, i))
+						if max > 0:
+							if minionSpawn():
 								max -= 1
+
 					x += 1
 				gen.append(line)
 

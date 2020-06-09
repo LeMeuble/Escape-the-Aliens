@@ -85,7 +85,6 @@ class Terrain():
 
 			self.pattern_data = json.load(f)
 
-
 		for row in range(5):
 
 			for room in range(5):
@@ -119,7 +118,6 @@ class Terrain():
 
 				f.write('\n')
 
-
 	def get_pattern(self, path):
 
 		pattern = []
@@ -135,7 +133,6 @@ class Terrain():
 			pattern.append(json.load(f))
 
 		return pattern
-
 
 	def display(self, surface):
 
@@ -191,6 +188,4 @@ while RUN:
 	OBJ_terrain.display(OBJ_window)
 
 	pygame.display.flip()
-=======
-'''
->>>>>>> 5446143fad03040a022cbdad98d3e1403c6e2606
+
