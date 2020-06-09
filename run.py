@@ -4,14 +4,16 @@
 #
 #
 #
-# ------------------------------------------------------- #
+# ------------------------------------------------------------ #
 
 
+import os
+import sys
+import json
+import time
 import pygame
 import random
-import sys
-import os
-import json
+import threading
 
 from pygame.locals import *
 from win32api import GetSystemMetrics
@@ -19,8 +21,11 @@ from win32api import GetSystemMetrics
 
 pygame.init()
 
-WINDOW_WIDTH = GetSystemMetrics(0)
-WINDOW_HEIGHT = GetSystemMetrics(1)
+
+"""@@@@@ INIT BASES VARIABLES @@@@@"""
+
+WINDOW_WIDTH = 1024 #GetSystemMetrics(0)
+WINDOW_HEIGHT = 1024 #GetSystemMetrics(1)
 WINDOW_FRAMERATE = 60
 WINDOW_FLAGS = None
 
@@ -28,10 +33,16 @@ CANVAS_WIDTH = CANVAS_HEIGHT = WINDOW_HEIGHT
 CANVAS_POSITION = (round((WINDOW_WIDTH - CANVAS_WIDTH) / 2), round((WINDOW_HEIGHT - CANVAS_HEIGHT) / 2))
 CANVAS_RATE = round(CANVAS_WIDTH / 32)
 
-
 DEFAULT_DIFFICULTY = 2
 
+VECTOR_INCREMENT = 0.2
+VECTOR_FALLTHFULLING = 0.025
+VECTOR_MAX = 3
+
 RUN = True
+
+
+"""@@@@@ INIT SPRITES/IMAGES/WALL/GROUNDS IMAGES VARIABLES @@@@@"""
 
 IMAGE_WALL_HORIZONTAL = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
 IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
@@ -53,63 +64,165 @@ SPRITE_PLAYER_LASER['west'] = {}
 SPRITE_PLAYER_LASER['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
 
+"""@@@@@ INIT GAMES VARIABLES @@@@@"""
+
+GAMEVAR_DIFFICULTY = DEFAULT_DIFFICULTY
+GAMEVAR_FLOOR = 0
+GAMEVAR_INFIGHT = False
+GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor/3) + 1
+
+GAMEVAR_SCORE = 0
+GAMEVAR_KEYBOARD = []
 
 
+"""@@@@@ INIT ENTITIES VARIABLES @@@@@"""
+
+GAME_ENTITIES = {}
+GAME_ENTITIES['MINIONS'] = []
+GAME_ENTITIES['ARCHEROS'] = []
+GAME_ENTITIES['RUSHERS'] = []
+GAME_ENTITIES['HEALERS'] = []
+GAME_ENTITIES['TORNADOS'] = []
+GAME_ENTITIES['ALLIES'] = [] #To brainstorm
+GAME_ENTITIES['BOSS_1'] = []
+GAME_ENTITIES['BOSS_2'] = []
+GAME_ENTITIES['BOSS_3'] = []
+GAME_ENTITIES['BOSS_4'] = []
+GAME_ENTITIES['BOSS_5'] = []
+
+
+"""@@@@@ INIT ENTITIES VARIABLES @@@@@"""
 
 """
 	
-	Terrain generator/loader class
+	Player instance class
 
 	@__init__() => constructor
-	@generate() => terrain builder
+	@display() => blit player on canvas
 	@save_to_file() => save terrain to file
 	@get_pattern() => load and return pattern from pattern file
 
 
 
 """
-dificulty = 2
-nbMobs = dificulty * 2
+class Player(threading.Thread):
 
 
-class player():
 	def __init__(self, coordinates):
+
 		self.coordinates = coordinates
-		temp = self.coordinates.split('//')
-		self.x = int(temp[1].split('@')[0])
-		self.y = int(temp[1].split('@')[1])
 		self.facing = "east"
+		self.is_running = False
+		self.walking = 1
+		self.running = 1
+
+		self.vector_x = 0
+		self.vector_y = 0
+
+		self.load_coordinates_from_string(self.coordinates)
+
+		threading.Thread.__init__(self)
+
+
+	def load_coordinates_from_string(self, coordinates):
+
+		self.coordinates = coordinates
+
+		_temp = self.coordinates.split('//')
+
+		self.x = int(_temp[1].split('@')[0]) * CANVAS_RATE
+		self.y = int(_temp[1].split('@')[1]) * CANVAS_RATE
+
+		del _temp
+
+
+	def run(self):
+
+		global RUN
+
+		while True:
+
+			if not RUN:
+
+				sys.exit(0)
+
+			self.x += self.vector_x
+			self.y += self.vector_y
+
+			if self.vector_x != 0:
+
+				self.vector_x += VECTOR_FALLTHFULLING if self.vector_x < 0 else 0 - VECTOR_FALLTHFULLING
+
+				if self.vector_x > -0.1 and self.vector_x < 0.1:
+
+					self.vector_x = 0
+
+			if self.vector_y != 0:
+
+				self.vector_y += VECTOR_FALLTHFULLING if self.vector_y < 0 else 0 - VECTOR_FALLTHFULLING
+
+				if self.vector_y > -0.1 and self.vector_y < 0.1:
+
+					self.vector_y = 0
+
+			time.sleep(0.01)
+
 
 	def display(self, surface):
-		global SPRITE_PLAYER_LASER
-		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
 
-	def increaseX(self):
-		self.x += 1
+		global SPRITE_PLAYER_LASER
+
+		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (round(self.x), round(self.y)))
+
+
+	def right(self):
+
 		self.facing = "east"
 
-	def decreaseX(self):
-		self.x -= 1
+		self.vector_dx(VECTOR_INCREMENT)
+
+
+	def left(self):
+
 		self.facing = "west"
 
-	def increaseY(self):
-		self.y -= 1
+		self.vector_dx(0 - VECTOR_INCREMENT)
 
-	def decreaseY(self):
-		self.y += 1
 
-#class for the mobs
+	def up(self):
 
-minions = []
+		self.vector_dy(0 - VECTOR_INCREMENT)
 
-class minion():
+
+	def down(self):
+
+		self.vector_dy(VECTOR_INCREMENT)
+
+
+	def vector_dx(self, v):
+
+		if self.vector_x < VECTOR_MAX and self.vector_x > 0 - VECTOR_MAX:
+
+			self.vector_x += float(v)
+
+	def vector_dy(self, v):
+
+		if self.vector_y < VECTOR_MAX and self.vector_y > 0 - VECTOR_MAX:
+
+			self.vector_y += float(v)
+
+
+
+
+class Minion():
 
 	def __init__(self, coordinates):
-		global dificulty
+
+		global GAMEVAR_DIFFICULTY
 		self.coordinates = coordinates
-		self.speed = dificulty * 0.5
-		self.health = 5 + (dificulty * 1.5)
-		self.damage = 1 + (dificulty * 1.25)
+		self.speed = GAMEVAR_DIFFICULTY * 0.5
+		self.health = 5 + (GAMEVAR_DIFFICULTY * 1.5)
+		self.damage = 1 + (GAMEVAR_DIFFICULTY * 1.25)
 		temp = self.coordinates.split('//')
 		self.x = int(temp[1].split('@')[0])
 		self.y = int(temp[1].split('@')[1])
@@ -132,7 +245,18 @@ class minion():
 
 
 
+"""
+	
+	Terrain generator/loader class
 
+	@__init__() => constructor
+	@generate() => terrain builder
+	@save_to_file() => save terrain to file
+	@get_pattern() => load and return pattern from pattern file
+
+
+
+"""
 class Terrain():
 
 
@@ -142,7 +266,7 @@ class Terrain():
 
 	"""
 	def __init__(self):
-		global minions
+
 		#Initialize the terrain matrix charmap
 		self.terrain = [
 			[[], [], [], [], []], #row 1
@@ -169,7 +293,7 @@ class Terrain():
 
 	"""
 	def generate(self):
-		global minions
+		global GAME_ENTITIES
 		self.pattern = random.choice(os.listdir('./resources/terrain/paths'))
 
 		with open(f'./resources/terrain/paths/{self.pattern}', 'r') as f:
@@ -196,7 +320,7 @@ class Terrain():
 					y += 1
 				for i in range(random.randint(0, 4)):
 
-					minions.append(minion(random.choice(ground)))
+					GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
 				#print(f'{row}@{room}-------------')
 
@@ -252,7 +376,7 @@ class Terrain():
 
 	def display(self, surface):
 
-		global minions
+		global GAME_ENTITIES
 		global IMAGE_WALL_VERTICAL
 
 		map_x = int(self.current_room.split('@')[0])
@@ -308,7 +432,7 @@ class Terrain():
 
 			y += 1
 			count = 0
-			for m in minions:
+			for m in GAME_ENTITIES['MINIONS']:
 				if m.in_room(map_x, map_y):
 					m.display(surface)
 					count += 1
@@ -317,13 +441,16 @@ class Terrain():
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
-OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
+OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FULLSCREEN
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
-OBJ_Clock = pygame.time.Clock()
-PLAYER = player('512@00//0@00')
+OBJ_clock = pygame.time.Clock()
+OBJ_player = Player('512@00//0@00')
+OBJ_player.start()
 
 
 while RUN:
+
+	OBJ_clock.tick(WINDOW_FRAMERATE) #Ticks per seconds ~= FPS
 
 	for e in pygame.event.get():
 
@@ -332,18 +459,41 @@ while RUN:
 			RUN = False
 			sys.exit(0)
 
-		if e.type == pygame.KEYUP:
-			if e.key == pygame.K_d or e.key == K_RIGHT:
-				PLAYER.increaseX()
-			elif e.key == pygame.K_a or e.key == K_LEFT:
-				PLAYER.decreaseX()
-			elif e.key == pygame.K_w or e.key == K_UP:
-				PLAYER.increaseY()
-			elif e.key == pygame.K_s or e.key == K_DOWN:
-				PLAYER.decreaseY()
+		if not GAMEVAR_INFIGHT:
 
-	OBJ_terrain.display(OBJ_canvas)
-	PLAYER.display(OBJ_canvas)
-	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)
-	pygame.display.flip()
-	OBJ_Clock.tick(30)
+			if e.type == pygame.KEYDOWN:
+
+				GAMEVAR_KEYBOARD.append(e.key)
+
+			elif e.type == pygame.KEYUP:
+
+				GAMEVAR_KEYBOARD.remove(e.key)
+			
+	if 97 in GAMEVAR_KEYBOARD or 276 in GAMEVAR_KEYBOARD:
+
+		OBJ_player.left()
+				
+	if 100 in GAMEVAR_KEYBOARD or 275 in GAMEVAR_KEYBOARD:
+
+		OBJ_player.right()
+
+	if 119 in GAMEVAR_KEYBOARD or 273 in GAMEVAR_KEYBOARD:
+
+		OBJ_player.up()
+
+	if 115 in GAMEVAR_KEYBOARD or 274 in GAMEVAR_KEYBOARD:
+
+		OBJ_player.down()
+
+
+	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
+
+	OBJ_terrain.display(OBJ_canvas) # Display the terrain and generates entities on the canvas
+	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
+
+	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
+
+	pygame.display.flip() #Flip/Update the screen
+
+
+	#276 < // 275 >
