@@ -11,6 +11,8 @@ import os
 import sys
 import json
 import time
+import math
+import string
 import pygame
 import random
 import threading
@@ -51,6 +53,8 @@ IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png
 IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
 IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
 
+SPRITE_LASER = pygame.transform.scale(pygame.image.load('./resources/sprites/fx/LASER_fire.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
+
 SPRITE_MINION = {}
 SPRITE_MINION['east'] = {}
 SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
@@ -60,8 +64,16 @@ SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(
 SPRITE_PLAYER_LASER = {}
 SPRITE_PLAYER_LASER['east'] = {}
 SPRITE_PLAYER_LASER['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+SPRITE_PLAYER_LASER['east']['frame_2'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+SPRITE_PLAYER_LASER['east']['frame_3'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/2.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+SPRITE_PLAYER_LASER['east']['frame_4'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/3.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+SPRITE_PLAYER_LASER['east']['frame_5'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/4.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
 SPRITE_PLAYER_LASER['west'] = {}
 SPRITE_PLAYER_LASER['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+SPRITE_PLAYER_LASER['west']['frame_2'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+SPRITE_PLAYER_LASER['west']['frame_3'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/2.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+SPRITE_PLAYER_LASER['west']['frame_4'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/3.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+SPRITE_PLAYER_LASER['west']['frame_5'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/4.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
 SPRITE_PLAYER_RIFLE = {}
 SPRITE_PLAYER_RIFLE['east'] = {}
@@ -96,6 +108,24 @@ GAME_ENTITIES['BOSS_4'] = []
 GAME_ENTITIES['BOSS_5'] = []
 
 
+WEAPONS = {
+	"AR": {
+		"damages": 3,
+		"munitions": 30
+	},
+	"LASER_RIFLE": {
+		"damages": 8,
+		"munitions": 4
+	}
+}
+
+OBJ_terrain = None
+OBJ_window = None
+OBJ_canvas = None
+OBJ_clock = None
+OBJ_player = None
+OBJ_bullet = None
+
 """@@@@@ INIT ENTITIES VARIABLES @@@@@"""
 
 """
@@ -110,16 +140,90 @@ GAME_ENTITIES['BOSS_5'] = []
 
 
 """
-class Player(threading.Thread):
 
+
+def get_uid(size):
+
+	chars = string.ascii_lowercase + string.digits
+	uuid = ""
+
+	for i in range(size):
+
+		uuid += random.choice(chars)
+
+	return uuid
+
+
+class Bullet(threading.Thread):
+
+	def __init__(self):
+		#, coordinates, damages, facing, weapon, ammos
+
+		self.bullets = []
+
+		'''self.coordinates = coordinates
+		self.damages = damages
+		self.facing = facing
+		self.weapon = weapon
+		self.ammos = ammos'''
+
+		threading.Thread.__init__(self)
+
+	def fire(self, shooter, position, facing, weapon, surface):
+
+		if shooter == 'player':
+			if weapon == "LASER":
+
+				print('fire with ' + weapon + ' ' + str(position))
+
+				self.bullets.append(
+					{
+						"canvas": pygame.transform.rotate(SPRITE_LASER, ),
+						"uid": get_uid(10),
+						"shooter": shooter,
+						"position": position,
+						"facing": facing,
+						"weapon": weapon
+					}
+				)
+
+	def run(self):
+
+		global RUN
+		while True:
+			time.sleep(0.05)
+
+			for bullet in self.bullets:
+				x = bullet['position'][0] + bullet['facing'][0] * 10
+				y = bullet['position'][1] + bullet['facing'][1] * 10
+				bullet['position'] = (x, y)
+				if bullet['position'][0] <= 0 or bullet['position'][0] >= CANVAS_WIDTH or bullet['position'][1] <= 0 or bullet['position'][1] >= CANVAS_HEIGHT:
+					self.bullets.remove(bullet)
+
+
+
+			if not RUN:
+				sys.exit(0)
+
+	def display(self, surface):
+
+		for bullet in self.bullets:
+
+			surface.blit(bullet['canvas'], (round(bullet['position'][0]), round(bullet['position'][1])))
+
+
+class Player(threading.Thread):
 
 	def __init__(self, coordinates):
 
 		self.coordinates = coordinates
 		self.facing = "east"
 		self.is_running = False
+		self.inCombat = False
+
 		self.walking = 1
 		self.running = 1
+		self.health = 20
 
 		self.vector_x = 0
 		self.vector_y = 0
@@ -127,7 +231,6 @@ class Player(threading.Thread):
 		self.load_coordinates_from_string(self.coordinates)
 
 		threading.Thread.__init__(self)
-
 
 	def load_coordinates_from_string(self, coordinates):
 
@@ -140,49 +243,43 @@ class Player(threading.Thread):
 
 		del _temp
 
-
 	def run(self):
 
 		global RUN
 
-		while True:
+		if not self.inCombat:
+			while True:
 
-			if not RUN:
+				if not RUN:
 
-				sys.exit(0)
+					sys.exit(0)
 
-			self.x += self.vector_x
-			self.y += self.vector_y
+				self.x += self.vector_x
+				self.y += self.vector_y
 
-			if self.vector_x != 0:
+				if self.vector_x != 0:
 
-				self.vector_x += VECTOR_FALLTHFULLING if self.vector_x < 0 else 0 - VECTOR_FALLTHFULLING
+					self.vector_x += VECTOR_FALLTHFULLING if self.vector_x < 0 else 0 - VECTOR_FALLTHFULLING
 
-				if self.vector_x > -0.1 and self.vector_x < 0.1:
+					if self.vector_x > -0.1 and self.vector_x < 0.1:
 
-					self.vector_x = 0
+						self.vector_x = 0
 
-			if self.vector_y != 0:
+				if self.vector_y != 0:
 
-				self.vector_y += VECTOR_FALLTHFULLING if self.vector_y < 0 else 0 - VECTOR_FALLTHFULLING
+					self.vector_y += VECTOR_FALLTHFULLING if self.vector_y < 0 else 0 - VECTOR_FALLTHFULLING
 
-				if self.vector_y > -0.1 and self.vector_y < 0.1:
+					if self.vector_y > -0.1 and self.vector_y < 0.1:
 
-					self.vector_y = 0
+						self.vector_y = 0
 
-			time.sleep(0.01)
-
+				time.sleep(0.01)
 
 	def display(self, surface):
 
 		global SPRITE_PLAYER_LASER
-<<<<<<< HEAD
-		surface.blit(SPRITE_PLAYER_RIFLE[self.facing]['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
-=======
->>>>>>> b2c0d1b27e03fa0465590a8ff9afcb38f94df6bc
 
 		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (round(self.x), round(self.y)))
-
 
 	def right(self):
 
@@ -190,23 +287,19 @@ class Player(threading.Thread):
 
 		self.vector_dx(VECTOR_INCREMENT)
 
-
 	def left(self):
 
 		self.facing = "west"
 
 		self.vector_dx(0 - VECTOR_INCREMENT)
 
-
 	def up(self):
 
 		self.vector_dy(0 - VECTOR_INCREMENT)
 
-
 	def down(self):
 
 		self.vector_dy(VECTOR_INCREMENT)
-
 
 	def vector_dx(self, v):
 
@@ -219,6 +312,21 @@ class Player(threading.Thread):
 		if self.vector_y < VECTOR_MAX and self.vector_y > 0 - VECTOR_MAX:
 
 			self.vector_y += float(v)
+
+	def fire(self, target, weapon, surface):
+
+		global OBJ_bullet
+		print('fire player')
+		x, y = self.get_packed_angle_from_target(target)
+
+		OBJ_bullet.fire('player', (self.x, self.y), (x, y), 'LASER', surface)
+
+	def get_packed_angle_from_target(self, target):
+		x = (target[0] - round(self.x)) / math.sqrt(target[0] ** 2 + round(self.x) ** 2)
+		y = (target[1] - round(self.y)) / math.sqrt(target[1] ** 2 + round(self.y) ** 2)
+
+		return (x, y)
+
 
 
 
@@ -266,8 +374,9 @@ class Minion():
 
 
 """
-class Terrain():
 
+
+class Terrain():
 
 	"""
 
@@ -331,8 +440,6 @@ class Terrain():
 
 					GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
-				#print(f'{row}@{room}-------------')
-
 		self.current_room = self.pattern_data['metadata']['spawn']
 
 
@@ -373,7 +480,6 @@ class Terrain():
 		with open(f'{path}.metadata', 'r') as f:
 
 			pattern.append(json.load(f))
-
 		return pattern
 
 	def rotate(self, image):
@@ -454,6 +560,8 @@ OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FU
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
 OBJ_clock = pygame.time.Clock()
 OBJ_player = Player('512@00//0@00')
+OBJ_bullet = Bullet()
+OBJ_bullet.start()
 OBJ_player.start()
 
 
@@ -477,7 +585,11 @@ while RUN:
 			elif e.type == pygame.KEYUP:
 
 				GAMEVAR_KEYBOARD.remove(e.key)
-			
+
+		if e.type == MOUSEBUTTONDOWN:
+
+			OBJ_player.fire(pygame.mouse.get_pos(), 'LASER', OBJ_canvas)
+
 	if 97 in GAMEVAR_KEYBOARD or 276 in GAMEVAR_KEYBOARD:
 
 		OBJ_player.left()
@@ -495,10 +607,12 @@ while RUN:
 		OBJ_player.down()
 
 
+
 	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
 
 	OBJ_terrain.display(OBJ_canvas) # Display the terrain and generates entities on the canvas
 	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
+	OBJ_bullet.display(OBJ_canvas)
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
 
