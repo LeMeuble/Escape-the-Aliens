@@ -22,7 +22,10 @@ from win32api import GetSystemMetrics
 
 
 pygame.init()
+pygame.font.init()
 
+
+FONT = pygame.font.SysFont('Helvetica', 20, True)
 
 """@@@@@ INIT BASES VARIABLES @@@@@"""
 
@@ -53,15 +56,15 @@ IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png
 IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
 IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
 
-SPRITE_LASER = pygame.transform.scale(pygame.image.load('./resources/sprites/fx/LASER_fire.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
-
 SPRITE_MINION = {}
+SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
 SPRITE_MINION['east'] = {}
 SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
 SPRITE_MINION['west'] = {}
 SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5))), True, False)
 
 SPRITE_PLAYER_LASER = {}
+SPRITE_PLAYER_LASER['metadata'] = json.load(open('./resources/sprites/characters/persoLaser.metadata', 'r'))
 SPRITE_PLAYER_LASER['east'] = {}
 SPRITE_PLAYER_LASER['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
 SPRITE_PLAYER_LASER['east']['frame_2'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
@@ -169,38 +172,22 @@ class Bullet(threading.Thread):
 
 		threading.Thread.__init__(self)
 
-	def fire(self, shooter, position, facing, angle, weapon, surface):
+	def fire(self, source, target):
 
-		if shooter == 'player':
-			if weapon == "LASER":
-
-				print('fire with ' + weapon + ' ' + str(position))
-				print(angle)
-				self.bullets.append(
-					{
-						"canvas": pygame.transform.rotate(SPRITE_LASER, angle),
-						"uid": get_uid(10),
-						"shooter": shooter,
-						"position": position,
-						"facing": facing,
-						"weapon": weapon
-					}
-				)
+		self.bullets.append(
+			{
+				"uid": get_uid(10),
+				"source": source,
+				"target": target,
+				"tick": 10
+			}
+		)
 
 	def run(self):
 
 		global RUN
 		while True:
 			time.sleep(0.05)
-
-			for bullet in self.bullets:
-				x = bullet['position'][0] + bullet['facing'][0] * 10
-				y = bullet['position'][1] + bullet['facing'][1] * 10
-				bullet['position'] = (x, y)
-				if bullet['position'][0] <= 0 or bullet['position'][0] >= CANVAS_WIDTH or bullet['position'][1] <= 0 or bullet['position'][1] >= CANVAS_HEIGHT:
-					self.bullets.remove(bullet)
-
-
 
 			if not RUN:
 				sys.exit(0)
@@ -209,7 +196,11 @@ class Bullet(threading.Thread):
 
 		for bullet in self.bullets:
 
-			surface.blit(bullet['canvas'], (round(bullet['position'][0]), round(bullet['position'][1])))
+			if bullet['tick'] > 0:
+				pygame.draw.line(surface, (0, 255, 0), (round(bullet['source'][0]), round(bullet['source'][1])), (round(bullet['target'][0]), round(bullet['target'][1])), 2)
+				bullet['tick'] -= 1
+			else:
+				self.bullets.remove(bullet)
 
 
 class Player(threading.Thread):
@@ -238,6 +229,9 @@ class Player(threading.Thread):
 
 		_temp = self.coordinates.split('//')
 
+		self.map_x = int(_temp[0].split('@')[0]) * CANVAS_RATE
+		self.map_y = int(_temp[0].split('@')[1]) * CANVAS_RATE
+
 		self.x = int(_temp[1].split('@')[0]) * CANVAS_RATE
 		self.y = int(_temp[1].split('@')[1]) * CANVAS_RATE
 
@@ -253,92 +247,103 @@ class Player(threading.Thread):
 				if not RUN:
 
 					sys.exit(0)
-
-				self.x += self.vector_x
-				self.y += self.vector_y
-
-				if self.vector_x != 0:
-
-					self.vector_x += VECTOR_FALLTHFULLING if self.vector_x < 0 else 0 - VECTOR_FALLTHFULLING
-
-					if self.vector_x > -0.1 and self.vector_x < 0.1:
-
-						self.vector_x = 0
-
-				if self.vector_y != 0:
-
-					self.vector_y += VECTOR_FALLTHFULLING if self.vector_y < 0 else 0 - VECTOR_FALLTHFULLING
-
-					if self.vector_y > -0.1 and self.vector_y < 0.1:
-
-						self.vector_y = 0
-
 				time.sleep(0.01)
 
 	def display(self, surface):
 
+		global OBJ_terrain
 		global SPRITE_PLAYER_LASER
 
+		a = self.get_position()
+
+
+		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1]))
 		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (round(self.x), round(self.y)))
+
+		pygame.draw.rect(surface, (0, 0, 255), (
+		self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x'],
+		self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'], 10, 10))
+		pygame.draw.rect(surface, (255, 0, 0), (round(self.x), round(self.y), 10, 10))
 
 	def right(self):
 
-		self.facing = "east"
+		global GAME_ENTITIES
 
-		self.vector_dx(VECTOR_INCREMENT)
+		a = self.get_position()
+		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "|"):
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.collide((a[0] + 1, a[1])):
+						collide = True
+						break
+
+			if not collide:
+				self.facing = "east"
+				self.x += 32
+		else:
+			self.facing = "east"
 
 	def left(self):
 
-		self.facing = "west"
+		a = self.get_position()
+		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "|"):
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.collide((a[0] - 1, a[1])):
+						collide = True
+						break
+			if not collide:
+				self.facing = "west"
+				self.x -= 32
 
-		self.vector_dx(0 - VECTOR_INCREMENT)
+		else:
+			self.facing = "west"
 
 	def up(self):
 
-		self.vector_dy(0 - VECTOR_INCREMENT)
+		a = self.get_position()
+		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "|"):
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.collide((a[0], a[1] - 1)):
+						collide = True
+						break
+
+			if not collide:
+				self.y -= 32
 
 	def down(self):
 
-		self.vector_dy(VECTOR_INCREMENT)
+		a = self.get_position()
+		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "|"):
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.collide((a[0], a[1] + 1)):
+						collide = True
+						break
+			if not collide:
+				self.y += 32
 
-	def vector_dx(self, v):
-
-		if self.vector_x < VECTOR_MAX and self.vector_x > 0 - VECTOR_MAX:
-
-			self.vector_x += float(v)
-
-	def vector_dy(self, v):
-
-		if self.vector_y < VECTOR_MAX and self.vector_y > 0 - VECTOR_MAX:
-
-			self.vector_y += float(v)
-
-	def fire(self, target, weapon, surface):
+	def fire(self, target):
 
 		global OBJ_bullet
-		x, y = self.get_packed_angle_from_target(target)
-		angle = self.get_angle(target)
+		global SPRITE_PLAYER_LASER
 
-		OBJ_bullet.fire('player', (self.x, self.y), (x, y), angle, 'LASER', surface)
+		#x, y = self.get_packed_angle_from_target(target)
+		#angle = self.get_angle(target)
+		if (self.facing == 'east' and target[0] > (self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'])) or (self.facing == 'west' and target[0] < (self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'])):
 
-	def get_packed_angle_from_target(self, target):
+			OBJ_bullet.fire((self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'], self.y + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['y']), target)
 
-		x = (target[0] - round(self.x)) / math.sqrt(target[0] ** 2 + round(self.x) ** 2)
-		y = (target[1] - round(self.y)) / math.sqrt(target[1] ** 2 + round(self.y) ** 2)
+	def get_position(self):
+		positionX = math.floor((self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x']) / CANVAS_RATE)
+		positionY = math.floor((self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y']) / CANVAS_RATE)
 
-		return (x, y)
-
-	def get_angle(self, target):
-
-		degree = math.degrees(
-			math.atan(
-				(target[0] - round(self.x)) / (target[1] - round(self.y))
-			)
-		) + 90
-		return round(degree)
-
-
-
+		return (positionX, positionY)
 
 class Minion():
 
@@ -354,6 +359,8 @@ class Minion():
 		self.y = int(temp[1].split('@')[1])
 		self.map_x = int(temp[0].split('@')[0])
 		self.map_y = int(temp[0].split('@')[1])
+		self.collide_radius = 50
+		self.facing = "east"
 
 	def display(self, surface):
 
@@ -361,7 +368,8 @@ class Minion():
 
 		if self.x > 0 and self.x <= CANVAS_RATE:
 			if self.y > 0 and self.y <= CANVAS_RATE:
-				surface.blit(SPRITE_MINION['east']['frame_1'], (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
+				surface.blit(SPRITE_MINION['east']['frame_1'], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2))))
+				pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
 
 	def in_room(self, map_x, map_y):
 		if map_x == self.map_x and map_y == self.map_y:
@@ -369,6 +377,23 @@ class Minion():
 		else:
 			return False
 
+	def collide(self, position):
+
+		global SPRITE_MINION
+		global CANVAS_RATE
+
+		player_x = position[0] * CANVAS_RATE + 16
+		player_y = position[1] * CANVAS_RATE + 16
+
+		mob_x = self.x * CANVAS_RATE + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['x']
+		mob_y = self.y * CANVAS_RATE + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['y']
+
+		distance = math.sqrt((abs(mob_x - player_x))**2 + (mob_y - player_y)**2)
+
+		if distance > self.collide_radius:
+			return False
+		else:
+			return True
 
 
 """
@@ -383,8 +408,6 @@ class Minion():
 
 
 """
-
-
 class Terrain():
 
 	"""
@@ -460,6 +483,7 @@ class Terrain():
 		@path => Path to output file
 
 	"""
+
 	def save_to_file(self, path):
 
 		with open(path, "w+") as f:
@@ -475,6 +499,9 @@ class Terrain():
 					f.write(l + '\n')
 
 				f.write('\n')
+
+	def get_char(self, row, room, x, y):
+		return self.terrain[row][room][y][x]
 
 	def get_pattern(self, path):
 
@@ -547,10 +574,12 @@ class Terrain():
 					surface.blit(IMAGE_WALL_HORIZONTAL, (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				else:
-					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE, y * CANVAS_RATE, x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE + (CANVAS_RATE/2)))
-					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + (CANVAS_RATE/2)))
-					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE + (CANVAS_RATE/2), x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE + CANVAS_RATE))
-					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE + (CANVAS_RATE/2), y * CANVAS_RATE + (CANVAS_RATE/2), x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
+					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE, y * CANVAS_RATE, round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2))))
+					pygame.draw.rect(surface, (0, 0, 0), (round(x * CANVAS_RATE + (CANVAS_RATE/2)), y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, round(y * CANVAS_RATE + (CANVAS_RATE/2))))
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, round(y * CANVAS_RATE + (CANVAS_RATE/2)), round(x * CANVAS_RATE + (CANVAS_RATE/2)), y * CANVAS_RATE + CANVAS_RATE))
+					pygame.draw.rect(surface, (209, 56, 179), (round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2)), x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
+
+				#surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				x += 1
 
@@ -568,7 +597,7 @@ OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FULLSCREEN
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
 OBJ_clock = pygame.time.Clock()
-OBJ_player = Player('512@00//0@00')
+OBJ_player = Player(f'0@0//1@1')
 OBJ_bullet = Bullet()
 OBJ_bullet.start()
 OBJ_player.start()
@@ -589,37 +618,27 @@ while RUN:
 
 			if e.type == pygame.KEYDOWN:
 
-				GAMEVAR_KEYBOARD.append(e.key)
+				if e.key == 97 or e.key == 276:
+					OBJ_player.left()
 
-			elif e.type == pygame.KEYUP:
+				elif e.key == 100 or e.key == 275:
+					OBJ_player.right()
 
-				GAMEVAR_KEYBOARD.remove(e.key)
+				elif e.key == 119 or e.key == 273:
+					OBJ_player.up()
+
+				elif e.key == 115 or e.key == 274:
+					OBJ_player.down()
+
 
 		if e.type == MOUSEBUTTONDOWN:
 
-			OBJ_player.fire(pygame.mouse.get_pos(), 'LASER', OBJ_canvas)
-
-	if 97 in GAMEVAR_KEYBOARD or 276 in GAMEVAR_KEYBOARD:
-
-		OBJ_player.left()
-				
-	if 100 in GAMEVAR_KEYBOARD or 275 in GAMEVAR_KEYBOARD:
-
-		OBJ_player.right()
-
-	if 119 in GAMEVAR_KEYBOARD or 273 in GAMEVAR_KEYBOARD:
-
-		OBJ_player.up()
-
-	if 115 in GAMEVAR_KEYBOARD or 274 in GAMEVAR_KEYBOARD:
-
-		OBJ_player.down()
-
-
+			OBJ_player.fire(pygame.mouse.get_pos())
 
 	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
 
 	OBJ_terrain.display(OBJ_canvas) # Display the terrain and generates entities on the canvas
+
 	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
 	OBJ_bullet.display(OBJ_canvas)
 
@@ -630,4 +649,16 @@ while RUN:
 
 	#276 < // 275 >
 
-#TODO redessiner le tir de laser qui n'est pas centré
+#TODO: debugger les 2 carrés en haut à droite
+
+#TODO TOMORROW: Changement de salle (=> portes)
+#TODO TOMORROW: .display_ground()
+#TODO TOMORROW: .display_walls()
+#TODO TOMORROW MAYBE: Système de combat
+#TODO: BARRE DE VIE
+#TODO: INVENTAIRE
+#TODO: MENU PRINCIPAL
+#TODO: FICHIER DE PARAMETRES
+#TODO: COMPETENCES ???
+#TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
+#TODO: ARMES, MOBS, SPRITES OBJETS
