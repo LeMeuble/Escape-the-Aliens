@@ -169,16 +169,16 @@ class Bullet(threading.Thread):
 
 		threading.Thread.__init__(self)
 
-	def fire(self, shooter, position, facing, weapon, surface):
+	def fire(self, shooter, position, facing, angle, weapon, surface):
 
 		if shooter == 'player':
 			if weapon == "LASER":
 
 				print('fire with ' + weapon + ' ' + str(position))
-
+				print(angle)
 				self.bullets.append(
 					{
-						"canvas": pygame.transform.rotate(SPRITE_LASER, ),
+						"canvas": pygame.transform.rotate(SPRITE_LASER, angle),
 						"uid": get_uid(10),
 						"shooter": shooter,
 						"position": position,
@@ -316,17 +316,26 @@ class Player(threading.Thread):
 	def fire(self, target, weapon, surface):
 
 		global OBJ_bullet
-		print('fire player')
 		x, y = self.get_packed_angle_from_target(target)
+		angle = self.get_angle(target)
 
-		OBJ_bullet.fire('player', (self.x, self.y), (x, y), 'LASER', surface)
+		OBJ_bullet.fire('player', (self.x, self.y), (x, y), angle, 'LASER', surface)
 
 	def get_packed_angle_from_target(self, target):
+
 		x = (target[0] - round(self.x)) / math.sqrt(target[0] ** 2 + round(self.x) ** 2)
 		y = (target[1] - round(self.y)) / math.sqrt(target[1] ** 2 + round(self.y) ** 2)
 
 		return (x, y)
 
+	def get_angle(self, target):
+
+		degree = math.degrees(
+			math.atan(
+				(target[0] - round(self.x)) / (target[1] - round(self.y))
+			)
+		) + 90
+		return round(degree)
 
 
 
@@ -620,3 +629,5 @@ while RUN:
 
 
 	#276 < // 275 >
+
+#TODO redessiner le tir de laser qui n'est pas centré
