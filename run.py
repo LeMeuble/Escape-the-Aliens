@@ -243,6 +243,18 @@ class Player(threading.Thread):
 
 		self.load_coordinates_from_string(self.coordinates)
 
+		self.side_doors = {}
+		self.side_doors['up'] = False
+		self.side_doors['down'] = False
+		self.side_doors['right'] = False
+		self.side_doors['left'] = False
+
+		self.side_chars = {}
+		self.side_chars['up'] = None
+		self.side_chars['down'] = None
+		self.side_chars['right'] = None
+		self.side_chars['left'] = None
+
 		threading.Thread.__init__(self)
 
 	def load_coordinates_from_string(self, coordinates):
@@ -251,8 +263,8 @@ class Player(threading.Thread):
 
 		_temp = self.coordinates.split('//')
 
-		self.map_x = int(_temp[0].split('@')[0]) * CANVAS_RATE
-		self.map_y = int(_temp[0].split('@')[1]) * CANVAS_RATE
+		self.map_x = int(_temp[0].split('@')[0])
+		self.map_y = int(_temp[0].split('@')[1])
 
 		self.x = int(_temp[1].split('@')[0]) * CANVAS_RATE
 		self.y = int(_temp[1].split('@')[1]) * CANVAS_RATE
@@ -267,9 +279,23 @@ class Player(threading.Thread):
 			while True:
 
 				if not RUN:
-
 					sys.exit(0)
+
 				time.sleep(0.01)
+
+				pos = self.get_position()
+				self.side_chars['up'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] - 1)
+				self.side_chars['down'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] + 1)
+				self.side_chars['right'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] + 1, pos[1])
+				self.side_chars['left'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] - 1, pos[1])
+
+				for char in self.side_chars:
+
+					if (self.side_chars[char] == "<") or (self.side_chars[char] == ">") or (self.side_chars[char] == "v") or (self.side_chars[char] == "^"):
+						self.side_doors[char] = True
+						# print('You are in front of a door, do you want to cross it ?')
+					else:
+						self.side_doors[char] = False
 
 	def display(self, surface):
 
@@ -292,45 +318,41 @@ class Player(threading.Thread):
 		global GAME_ENTITIES
 
 		a = self.get_position()
-		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]))
-		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "|"):
-			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) == "!"):
-				Player.go_through_door(self)
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1])
 
-			else:
-				collide = False
-				for type in GAME_ENTITIES:
-					for entity in GAME_ENTITIES[type]:
-						if entity.in_room(self.map_x, self.map_y):
-							if entity.collide((a[0] + 1, a[1])):
-								collide = True
-								break
+		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
 
-				if not collide:
-					self.facing = "east"
-					self.x += 32
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.in_room(self.map_x, self.map_y):
+						if entity.collide((a[0] + 1, a[1])):
+							collide = True
+							break
+
+			if not collide:
+				self.facing = "east"
+				self.x += 32
 		else:
 			self.facing = "east"
 
 	def left(self):
 
 		a = self.get_position()
-		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]))
-		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "|"):
-			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) == "!"):
-				Player.go_through_door(self)
+		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]))
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1])
+		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
 
-			else:
-				collide = False
-				for type in GAME_ENTITIES:
-					for entity in GAME_ENTITIES[type]:
-						if entity.in_room(self.map_x, self.map_y):
-							if entity.collide((a[0] - 1, a[1])):
-								collide = True
-								break
-				if not collide:
-					self.facing = "west"
-					self.x -= 32
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.in_room(self.map_x, self.map_y):
+						if entity.collide((a[0] - 1, a[1])):
+							collide = True
+							break
+			if not collide:
+				self.facing = "west"
+				self.x -= 32
 
 		else:
 			self.facing = "west"
@@ -338,41 +360,37 @@ class Player(threading.Thread):
 	def up(self):
 
 		a = self.get_position()
-		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1))
-		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "|"):
-			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) == "!"):
-				Player.go_through_door(self)
+		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1))
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1)
+		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
 
-			else:
-				collide = False
-				for type in GAME_ENTITIES:
-					for entity in GAME_ENTITIES[type]:
-						if entity.in_room(self.map_x, self.map_y):
-							if entity.collide((a[0], a[1] - 1)):
-								collide = True
-								break
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.in_room(self.map_x, self.map_y):
+						if entity.collide((a[0], a[1] - 1)):
+							collide = True
+							break
 
-				if not collide:
-					self.y -= 32
+			if not collide:
+				self.y -= 32
 
 	def down(self):
 
 		a = self.get_position()
-		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1))
-		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "|") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "_"):
-			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) == "!"):
-				Player.go_through_door(self)
+		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1))
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1)
+		if (char != "-") and (char != "|") and (char != "_") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
 
-			else:
-				collide = False
-				for type in GAME_ENTITIES:
-					for entity in GAME_ENTITIES[type]:
-						if entity.in_room(self.map_x, self.map_y):
-							if entity.collide((a[0], a[1] + 1)):
-								collide = True
-								break
-				if not collide:
-					self.y += 32
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.in_room(self.map_x, self.map_y):
+						if entity.collide((a[0], a[1] + 1)):
+							collide = True
+							break
+			if not collide:
+				self.y += 32
 
 	def fire(self, target):
 
@@ -391,7 +409,31 @@ class Player(threading.Thread):
 
 	def go_through_door(self):
 
-		print('You are in front of a door, do you want to cross it ?')
+		global OBJ_terrain
+
+		if self.side_doors['right']:
+			OBJ_terrain.go_right()
+
+		elif self.side_doors['left']:
+			OBJ_terrain.go_left()
+
+		elif self.side_doors['down']:
+			OBJ_terrain.go_down()
+
+		elif self.side_doors['up']:
+			OBJ_terrain.go_up()
+
+	def set_room(self, room):
+
+		self.map_x = int(room.split('@')[0])
+		self.map_y = int(room.split('@')[1])
+
+	def set_position(self, position):
+
+
+		self.x = round((int(position.split('@')[0]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
+		self.y = round((int(position.split('@')[1]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
+
 
 class Minion():
 
@@ -524,13 +566,16 @@ class Terrain():
 							ground.append(f'{row}@{room}//{x}@{y}') # Coordinates format: row@room//x@y => ex: 0@0//10@5
 						x += 1
 					y += 1
-				for i in range(random.randint(0, 4)):
 
-					GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
+				if ground != []:
+
+					for i in range(random.randint(0, 4)):
+
+						GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
 		self.current_room = self.pattern_data['metadata']['spawn']
 
-		print(GAME_ENTITIES)
+		#print(GAME_ENTITIES)
 
 
 	"""
@@ -559,6 +604,7 @@ class Terrain():
 				f.write('\n')
 
 	def get_char(self, row, room, x, y):
+		#print(row, room, x, y)
 		return self.terrain[row][room][y][x]
 
 	def get_pattern(self, path):
@@ -583,7 +629,6 @@ class Terrain():
 
 		return image
 
-
 	def display_ground(self, surface):
 
 		global SPRITES_GROUND
@@ -591,6 +636,8 @@ class Terrain():
 
 		map_x = int(self.current_room.split('@')[0])
 		map_y = int(self.current_room.split('@')[1])
+
+		#print(f'Room: {map_x}@{map_y}')
 
 		y = 0
 
@@ -604,7 +651,7 @@ class Terrain():
 
 					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
 
-				elif box == "+":
+				elif box == "+" or box == "x":
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 
@@ -628,7 +675,7 @@ class Terrain():
 
 
 
-				if box == "+":
+				if box == "+" or box == "x":
 
 					try:
 						self.texture_map[f'{x}@{y}']
@@ -671,6 +718,11 @@ class Terrain():
 				if box == "_":
 
 					surface.blit(SPRITES_WALLS['horizontal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
+
+				elif box == "!":
+
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 				x += 1
 			y += 1
 
@@ -704,7 +756,6 @@ class Terrain():
 				x += 1
 			y += 1
 
-
 	def display_props(self, surface):
 
 		global CANVAS_RATE
@@ -720,17 +771,16 @@ class Terrain():
 
 			for box in list(line):
 
-				if box == "?":
+				if box == "<" or box == ">":
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box == "o":
+				elif box == "v" or box == "^":
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				x += 1
 			y += 1
-
 
 	def display_entities(self, surface):
 
@@ -745,12 +795,49 @@ class Terrain():
 					e.display(surface)
 					count += 1
 
-		#print(count)
 
 
-	def change_room(self, room):
+	def go_right(self):
 
-		self.current_room = room
+		global OBJ_player
+
+		row = int(self.current_room.split('@')[0])
+		room = int(self.current_room.split('@')[1]) + 1
+
+		self.current_room = f'{row}@{room}'
+		OBJ_player.set_room(f'{row}@{room}')
+
+		spawn_x = self.terrain[row][room][32]['spawns']['from_left']['x_case']
+		spawn_y = self.terrain[row][room][32]['spawns']['from_left']['y_case']
+
+		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
+
+	def go_left(self):
+
+		row = int(self.current_room.split('@')[0])
+		room = int(self.current_room.split('@')[1]) - 1
+
+		self.current_room = f'{row}@{room}'
+		OBJ_player.set_room(f'{row}@{room}')
+
+	def go_up(self):
+
+		row = int(self.current_room.split('@')[0]) - 1
+		room = int(self.current_room.split('@')[1])
+
+		self.current_room = f'{row}@{room}'
+		OBJ_player.set_room(f'{row}@{room}')
+
+	def go_down(self):
+
+		row = int(self.current_room.split('@')[0]) + 1
+		room = int(self.current_room.split('@')[1])
+
+		self.current_room = f'{row}@{room}'
+		OBJ_player.set_room(f'{row}@{room}')
+
+
+
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
@@ -791,7 +878,7 @@ while RUN:
 					OBJ_player.down()
 
 				elif e.key == pygame.K_f:
-					OBJ_terrain.change_room('0@1')
+					OBJ_player.go_through_door()
 
 
 		if e.type == MOUSEBUTTONDOWN:

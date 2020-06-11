@@ -2,11 +2,11 @@
 
 	"pattern": [
 
-		[["./resources/terrain/rooms/L_up_room"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
-		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
-		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
-		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
-		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]]
+		[["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"]],
+		[["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"]],
+		[["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"]],
+		[["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"]],
+		[["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/basic_pattern"]]
 
 	],
 
