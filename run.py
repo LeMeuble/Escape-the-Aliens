@@ -68,9 +68,11 @@ SPRITES_GROUND['moss'][2] = pygame.image.load('./resources/sprites/grounds/moss3
 
 SPRITES_WALLS = {}
 SPRITES_WALLS['vertical'] = {}
-SPRITES_WALLS['vertical'] = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+SPRITES_WALLS['vertical']['normal'] = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+SPRITES_WALLS['vertical']['highter'] = pygame.image.load('./resources/sprites/walls/wall_vertical_highter.png')
 SPRITES_WALLS['horizontal'] = {}
-SPRITES_WALLS['horizontal'] = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
+SPRITES_WALLS['horizontal']['normal'] = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
+SPRITES_WALLS['horizontal']['smaller'] = pygame.image.load('./resources/sprites/walls/wall_horizontal_smaller.png')
 
 SPRITES_DOORS = {}
 SPRITES_DOORS['vertical'] = {}
@@ -320,7 +322,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1])
 
-		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
+		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -341,7 +343,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1])
-		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
+		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -362,7 +364,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1)
-		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
+		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -380,7 +382,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1)
-		if (char != "-") and (char != "|") and (char != "_") and (char != ">") and (char != "<") and (char != "v") and (char != "^"):
+		if (char != "-") and (char != "|") and (char != "_") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -661,7 +663,7 @@ class Terrain():
 					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, round(y * CANVAS_RATE + (CANVAS_RATE/2)), round(x * CANVAS_RATE + (CANVAS_RATE/2)), y * CANVAS_RATE + CANVAS_RATE))
 					pygame.draw.rect(surface, (209, 56, 179), (round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2)), x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
 
-				surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
+				#surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
 				x += 1
 			y += 1
 
@@ -717,12 +719,12 @@ class Terrain():
 
 				if box == "_":
 
-					surface.blit(SPRITES_WALLS['horizontal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['horizontal']['normal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
 
 				elif box == "!":
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
-					surface.blit(SPRITES_WALLS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['vertical']['normal'], (x * CANVAS_RATE, y * CANVAS_RATE))
 				x += 1
 			y += 1
 
@@ -745,13 +747,23 @@ class Terrain():
 
 				if box == "-":
 
-					surface.blit(SPRITES_WALLS['horizontal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['horizontal']['normal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
 
 
 				elif box == "|":
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
-					surface.blit(SPRITES_WALLS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['vertical']['normal'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box == "2":
+
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['vertical']['highter'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box == "1":
+
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['horizontal']['smaller'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
 
 				x += 1
 			y += 1
@@ -795,7 +807,8 @@ class Terrain():
 					e.display(surface)
 					count += 1
 
-
+	def get_spawn(self):
+		return '0@1//10@10'
 
 	def go_right(self):
 
@@ -859,7 +872,7 @@ OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FULLSCREEN
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
 OBJ_clock = pygame.time.Clock()
-OBJ_player = Player(f'0@0//15@10')
+OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
 OBJ_bullet = Bullet()
 OBJ_bullet.start()
 OBJ_player.start()
