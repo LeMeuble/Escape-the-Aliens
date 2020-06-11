@@ -1,0 +1,31 @@
+{
+	"is_room": false,
+	"is_collidable": false,
+
+	"spawns":{
+		"main": {
+			"x_case": 0,
+			"y_case": 0
+
+		},
+		"from_left": {
+			"x_case": 0,
+			"y_case": 0
+		},
+
+		"from_right": {
+			"x_case": 0,
+			"y_case": 0
+		},
+
+		"from_top": {
+			"x_case": 0,
+			"y_case": 0
+		},
+
+		"from_bottom": {
+			"x_case": 0,
+			"y_case": 0
+		}
+	}
+}
