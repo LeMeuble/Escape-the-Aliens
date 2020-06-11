@@ -820,6 +820,11 @@ class Terrain():
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
 
+		spawn_x = self.terrain[row][room][32]['spawns']['from_right']['x_case']
+		spawn_y = self.terrain[row][room][32]['spawns']['from_right']['y_case']
+
+		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
+
 	def go_up(self):
 
 		row = int(self.current_room.split('@')[0]) - 1
@@ -828,6 +833,11 @@ class Terrain():
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
 
+		spawn_x = self.terrain[row][room][32]['spawns']['from_bottom']['x_case']
+		spawn_y = self.terrain[row][room][32]['spawns']['from_bottom']['y_case']
+
+		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
+
 	def go_down(self):
 
 		row = int(self.current_room.split('@')[0]) + 1
@@ -835,6 +845,11 @@ class Terrain():
 
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
+
+		spawn_x = self.terrain[row][room][32]['spawns']['from_top']['x_case']
+		spawn_y = self.terrain[row][room][32]['spawns']['from_top']['y_case']
+
+		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
 
 
 
@@ -903,9 +918,9 @@ while RUN:
 	pygame.display.flip() #Flip/Update the screen
 
 
-#TODO: debugger les 2 carrés en haut à droite
-
+#TODO: El famoso patern de dev
 #TODO TOMORROW: Changement de salle (=> portes)
+#TODO: ARMES, MOBS, SPRITES OBJETS
 #TODO TOMORROW MAYBE: Système de combat
 #TODO: BARRE DE VIE
 #TODO: INVENTAIRE
@@ -913,4 +928,4 @@ while RUN:
 #TODO: FICHIER DE PARAMETRES
 #TODO: COMPETENCES ???
 #TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
-#TODO: ARMES, MOBS, SPRITES OBJETS
+
