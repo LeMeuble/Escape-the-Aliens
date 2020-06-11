@@ -49,22 +49,34 @@ RUN = True
 
 """@@@@@ INIT SPRITES/IMAGES/WALL/GROUNDS IMAGES VARIABLES @@@@@"""
 
-IMAGE_WALL_HORIZONTAL = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
-IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
-IMAGE_VERTICAL_DOOR = pygame.image.load('./resources/sprites/walls/vertical_Door.png')
-IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
-IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
-IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
-IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
-
 SPRITES_GROUND = {}
-SPRITES_GROUND[0] = pygame.image.load('./resources/sprites/grounds/ground_base.png')
-SPRITES_GROUND[1] = pygame.image.load('./resources/sprites/grounds/ground1.png')
-SPRITES_GROUND[2] = pygame.image.load('./resources/sprites/grounds/ground2.png')
-SPRITES_GROUND[3] = pygame.image.load('./resources/sprites/grounds/ground3.png')
-SPRITES_GROUND[4] = pygame.image.load('./resources/sprites/grounds/ground4.png')
-SPRITES_GROUND[5] = pygame.image.load('./resources/sprites/grounds/ground5.png')
+SPRITES_GROUND['base'] = {}
+SPRITES_GROUND['base'][0] = pygame.image.load('./resources/sprites/grounds/ground_base.png')
+SPRITES_GROUND['base'][1] = pygame.image.load('./resources/sprites/grounds/ground1.png')
+SPRITES_GROUND['base'][2] = pygame.image.load('./resources/sprites/grounds/ground2.png')
+SPRITES_GROUND['base'][3] = pygame.image.load('./resources/sprites/grounds/ground3.png')
+SPRITES_GROUND['base'][4] = pygame.image.load('./resources/sprites/grounds/ground4.png')
+SPRITES_GROUND['base'][5] = pygame.image.load('./resources/sprites/grounds/ground5.png')
+SPRITES_GROUND['mud'] = {}
+SPRITES_GROUND['mud'][0] = pygame.image.load('./resources/sprites/grounds/mud1.png')
+SPRITES_GROUND['mud'][1] = pygame.image.load('./resources/sprites/grounds/mud2.png')
+SPRITES_GROUND['mud'][2] = pygame.image.load('./resources/sprites/grounds/mud3.png')
+SPRITES_GROUND['moss'] = {}
+SPRITES_GROUND['moss'][0] = pygame.image.load('./resources/sprites/grounds/moss1.png')
+SPRITES_GROUND['moss'][1] = pygame.image.load('./resources/sprites/grounds/moss2.png')
+SPRITES_GROUND['moss'][2] = pygame.image.load('./resources/sprites/grounds/moss3.png')
 
+SPRITES_WALLS = {}
+SPRITES_WALLS['vertical'] = {}
+SPRITES_WALLS['vertical'] = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+SPRITES_WALLS['horizontal'] = {}
+SPRITES_WALLS['horizontal'] = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
+
+SPRITES_DOORS = {}
+SPRITES_DOORS['vertical'] = {}
+SPRITES_DOORS['vertical'] = pygame.image.load('./resources/sprites/doors/door_vertical.png')
+SPRITES_DOORS['horizontal'] = {}
+SPRITES_DOORS['horizontal'] = pygame.image.load('./resources/sprites/doors/door_horizontal.png')
 
 SPRITE_MINION = {}
 SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
@@ -189,7 +201,7 @@ class Bullet(threading.Thread):
 				"uid": get_uid(10),
 				"source": source,
 				"target": target,
-				"tick": 10
+				"tick": 1
 			}
 		)
 
@@ -280,6 +292,7 @@ class Player(threading.Thread):
 		global GAME_ENTITIES
 
 		a = self.get_position()
+		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]))
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "|"):
 			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) == "!"):
 				Player.go_through_door(self)
@@ -288,9 +301,10 @@ class Player(threading.Thread):
 				collide = False
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
-						if entity.collide((a[0] + 1, a[1])):
-							collide = True
-							break
+						if entity.in_room(self.map_x, self.map_y):
+							if entity.collide((a[0] + 1, a[1])):
+								collide = True
+								break
 
 				if not collide:
 					self.facing = "east"
@@ -301,6 +315,7 @@ class Player(threading.Thread):
 	def left(self):
 
 		a = self.get_position()
+		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]))
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "|"):
 			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) == "!"):
 				Player.go_through_door(self)
@@ -309,9 +324,10 @@ class Player(threading.Thread):
 				collide = False
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
-						if entity.collide((a[0] - 1, a[1])):
-							collide = True
-							break
+						if entity.in_room(self.map_x, self.map_y):
+							if entity.collide((a[0] - 1, a[1])):
+								collide = True
+								break
 				if not collide:
 					self.facing = "west"
 					self.x -= 32
@@ -322,6 +338,7 @@ class Player(threading.Thread):
 	def up(self):
 
 		a = self.get_position()
+		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1))
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "|"):
 			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) == "!"):
 				Player.go_through_door(self)
@@ -330,9 +347,10 @@ class Player(threading.Thread):
 				collide = False
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
-						if entity.collide((a[0], a[1] - 1)):
-							collide = True
-							break
+						if entity.in_room(self.map_x, self.map_y):
+							if entity.collide((a[0], a[1] - 1)):
+								collide = True
+								break
 
 				if not collide:
 					self.y -= 32
@@ -340,7 +358,8 @@ class Player(threading.Thread):
 	def down(self):
 
 		a = self.get_position()
-		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "|"):
+		print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1))
+		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "|") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "_"):
 			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) == "!"):
 				Player.go_through_door(self)
 
@@ -348,9 +367,10 @@ class Player(threading.Thread):
 				collide = False
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
-						if entity.collide((a[0], a[1] + 1)):
-							collide = True
-							break
+						if entity.in_room(self.map_x, self.map_y):
+							if entity.collide((a[0], a[1] + 1)):
+								collide = True
+								break
 				if not collide:
 					self.y += 32
 
@@ -359,8 +379,6 @@ class Player(threading.Thread):
 		global OBJ_bullet
 		global SPRITE_PLAYER_LASER
 
-		#x, y = self.get_packed_angle_from_target(target)
-		#angle = self.get_angle(target)
 		if (self.facing == 'east' and target[0] > (self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'])) or (self.facing == 'west' and target[0] < (self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'])):
 
 			OBJ_bullet.fire((self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'], self.y + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['y']), target)
@@ -390,7 +408,7 @@ class Minion():
 		self.map_x = int(temp[0].split('@')[0])
 		self.map_y = int(temp[0].split('@')[1])
 		self.collide_radius = 50
-		self.facing = "east"
+		self.facing = random.choice(["east", "west"])
 
 	def display(self, surface):
 
@@ -398,8 +416,8 @@ class Minion():
 
 		if self.x > 0 and self.x <= CANVAS_RATE:
 			if self.y > 0 and self.y <= CANVAS_RATE:
-				surface.blit(SPRITE_MINION['east']['frame_1'], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2))))
-				pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
+				surface.blit(SPRITE_MINION[self.facing]['frame_1'], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2))))
+				#pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
 
 	def in_room(self, map_x, map_y):
 		if map_x == self.map_x and map_y == self.map_y:
@@ -415,14 +433,22 @@ class Minion():
 		player_x = position[0] * CANVAS_RATE + 16
 		player_y = position[1] * CANVAS_RATE + 16
 
-		mob_x = self.x * CANVAS_RATE + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['x']
-		mob_y = self.y * CANVAS_RATE + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['y']
+
+		mob_x = round(self.x * CANVAS_RATE) + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['x']
+		mob_y = round(self.y * CANVAS_RATE) + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['y']
+
 
 		distance = math.sqrt((abs(mob_x - player_x))**2 + (mob_y - player_y)**2)
+
 
 		if distance > self.collide_radius:
 			return False
 		else:
+			#print("-----------------")
+			#print(player_x, player_y)
+			#print(self.x, self.y, mob_x, mob_y)
+			#print(distance)
+			#print("-----------------")
 			return True
 
 
@@ -504,6 +530,8 @@ class Terrain():
 
 		self.current_room = self.pattern_data['metadata']['spawn']
 
+		print(GAME_ENTITIES)
+
 
 	"""
 
@@ -555,10 +583,11 @@ class Terrain():
 
 		return image
 
-	def display(self, surface):
 
-		global GAME_ENTITIES
-		global IMAGE_WALL_VERTICAL
+	def display_ground(self, surface):
+
+		global SPRITES_GROUND
+		global CANVAS_RATE
 
 		map_x = int(self.current_room.split('@')[0])
 		map_y = int(self.current_room.split('@')[1])
@@ -573,44 +602,11 @@ class Terrain():
 
 				if box == "/":
 
-					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
 
 				elif box == "+":
 
-					try:
-						self.texture_map[f'{x}@{y}']
-					except:
-						LIST = [IMAGE_GROUND, self.rotate(IMAGE_GROUND),
-								IMAGE_GROUND, self.rotate(IMAGE_GROUND),
-								IMAGE_GROUND, self.rotate(IMAGE_GROUND),
-								IMAGE_GROUND_MUD, self.rotate(IMAGE_GROUND_MUD),
-								IMAGE_GROUND_MUD_PLANTS, self.rotate(IMAGE_GROUND_MUD_PLANTS)]
-						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
-
-					surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
-
-				elif box == "x":
-
-					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
-
-				elif box == "|":
-
-					surface.blit(IMAGE_GROUND, (x * CANVAS_RATE, y * CANVAS_RATE))
-					surface.blit(IMAGE_WALL_VERTICAL, (x * CANVAS_RATE, y * CANVAS_RATE))
-
-				elif box == "-":
-
-					surface.blit(IMAGE_GROUND, (x * CANVAS_RATE, y * CANVAS_RATE))
-					surface.blit(IMAGE_WALL_HORIZONTAL, (x * CANVAS_RATE, y * CANVAS_RATE))
-
-				elif box == "?":
-
-					surface.blit(IMAGE_VERTICAL_DOOR, (x * CANVAS_RATE, y * CANVAS_RATE))
-
-				elif box == "o":
-
-					surface.blit(IMAGE_VERTICAL_DOOR, (x * CANVAS_RATE, y * CANVAS_RATE))
-
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				else:
 					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE, y * CANVAS_RATE, round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2))))
@@ -618,25 +614,150 @@ class Terrain():
 					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, round(y * CANVAS_RATE + (CANVAS_RATE/2)), round(x * CANVAS_RATE + (CANVAS_RATE/2)), y * CANVAS_RATE + CANVAS_RATE))
 					pygame.draw.rect(surface, (209, 56, 179), (round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2)), x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
 
+				surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
+				x += 1
+			y += 1
+
+		y = 0
+
+		for line in self.terrain[map_x][map_y][:-1]:
+
+			x = 0
+
+			for box in list(line):
+
+
+
+				if box == "+":
+
+					try:
+						self.texture_map[f'{x}@{y}']
+					except:
+						LIST = [
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][1], (64, 64)), random.randint(0, 360)),
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][2], (64, 64)), random.randint(0, 360)),
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][3], (64, 64)), random.randint(0, 360)),
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][4], (64, 64)), random.randint(0, 360)),
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][5], (64, 64)), random.randint(0, 360)),
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['mud'][0], (64, 64)), random.randint(0, 360)),
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['moss'][0], (64, 64)), random.randint(0, 360))
+						]
+						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
+
+					surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
+				if box == "/":
+					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
 				#surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
+				x += 1
+			y += 1
+
+	def display_overwalls(self, surface):
+
+		global IMAGE_WALL_VERTICAL
+		global IMAGE_WALL_HORIZONTAL
+		global CANVAS_RATE
+
+		map_x = int(self.current_room.split('@')[0])
+		map_y = int(self.current_room.split('@')[1])
+
+		y = 0
+
+		for line in self.terrain[map_x][map_y][:-1]:
+
+			x = 0
+
+			for box in list(line):
+
+				if box == "_":
+
+					surface.blit(SPRITES_WALLS['horizontal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
+				x += 1
+			y += 1
+
+	def display_walls(self, surface):
+
+		global IMAGE_WALL_VERTICAL
+		global IMAGE_WALL_HORIZONTAL
+		global CANVAS_RATE
+
+		map_x = int(self.current_room.split('@')[0])
+		map_y = int(self.current_room.split('@')[1])
+
+		y = 0
+
+		for line in self.terrain[map_x][map_y][:-1]:
+
+			x = 0
+
+			for box in list(line):
+
+				if box == "-":
+
+					surface.blit(SPRITES_WALLS['horizontal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
+
+
+				elif box == "|":
+
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_WALLS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				x += 1
-
 			y += 1
-			count = 0
-			for m in GAME_ENTITIES['MINIONS']:
-				if m.in_room(map_x, map_y):
-					m.display(surface)
+
+
+	def display_props(self, surface):
+
+		global CANVAS_RATE
+
+		map_x = int(self.current_room.split('@')[0])
+		map_y = int(self.current_room.split('@')[1])
+
+		y = 0
+
+		for line in self.terrain[map_x][map_y][:-1]:
+
+			x = 0
+
+			for box in list(line):
+
+				if box == "?":
+
+					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box == "o":
+
+					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				x += 1
+			y += 1
+
+
+	def display_entities(self, surface):
+
+		map_x = int(self.current_room.split('@')[0])
+		map_y = int(self.current_room.split('@')[1])
+
+		count = 0
+
+		for type in GAME_ENTITIES:
+			for e in GAME_ENTITIES[type]:
+				if e.in_room(map_x, map_y):
+					e.display(surface)
 					count += 1
 
-			#print(count)
+		#print(count)
+
+
+	def change_room(self, room):
+
+		self.current_room = room
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FULLSCREEN
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
 OBJ_clock = pygame.time.Clock()
-OBJ_player = Player(f'0@0//1@1')
+OBJ_player = Player(f'0@0//15@10')
 OBJ_bullet = Bullet()
 OBJ_bullet.start()
 OBJ_player.start()
@@ -669,6 +790,9 @@ while RUN:
 				elif e.key == 115 or e.key == 274:
 					OBJ_player.down()
 
+				elif e.key == pygame.K_f:
+					OBJ_terrain.change_room('0@1')
+
 
 		if e.type == MOUSEBUTTONDOWN:
 
@@ -676,9 +800,15 @@ while RUN:
 
 	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
 
-	OBJ_terrain.display(OBJ_canvas) # Display the terrain and generates entities on the canvas
+	OBJ_terrain.display_ground(OBJ_canvas) # Display the terrain and generates entities on the canvas
+	OBJ_terrain.display_walls(OBJ_canvas)
+	OBJ_terrain.display_props(OBJ_canvas)
+	OBJ_terrain.display_entities(OBJ_canvas)
 
 	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
+
+	OBJ_terrain.display_overwalls(OBJ_canvas)
+
 	OBJ_bullet.display(OBJ_canvas)
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
@@ -686,13 +816,9 @@ while RUN:
 	pygame.display.flip() #Flip/Update the screen
 
 
-	#276 < // 275 >
-
 #TODO: debugger les 2 carrés en haut à droite
 
 #TODO TOMORROW: Changement de salle (=> portes)
-#TODO TOMORROW: .display_ground()
-#TODO TOMORROW: .display_walls()
 #TODO TOMORROW MAYBE: Système de combat
 #TODO: BARRE DE VIE
 #TODO: INVENTAIRE

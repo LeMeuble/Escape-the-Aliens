@@ -1,4 +1,40 @@
 {
 	"is_room": true,
-	"is_collidable": true
+	"is_collidable": true,
+
+	"spawns":{
+		"main": {
+			"x_case": 0,
+			"y_case": 0
+
+		},
+		"from_left": {
+			"x_case": 0,
+			"y_case": 0
+		},
+
+		"from_right": {
+			"x_case": 0,
+			"y_case": 0
+		},
+
+		"from_top": {
+			"x_case": 0,
+			"y_case": 0
+		},
+
+		"from_bottom": {
+			"x_case": 0,
+			"y_case": 0
+		}
+	},
+
+	"doors": {
+		"has_door": {
+			"left": true,
+			"right": true,
+			"top": true,
+			"bottom": true
+		}
+	}
 }
