@@ -2,7 +2,7 @@
 
 	"pattern": [
 
-		[["./resources/terrain/rooms/basic_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
+		[["./resources/terrain/rooms/L_down_room"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
 		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
 		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],
 		[["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"], ["./resources/terrain/rooms/empty_pattern"]],

@@ -51,10 +51,20 @@ RUN = True
 
 IMAGE_WALL_HORIZONTAL = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
 IMAGE_WALL_VERTICAL = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+IMAGE_VERTICAL_DOOR = pygame.image.load('./resources/sprites/walls/vertical_Door.png')
 IMAGE_GROUND = pygame.image.load('./resources/sprites/grounds/ground.png')
 IMAGE_GROUND_MUD = pygame.image.load('./resources/sprites/grounds/ground_mud.png')
 IMAGE_GROUND_MUD_PLANTS = pygame.image.load('./resources/sprites/grounds/ground_mud_plants.png')
 IMAGE_GROUND_WATER = pygame.image.load('./resources/sprites/grounds/ground_water.png')
+
+SPRITES_GROUND = {}
+SPRITES_GROUND[0] = pygame.image.load('./resources/sprites/grounds/ground_base.png')
+SPRITES_GROUND[1] = pygame.image.load('./resources/sprites/grounds/ground1.png')
+SPRITES_GROUND[2] = pygame.image.load('./resources/sprites/grounds/ground2.png')
+SPRITES_GROUND[3] = pygame.image.load('./resources/sprites/grounds/ground3.png')
+SPRITES_GROUND[4] = pygame.image.load('./resources/sprites/grounds/ground4.png')
+SPRITES_GROUND[5] = pygame.image.load('./resources/sprites/grounds/ground5.png')
+
 
 SPRITE_MINION = {}
 SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
@@ -271,16 +281,20 @@ class Player(threading.Thread):
 
 		a = self.get_position()
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) != "|"):
-			collide = False
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.collide((a[0] + 1, a[1])):
-						collide = True
-						break
+			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1]) == "!"):
+				Player.go_through_door(self)
 
-			if not collide:
-				self.facing = "east"
-				self.x += 32
+			else:
+				collide = False
+				for type in GAME_ENTITIES:
+					for entity in GAME_ENTITIES[type]:
+						if entity.collide((a[0] + 1, a[1])):
+							collide = True
+							break
+
+				if not collide:
+					self.facing = "east"
+					self.x += 32
 		else:
 			self.facing = "east"
 
@@ -288,15 +302,19 @@ class Player(threading.Thread):
 
 		a = self.get_position()
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) != "|"):
-			collide = False
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.collide((a[0] - 1, a[1])):
-						collide = True
-						break
-			if not collide:
-				self.facing = "west"
-				self.x -= 32
+			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]) == "!"):
+				Player.go_through_door(self)
+
+			else:
+				collide = False
+				for type in GAME_ENTITIES:
+					for entity in GAME_ENTITIES[type]:
+						if entity.collide((a[0] - 1, a[1])):
+							collide = True
+							break
+				if not collide:
+					self.facing = "west"
+					self.x -= 32
 
 		else:
 			self.facing = "west"
@@ -305,28 +323,36 @@ class Player(threading.Thread):
 
 		a = self.get_position()
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) != "|"):
-			collide = False
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.collide((a[0], a[1] - 1)):
-						collide = True
-						break
+			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1) == "!"):
+				Player.go_through_door(self)
 
-			if not collide:
-				self.y -= 32
+			else:
+				collide = False
+				for type in GAME_ENTITIES:
+					for entity in GAME_ENTITIES[type]:
+						if entity.collide((a[0], a[1] - 1)):
+							collide = True
+							break
+
+				if not collide:
+					self.y -= 32
 
 	def down(self):
 
 		a = self.get_position()
 		if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "-") and (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) != "|"):
-			collide = False
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.collide((a[0], a[1] + 1)):
-						collide = True
-						break
-			if not collide:
-				self.y += 32
+			if (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) == "?") or (OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1) == "!"):
+				Player.go_through_door(self)
+
+			else:
+				collide = False
+				for type in GAME_ENTITIES:
+					for entity in GAME_ENTITIES[type]:
+						if entity.collide((a[0], a[1] + 1)):
+							collide = True
+							break
+				if not collide:
+					self.y += 32
 
 	def fire(self, target):
 
@@ -344,6 +370,10 @@ class Player(threading.Thread):
 		positionY = math.floor((self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y']) / CANVAS_RATE)
 
 		return (positionX, positionY)
+
+	def go_through_door(self):
+
+		print('You are in front of a door, do you want to cross it ?')
 
 class Minion():
 
@@ -572,6 +602,15 @@ class Terrain():
 
 					surface.blit(IMAGE_GROUND, (x * CANVAS_RATE, y * CANVAS_RATE))
 					surface.blit(IMAGE_WALL_HORIZONTAL, (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box == "?":
+
+					surface.blit(IMAGE_VERTICAL_DOOR, (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box == "o":
+
+					surface.blit(IMAGE_VERTICAL_DOOR, (x * CANVAS_RATE, y * CANVAS_RATE))
+
 
 				else:
 					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE, y * CANVAS_RATE, round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2))))
