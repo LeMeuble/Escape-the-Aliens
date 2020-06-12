@@ -808,7 +808,9 @@ class Terrain():
 					count += 1
 
 	def get_spawn(self):
-		return '0@1//10@10'
+
+
+		return f"{self.pattern_data['metadata']['spawn']}//10@10"
 
 	def go_right(self):
 
