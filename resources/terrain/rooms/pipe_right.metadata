@@ -14,13 +14,13 @@
 		},
 
 		"from_right": {
-			"x_case": 0,
-			"y_case": 0
+			"x_case": 29,
+			"y_case": 25
 		},
 
 		"from_top": {
-			"x_case": 20,
-			"y_case": 3
+			"x_case": 0,
+			"y_case": 0
 		},
 
 		"from_bottom": {

@@ -946,3 +946,4 @@ while RUN:
 
 #TODO Changer la limace trisomique.
 
+#TODO Faire gaffe au fait que si le joueur tente de prendre une porte par le coté, ça le tp dans la salle en face de son regard.
