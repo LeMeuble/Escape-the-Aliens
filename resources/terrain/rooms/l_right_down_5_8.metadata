@@ -10,22 +10,22 @@
 		},
 		"from_left": {
 			"x_case": 4,
-			"y_case": 9
+			"y_case": 7
 		},
 
 		"from_right": {
-			"x_case": 29,
-			"y_case": 25
+			"x_case": 0,
+			"y_case": 0
 		},
 
 		"from_top": {
-			"x_case": 0,
-			"y_case": 0
+			"x_case": 20,
+			"y_case": 3
 		},
 
 		"from_bottom": {
-			"x_case": 0,
-			"y_case": 0
+			"x_case": 22,
+			"y_case": 27
 		}
 	}
 }
