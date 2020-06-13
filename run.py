@@ -944,3 +944,5 @@ while RUN:
 #TODO: COMPETENCES ???
 #TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
 
+#TODO Changer la limace trisomique.
+

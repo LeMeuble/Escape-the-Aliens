@@ -6,13 +6,13 @@
 		[["./resources/terrain/corridors/t_left"], ["./resources/terrain/rooms/pipe_right"], ["./resources/terrain/corridors/l_right_up"], ["./resources/terrain/rooms/large"], ["./resources/terrain/rooms/final"]],
 		[["./resources/terrain/rooms/l_up_right"], ["./resources/terrain/rooms/large"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/large"], ["./resources/terrain/rooms/pipe_down"]],
 		[["./resources/terrain/corridors/l_down_right"], ["./resources/terrain/corridors/intersection"], ["./resources/terrain/rooms/l_right_up"], ["./resources/terrain/corridors/t_down"], ["./resources/terrain/corridors/l_right_up"]],
-		[["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/pipe_up"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/empty"]]
+		[["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/pipe_up"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/small"]]
 
 	],
 
 	"metadata": {
 
-		"spawn": "1@1"
+		"spawn": "0@0"
 
 	}
 
