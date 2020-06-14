@@ -4,18 +4,18 @@
 
 	"spawns":{
 		"main": {
-			"x_case": 0,
-			"y_case": 0
+			"x_case": 16,
+			"y_case": 16
 
 		},
 		"from_left": {
-			"x_case": 4,
-			"y_case": 9
+			"x_case": 3,
+			"y_case": 23
 		},
 
 		"from_right": {
-			"x_case": 0,
-			"y_case": 0
+			"x_case": 29,
+			"y_case": 23
 		},
 
 		"from_top": {
