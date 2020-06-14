@@ -24,8 +24,8 @@
 		},
 
 		"from_bottom": {
-			"x_case": 0,
-			"y_case": 0
+			"x_case": 16,
+			"y_case": 27
 		}
 	}
 }
