@@ -10,7 +10,7 @@
 		},
 		"from_left": {
 			"x_case": 4,
-			"y_case": 9
+			"y_case": 15
 		},
 
 		"from_right": {
@@ -19,8 +19,8 @@
 		},
 
 		"from_top": {
-			"x_case": 20,
-			"y_case": 3
+			"x_case": 16,
+			"y_case": 2
 		},
 
 		"from_bottom": {
