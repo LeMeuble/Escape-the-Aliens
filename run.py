@@ -1009,6 +1009,11 @@ while RUN:
 
 			pygame.draw.rect(OBJ_canvas, (255, 255, 255), (x * 32, y * 32, 32, 32))
 
+			if e.type == MOUSEBUTTONDOWN:
+				distanceX = round(x - (OBJ_player.x / 32))
+				distanceY = round(y - (OBJ_player.y / 32))
+				print(distanceX, distanceY)
+
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
 
 	pygame.display.flip() #Flip/Update the screen
