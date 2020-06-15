@@ -485,6 +485,29 @@ class Player(threading.Thread):
 		self.x = round((int(position.split('@')[0]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 		self.y = round((int(position.split('@')[1]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 
+	def mouse_movement(self, positionX, positionY):
+
+		a = self.get_position()
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + positionX, a[1] + positionY)
+
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
+			collide = False
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.in_room(self.map_x, self.map_y):
+						if entity.collide((a[0] - 1, a[1])):
+							collide = True
+							break
+
+			if not collide:
+				if positionX >= 0:
+					self.facing = "east"
+				elif positionX < 0:
+					self.facing = "west"
+				self.x += (positionX * 32) - CANVAS_RATE
+				self.y += (positionY * 32) - CANVAS_RATE
+
+
 class Minion():
 
 	def __init__(self, coordinates):
@@ -542,6 +565,9 @@ class Minion():
 			#print(distance)
 			#print("-----------------")
 			return True
+
+	def IA(self):
+		print('a')
 
 
 """
@@ -942,8 +968,6 @@ while RUN:
 				has_mob = True
 				break
 
-	#print(has_mob)
-
 	witness = datetime.datetime.now()
 
 	if (datetime.datetime.now() - fps_timer).seconds >= 1:
@@ -1012,7 +1036,7 @@ while RUN:
 			if e.type == MOUSEBUTTONDOWN:
 				distanceX = round(x - (OBJ_player.x / 32))
 				distanceY = round(y - (OBJ_player.y / 32))
-				print(distanceX, distanceY)
+				OBJ_player.mouse_movement(distanceX, distanceY)
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
 
