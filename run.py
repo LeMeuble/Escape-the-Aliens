@@ -15,6 +15,7 @@ import math
 import string
 import pygame
 import random
+import datetime
 import threading
 
 from pygame.locals import *
@@ -24,134 +25,133 @@ from win32api import GetSystemMetrics
 pygame.init()
 pygame.font.init()
 
+if True:
 
-FONT = pygame.font.SysFont('Helvetica', 20, True)
+	FONT = pygame.font.SysFont('Helvetica', 20, True)
 
-"""@@@@@ INIT BASES VARIABLES @@@@@"""
+	"""@@@@@ INIT BASES VARIABLES @@@@@"""
 
-WINDOW_WIDTH = 1024 #GetSystemMetrics(0)
-WINDOW_HEIGHT = 1024 #GetSystemMetrics(1)
-WINDOW_FRAMERATE = 60
-WINDOW_FLAGS = None
+	WINDOW_WIDTH = 1024 #GetSystemMetrics(0)
+	WINDOW_HEIGHT = 1024 #GetSystemMetrics(1)
+	WINDOW_FRAMERATE = 30
+	WINDOW_FLAGS = None
 
-CANVAS_WIDTH = CANVAS_HEIGHT = WINDOW_HEIGHT
-CANVAS_POSITION = (round((WINDOW_WIDTH - CANVAS_WIDTH) / 2), round((WINDOW_HEIGHT - CANVAS_HEIGHT) / 2))
-CANVAS_RATE = round(CANVAS_WIDTH / 32)
+	CANVAS_WIDTH = CANVAS_HEIGHT = WINDOW_HEIGHT
+	CANVAS_POSITION = (round((WINDOW_WIDTH - CANVAS_WIDTH) / 2), round((WINDOW_HEIGHT - CANVAS_HEIGHT) / 2))
+	CANVAS_RATE = round(CANVAS_WIDTH / 32)
 
-DEFAULT_DIFFICULTY = 2
+	DEFAULT_DIFFICULTY = 2
 
-VECTOR_INCREMENT = 0.2
-VECTOR_FALLTHFULLING = 0.025
-VECTOR_MAX = 3
-
-RUN = True
+	RUN = True
 
 
-"""@@@@@ INIT SPRITES/IMAGES/WALL/GROUNDS IMAGES VARIABLES @@@@@"""
+	"""@@@@@ INIT SPRITES/IMAGES/WALL/GROUNDS IMAGES VARIABLES @@@@@"""
 
-SPRITES_GROUND = {}
-SPRITES_GROUND['base'] = {}
-SPRITES_GROUND['base'][0] = pygame.image.load('./resources/sprites/grounds/ground_base.png')
-SPRITES_GROUND['base'][1] = pygame.image.load('./resources/sprites/grounds/ground1.png')
-SPRITES_GROUND['base'][2] = pygame.image.load('./resources/sprites/grounds/ground2.png')
-SPRITES_GROUND['base'][3] = pygame.image.load('./resources/sprites/grounds/ground3.png')
-SPRITES_GROUND['base'][4] = pygame.image.load('./resources/sprites/grounds/ground4.png')
-SPRITES_GROUND['base'][5] = pygame.image.load('./resources/sprites/grounds/ground5.png')
-SPRITES_GROUND['mud'] = {}
-SPRITES_GROUND['mud'][0] = pygame.image.load('./resources/sprites/grounds/mud1.png')
-SPRITES_GROUND['mud'][1] = pygame.image.load('./resources/sprites/grounds/mud2.png')
-SPRITES_GROUND['mud'][2] = pygame.image.load('./resources/sprites/grounds/mud3.png')
-SPRITES_GROUND['moss'] = {}
-SPRITES_GROUND['moss'][0] = pygame.image.load('./resources/sprites/grounds/moss1.png')
-SPRITES_GROUND['moss'][1] = pygame.image.load('./resources/sprites/grounds/moss2.png')
-SPRITES_GROUND['moss'][2] = pygame.image.load('./resources/sprites/grounds/moss3.png')
+	SPRITES_GROUND = {}
+	SPRITES_GROUND['base'] = {}
+	SPRITES_GROUND['base'][0] = pygame.image.load('./resources/sprites/grounds/ground_base.png')
+	SPRITES_GROUND['base'][1] = pygame.image.load('./resources/sprites/grounds/ground1.png')
+	SPRITES_GROUND['base'][2] = pygame.image.load('./resources/sprites/grounds/ground2.png')
+	SPRITES_GROUND['base'][3] = pygame.image.load('./resources/sprites/grounds/ground3.png')
+	SPRITES_GROUND['base'][4] = pygame.image.load('./resources/sprites/grounds/ground4.png')
+	SPRITES_GROUND['base'][5] = pygame.image.load('./resources/sprites/grounds/ground5.png')
+	SPRITES_GROUND['mud'] = {}
+	SPRITES_GROUND['mud'][0] = pygame.image.load('./resources/sprites/grounds/mud1.png')
+	SPRITES_GROUND['mud'][1] = pygame.image.load('./resources/sprites/grounds/mud2.png')
+	SPRITES_GROUND['mud'][2] = pygame.image.load('./resources/sprites/grounds/mud3.png')
+	SPRITES_GROUND['moss'] = {}
+	SPRITES_GROUND['moss'][0] = pygame.image.load('./resources/sprites/grounds/moss1.png')
+	SPRITES_GROUND['moss'][1] = pygame.image.load('./resources/sprites/grounds/moss2.png')
+	SPRITES_GROUND['moss'][2] = pygame.image.load('./resources/sprites/grounds/moss3.png')
 
-SPRITES_WALLS = {}
-SPRITES_WALLS['vertical'] = {}
-SPRITES_WALLS['vertical']['normal'] = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
-SPRITES_WALLS['vertical']['highter'] = pygame.image.load('./resources/sprites/walls/wall_vertical_highter.png')
-SPRITES_WALLS['horizontal'] = {}
-SPRITES_WALLS['horizontal']['normal'] = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
-SPRITES_WALLS['horizontal']['smaller'] = pygame.image.load('./resources/sprites/walls/wall_horizontal_smaller.png')
+	SPRITES_WALLS = {}
+	SPRITES_WALLS['vertical'] = {}
+	SPRITES_WALLS['vertical']['normal'] = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
+	SPRITES_WALLS['vertical']['highter'] = pygame.image.load('./resources/sprites/walls/wall_vertical_highter.png')
+	SPRITES_WALLS['horizontal'] = {}
+	SPRITES_WALLS['horizontal']['normal'] = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
+	SPRITES_WALLS['horizontal']['smaller'] = pygame.image.load('./resources/sprites/walls/wall_horizontal_smaller.png')
 
-SPRITES_DOORS = {}
-SPRITES_DOORS['vertical'] = {}
-SPRITES_DOORS['vertical'] = pygame.image.load('./resources/sprites/doors/door_vertical.png')
-SPRITES_DOORS['horizontal'] = {}
-SPRITES_DOORS['horizontal'] = pygame.image.load('./resources/sprites/doors/door_horizontal.png')
+	SPRITES_DOORS = {}
+	SPRITES_DOORS['vertical'] = {}
+	SPRITES_DOORS['vertical'] = pygame.image.load('./resources/sprites/doors/door_vertical.png')
+	SPRITES_DOORS['horizontal'] = {}
+	SPRITES_DOORS['horizontal'] = pygame.image.load('./resources/sprites/doors/door_horizontal.png')
 
-SPRITE_MINION = {}
-SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
-SPRITE_MINION['east'] = {}
-SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
-SPRITE_MINION['west'] = {}
-SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5))), True, False)
+	SPRITE_MINION = {}
+	SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
+	SPRITE_MINION['east'] = {}
+	SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
+	SPRITE_MINION['west'] = {}
+	SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5))), True, False)
 
-SPRITE_PLAYER_LASER = {}
-SPRITE_PLAYER_LASER['metadata'] = json.load(open('./resources/sprites/characters/persoLaser.metadata', 'r'))
-SPRITE_PLAYER_LASER['east'] = {}
-SPRITE_PLAYER_LASER['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
-SPRITE_PLAYER_LASER['east']['frame_2'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
-SPRITE_PLAYER_LASER['east']['frame_3'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/2.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
-SPRITE_PLAYER_LASER['east']['frame_4'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/3.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
-SPRITE_PLAYER_LASER['east']['frame_5'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/4.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
-SPRITE_PLAYER_LASER['west'] = {}
-SPRITE_PLAYER_LASER['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
-SPRITE_PLAYER_LASER['west']['frame_2'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
-SPRITE_PLAYER_LASER['west']['frame_3'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/2.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
-SPRITE_PLAYER_LASER['west']['frame_4'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/3.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
-SPRITE_PLAYER_LASER['west']['frame_5'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/4.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+	SPRITE_PLAYER_LASER = {}
+	SPRITE_PLAYER_LASER['metadata'] = json.load(open('./resources/sprites/characters/persoLaser.metadata', 'r'))
+	SPRITE_PLAYER_LASER['east'] = {}
+	SPRITE_PLAYER_LASER['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+	SPRITE_PLAYER_LASER['east']['frame_2'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+	SPRITE_PLAYER_LASER['east']['frame_3'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/2.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+	SPRITE_PLAYER_LASER['east']['frame_4'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/3.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+	SPRITE_PLAYER_LASER['east']['frame_5'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/4.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+	SPRITE_PLAYER_LASER['west'] = {}
+	SPRITE_PLAYER_LASER['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoLaser.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+	SPRITE_PLAYER_LASER['west']['frame_2'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/1.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+	SPRITE_PLAYER_LASER['west']['frame_3'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/2.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+	SPRITE_PLAYER_LASER['west']['frame_4'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/3.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+	SPRITE_PLAYER_LASER['west']['frame_5'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/4.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
-SPRITE_PLAYER_RIFLE = {}
-SPRITE_PLAYER_RIFLE['east'] = {}
-SPRITE_PLAYER_RIFLE['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
-SPRITE_PLAYER_RIFLE['west'] = {}
-SPRITE_PLAYER_RIFLE['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
+	SPRITE_PLAYER_RIFLE = {}
+	SPRITE_PLAYER_RIFLE['east'] = {}
+	SPRITE_PLAYER_RIFLE['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4))
+	SPRITE_PLAYER_RIFLE['west'] = {}
+	SPRITE_PLAYER_RIFLE['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
-"""@@@@@ INIT GAMES VARIABLES @@@@@"""
+	"""@@@@@ INIT GAMES VARIABLES @@@@@"""
 
-GAMEVAR_DIFFICULTY = DEFAULT_DIFFICULTY
-GAMEVAR_FLOOR = 0
-GAMEVAR_INFIGHT = False
-GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor/3) + 1
-
-GAMEVAR_SCORE = 0
-GAMEVAR_KEYBOARD = []
+	GAMEVAR_DIFFICULTY = DEFAULT_DIFFICULTY
+	GAMEVAR_FLOOR = 0
+	GAMEVAR_INFIGHT = False
+	GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor/3) + 1
 
 
-"""@@@@@ INIT ENTITIES VARIABLES @@@@@"""
-
-GAME_ENTITIES = {}
-GAME_ENTITIES['MINIONS'] = []
-GAME_ENTITIES['ARCHEROS'] = []
-GAME_ENTITIES['RUSHERS'] = []
-GAME_ENTITIES['HEALERS'] = []
-GAME_ENTITIES['TORNADOS'] = []
-GAME_ENTITIES['ALLIES'] = [] #To brainstorm
-GAME_ENTITIES['BOSS_1'] = []
-GAME_ENTITIES['BOSS_2'] = []
-GAME_ENTITIES['BOSS_3'] = []
-GAME_ENTITIES['BOSS_4'] = []
-GAME_ENTITIES['BOSS_5'] = []
+	GAMEVAR_SCORE = 0
+	GAMEVAR_KEYBOARD = []
 
 
-WEAPONS = {
-	"AR": {
-		"damages": 3,
-		"munitions": 30
-	},
-	"LASER_RIFLE": {
-		"damages": 8,
-		"munitions": 4
+	"""@@@@@ INIT ENTITIES VARIABLES @@@@@"""
+
+	GAME_ENTITIES = {}
+	GAME_ENTITIES['MINIONS'] = []
+	GAME_ENTITIES['ARCHEROS'] = []
+	GAME_ENTITIES['RUSHERS'] = []
+	GAME_ENTITIES['HEALERS'] = []
+	GAME_ENTITIES['TORNADOS'] = []
+	GAME_ENTITIES['ALLIES'] = [] #To brainstorm
+	GAME_ENTITIES['BOSS_1'] = []
+	GAME_ENTITIES['BOSS_2'] = []
+	GAME_ENTITIES['BOSS_3'] = []
+	GAME_ENTITIES['BOSS_4'] = []
+	GAME_ENTITIES['BOSS_5'] = []
+
+
+	WEAPONS = {
+		"AR": {
+			"damages": 3,
+			"munitions": 30
+		},
+		"LASER_RIFLE": {
+			"damages": 8,
+			"munitions": 4
+		}
 	}
-}
 
-OBJ_terrain = None
-OBJ_window = None
-OBJ_canvas = None
-OBJ_clock = None
-OBJ_player = None
-OBJ_bullet = None
+	OBJ_terrain = None
+	OBJ_window = None
+	OBJ_canvas = None
+	OBJ_clock = None
+	OBJ_player = None
+	OBJ_bullet = None
+
 
 """@@@@@ INIT ENTITIES VARIABLES @@@@@"""
 
@@ -180,6 +180,48 @@ def get_uid(size):
 
 	return uuid
 
+def parse_location(point):
+
+	return math.floor(point / CANVAS_RATE)
+
+def mouse_global_case():
+
+	x, y = pygame.mouse.get_pos()
+	x = parse_location(x)
+	y = parse_location(y)
+
+	return (x, y)
+
+
+class ThreadedCalculator(threading.Thread):
+
+	def __init__(self):
+
+		self.x_case = None
+		self.y_case = None
+
+		threading.Thread.__init__(self)
+
+
+	def run(self):
+
+		global RUN
+
+		while True:
+
+			if not RUN:
+				sys.exit(0)
+
+			time.sleep(0.001)
+
+			self.x_case, self.y_case = mouse_global_case()
+
+
+	def get_mouse_case(self):
+
+		return (self.x_case, self.y_case)
+
+
 
 class Bullet(threading.Thread):
 
@@ -187,12 +229,6 @@ class Bullet(threading.Thread):
 		#, coordinates, damages, facing, weapon, ammos
 
 		self.bullets = []
-
-		'''self.coordinates = coordinates
-		self.damages = damages
-		self.facing = facing
-		self.weapon = weapon
-		self.ammos = ammos'''
 
 		threading.Thread.__init__(self)
 
@@ -210,11 +246,14 @@ class Bullet(threading.Thread):
 	def run(self):
 
 		global RUN
+
 		while True:
-			time.sleep(0.05)
 
 			if not RUN:
 				sys.exit(0)
+
+			time.sleep(0.05)
+
 
 	def display(self, surface):
 
@@ -315,6 +354,12 @@ class Player(threading.Thread):
 		self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'], 10, 10))
 		pygame.draw.rect(surface, (255, 0, 0), (round(self.x), round(self.y), 10, 10))
 
+	def distance(self, target):
+
+		global SPRITE_PLAYER_LASER
+
+		return math.sqrt(abs(target[0] - (self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x']))**2 + abs(target[1] - (self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y']))**2)
+
 	def right(self):
 
 		global GAME_ENTITIES
@@ -322,7 +367,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1])
 
-		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -343,7 +388,8 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1])
-		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
+
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -364,7 +410,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1)
-		if (char != "-") and (char != "|") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -382,7 +428,8 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1)
-		if (char != "-") and (char != "|") and (char != "_") and (char != ">") and (char != "<") and (char != "v") and (char != "^") and (char != "/"):
+
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -404,10 +451,13 @@ class Player(threading.Thread):
 			OBJ_bullet.fire((self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'], self.y + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['y']), target)
 
 	def get_position(self):
-		positionX = math.floor((self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x']) / CANVAS_RATE)
-		positionY = math.floor((self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y']) / CANVAS_RATE)
 
-		return (positionX, positionY)
+		return (
+			math.floor(
+				(self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x']) / CANVAS_RATE),
+			math.floor(
+				(self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y']) / CANVAS_RATE)
+		)
 
 	def go_through_door(self):
 
@@ -432,10 +482,8 @@ class Player(threading.Thread):
 
 	def set_position(self, position):
 
-
 		self.x = round((int(position.split('@')[0]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 		self.y = round((int(position.split('@')[1]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
-
 
 class Minion():
 
@@ -606,8 +654,12 @@ class Terrain():
 				f.write('\n')
 
 	def get_char(self, row, room, x, y):
-		#print(row, room, x, y)
+
 		return self.terrain[row][room][y][x]
+
+	def get_char_in_current_room_at(self, x, y):
+
+		return self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][y][x]
 
 	def get_pattern(self, path):
 
@@ -623,13 +675,6 @@ class Terrain():
 
 			pattern.append(json.load(f))
 		return pattern
-
-	def rotate(self, image):
-
-		deg = random.randint(1, 4)
-		image = pygame.transform.rotate(image, 90 * deg)
-
-		return image
 
 	def display_ground(self, surface):
 
@@ -653,7 +698,7 @@ class Terrain():
 
 					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
 
-				elif box == "+" or box == "x":
+				elif box in ['+', 'x']:
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 
@@ -675,9 +720,7 @@ class Terrain():
 
 			for box in list(line):
 
-
-
-				if box == "+" or box == "x":
+				if box in ['+', 'x']:
 
 					try:
 						self.texture_map[f'{x}@{y}']
@@ -691,6 +734,7 @@ class Terrain():
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['mud'][0], (64, 64)), random.randint(0, 360)),
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['moss'][0], (64, 64)), random.randint(0, 360))
 						]
+
 						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
 
 					surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
@@ -809,8 +853,10 @@ class Terrain():
 
 	def get_spawn(self):
 
+		x = int(self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][32]['spawns']['main']['x_case'])
+		y = int(self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][32]['spawns']['main']['y_case'])
 
-		return f"{self.pattern_data['metadata']['spawn']}//10@10"
+		return f"{self.pattern_data['metadata']['spawn']}//{x}@{y}"
 
 	def go_right(self):
 
@@ -878,9 +924,35 @@ OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
 OBJ_bullet = Bullet()
 OBJ_bullet.start()
 OBJ_player.start()
+OBJ_calculator = ThreadedCalculator()
+OBJ_calculator.start()
 
+import atexit
+atexit.register(OBJ_terrain.save_to_file, path='backup.terrain')
+
+fps_timer = datetime.datetime.now()
+fps_counter = 0
 
 while RUN:
+
+	has_mob = False
+	for type in GAME_ENTITIES:
+		for entity in GAME_ENTITIES[type]:
+			if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+				has_mob = True
+				break
+
+	#print(has_mob)
+
+	witness = datetime.datetime.now()
+
+	if (datetime.datetime.now() - fps_timer).seconds >= 1:
+		fps_timer = datetime.datetime.now()
+		print('FPS: ' + str(fps_counter))
+		fps_counter = 0
+
+
+	fps_counter += 1
 
 	OBJ_clock.tick(WINDOW_FRAMERATE) #Ticks per seconds ~= FPS
 
@@ -911,6 +983,7 @@ while RUN:
 					OBJ_player.go_through_door()
 
 
+
 		if e.type == MOUSEBUTTONDOWN:
 
 			OBJ_player.fire(pygame.mouse.get_pos())
@@ -928,13 +1001,22 @@ while RUN:
 
 	OBJ_bullet.display(OBJ_canvas)
 
+	x, y = OBJ_calculator.get_mouse_case()
+
+	if not OBJ_terrain.get_char_in_current_room_at(x, y) in ['/', '^', '<', 'v', 'V', '>', '*', '|', '-', '_']:
+
+		if OBJ_player.distance((x * 32, y * 32)) < 200:
+
+			pygame.draw.rect(OBJ_canvas, (255, 255, 255), (x * 32, y * 32, 32, 32))
+
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
 
 	pygame.display.flip() #Flip/Update the screen
 
+	#print('FRAME DURATION:' + str(datetime.datetime.now() - witness))
+
 
 #TODO: El famoso patern de dev
-#TODO TOMORROW: Changement de salle (=> portes)
 #TODO: ARMES, MOBS, SPRITES OBJETS
 #TODO TOMORROW MAYBE: Système de combat
 #TODO: BARRE DE VIE
