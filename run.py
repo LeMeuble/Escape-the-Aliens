@@ -273,7 +273,7 @@ class Player(threading.Thread):
 		self.coordinates = coordinates
 		self.facing = "east"
 		self.is_running = False
-		self.inCombat = False
+		self.in_combat = False
 
 		self.walking = 1
 		self.running = 1
@@ -316,27 +316,26 @@ class Player(threading.Thread):
 
 		global RUN
 
-		if not self.inCombat:
-			while True:
+		while True:
 
-				if not RUN:
-					sys.exit(0)
+			if not RUN:
+				sys.exit(0)
 
-				time.sleep(0.01)
+			time.sleep(0.01)
 
-				pos = self.get_position()
-				self.side_chars['up'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] - 1)
-				self.side_chars['down'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] + 1)
-				self.side_chars['right'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] + 1, pos[1])
-				self.side_chars['left'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] - 1, pos[1])
+			pos = self.get_position()
+			self.side_chars['up'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] - 1)
+			self.side_chars['down'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] + 1)
+			self.side_chars['right'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] + 1, pos[1])
+			self.side_chars['left'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] - 1, pos[1])
 
-				for char in self.side_chars:
+			for char in self.side_chars:
 
-					if (self.side_chars[char] == "<") or (self.side_chars[char] == ">") or (self.side_chars[char] == "v") or (self.side_chars[char] == "^"):
-						self.side_doors[char] = True
-						# print('You are in front of a door, do you want to cross it ?')
-					else:
-						self.side_doors[char] = False
+				if (self.side_chars[char] == "<") or (self.side_chars[char] == ">") or (self.side_chars[char] == "v") or (self.side_chars[char] == "^"):
+					self.side_doors[char] = True
+					# print('You are in front of a door, do you want to cross it ?')
+				else:
+					self.side_doors[char] = False
 
 	def display(self, surface):
 
@@ -376,7 +375,7 @@ class Player(threading.Thread):
 						if entity.collide((a[0] + 1, a[1])):
 							collide = True
 							break
-
+			print('indeed')
 			if not collide:
 				self.facing = "east"
 				self.x += 32
@@ -484,27 +483,27 @@ class Player(threading.Thread):
 		self.x = round((int(position.split('@')[0]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 		self.y = round((int(position.split('@')[1]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 
-	def mouse_movement(self, positionX, positionY):
+	def mouse_movement(self, cx, cy):
 
-		a = self.get_position()
-		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + positionX, a[1] + positionY)
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, cx, cy)
 
 		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
 			collide = False
 			for type in GAME_ENTITIES:
 				for entity in GAME_ENTITIES[type]:
 					if entity.in_room(self.map_x, self.map_y):
-						if entity.collide((a[0] - 1, a[1])):
+						if entity.collide((cx, cy)):
 							collide = True
 							break
 
 			if not collide:
-				if positionX >= 0:
+				if round(cx * 32, self.x) >= 0:
 					self.facing = "east"
-				elif positionX < 0:
+				else:
 					self.facing = "west"
-				self.x += (positionX * 32) - CANVAS_RATE
-				self.y += (positionY * 32) - CANVAS_RATE
+
+				self.x = cx * 32
+				self.y = cy * 32
 
 
 class Minion():
@@ -616,7 +615,9 @@ class Terrain():
 
 	"""
 	def generate(self):
+
 		global GAME_ENTITIES
+
 		self.pattern = random.choice(os.listdir('./resources/terrain/paths'))
 
 		with open(f'./resources/terrain/paths/{self.pattern}', 'r') as f:
@@ -644,9 +645,11 @@ class Terrain():
 
 				if ground != []:
 
-					for i in range(random.randint(0, 4)):
+					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
 
-						GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
+						for i in range(random.randint(0, 4)):
+
+							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
 		self.current_room = self.pattern_data['metadata']['spawn']
 
@@ -885,7 +888,6 @@ class Terrain():
 
 	def go_right(self):
 
-		global has_mob
 		global OBJ_player
 
 		row = int(self.current_room.split('@')[0])
@@ -901,21 +903,9 @@ class Terrain():
 
 		collide = False
 
-		has_mob = False
-		for type in GAME_ENTITIES:
-			for entity in GAME_ENTITIES[type]:
-				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
-					has_mob = True
-					break
-		if has_mob:
-			Player.inCombat = True
-			print('Combat')
-		else:
-			print('Pas combat')
-
 
 	def go_left(self):
-		global has_mob
+
 		row = int(self.current_room.split('@')[0])
 		room = int(self.current_room.split('@')[1]) - 1
 
@@ -926,21 +916,9 @@ class Terrain():
 		spawn_y = self.terrain[row][room][32]['spawns']['from_right']['y_case']
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
-		has_mob = False
-		for type in GAME_ENTITIES:
-			for entity in GAME_ENTITIES[type]:
-				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
-					has_mob = True
-					break
-		if has_mob:
-			Player.inCombat = True
-			print('Combat')
-		else:
-			print('Pas combat')
 
 
 	def go_up(self):
-		global has_mob
 		row = int(self.current_room.split('@')[0]) - 1
 		room = int(self.current_room.split('@')[1])
 
@@ -951,21 +929,10 @@ class Terrain():
 		spawn_y = self.terrain[row][room][32]['spawns']['from_bottom']['y_case']
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
-		has_mob = False
-		for type in GAME_ENTITIES:
-			for entity in GAME_ENTITIES[type]:
-				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
-					has_mob = True
-					break
-		if has_mob:
-			Player.inCombat = True
-			print('Combat')
-		else:
-			print('Pas combat')
+
 
 
 	def go_down(self):
-		global has_mob
 		row = int(self.current_room.split('@')[0]) + 1
 		room = int(self.current_room.split('@')[1])
 
@@ -976,17 +943,8 @@ class Terrain():
 		spawn_y = self.terrain[row][room][32]['spawns']['from_top']['y_case']
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
-		has_mob = False
-		for type in GAME_ENTITIES:
-			for entity in GAME_ENTITIES[type]:
-				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
-					has_mob = True
-					break
-		if has_mob:
-			Player.inCombat = True
-			print('Combat')
-		else:
-			print('Pas combat')
+
+
 
 
 OBJ_terrain = Terrain()
@@ -1016,6 +974,14 @@ while RUN:
 				has_mob = True
 				break
 
+	if has_mob:
+		GAMEVAR_INFIGHT = True
+		print('Combat')
+
+	else:
+		print('Pas combat')
+		GAMEVAR_INFIGHT = False
+
 	witness = datetime.datetime.now()
 
 	if (datetime.datetime.now() - fps_timer).seconds >= 1:
@@ -1028,6 +994,20 @@ while RUN:
 
 	OBJ_clock.tick(WINDOW_FRAMERATE) #Ticks per seconds ~= FPS
 
+	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
+
+	OBJ_terrain.display_ground(OBJ_canvas) # Display the terrain and generates entities on the canvas
+	OBJ_terrain.display_walls(OBJ_canvas)
+	OBJ_terrain.display_props(OBJ_canvas)
+	OBJ_terrain.display_entities(OBJ_canvas)
+
+	x, y = OBJ_calculator.get_mouse_case()
+
+	if not OBJ_terrain.get_char_in_current_room_at(x, y) in ['/', '^', '<', 'v', 'V', '>', '*', '|', '-', '_']:
+		if OBJ_player.distance((x * 32, y * 32)) < 200:
+			pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, (
+			(x * 32, y * 32), (x * 32 + 32, y * 32), (x * 32 + 32, y * 32 + 32), (x * 32, y * 32 + 32)), 2)
+
 	for e in pygame.event.get():
 
 		if e.type == pygame.QUIT:
@@ -1035,7 +1015,7 @@ while RUN:
 			RUN = False
 			sys.exit(0)
 
-		if not GAMEVAR_INFIGHT:
+		if GAMEVAR_INFIGHT:
 
 			if e.type == pygame.KEYDOWN:
 
@@ -1054,37 +1034,23 @@ while RUN:
 				elif e.key == pygame.K_f:
 					OBJ_player.go_through_door()
 
+		else:
 
+			if e.type == MOUSEBUTTONDOWN:
+
+				cx = math.ceil(x - (SPRITE_PLAYER_LASER['metadata']['foot']['offset']['east']['x'] / 32))
+				cy = math.ceil(y - (SPRITE_PLAYER_LASER['metadata']['foot']['offset']['east']['y'] / 32))
+				OBJ_player.mouse_movement(cx, cy)
 
 		if e.type == MOUSEBUTTONDOWN:
 
 			OBJ_player.fire(pygame.mouse.get_pos())
-
-	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
-
-	OBJ_terrain.display_ground(OBJ_canvas) # Display the terrain and generates entities on the canvas
-	OBJ_terrain.display_walls(OBJ_canvas)
-	OBJ_terrain.display_props(OBJ_canvas)
-	OBJ_terrain.display_entities(OBJ_canvas)
 
 	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
 
 	OBJ_terrain.display_overwalls(OBJ_canvas)
 
 	OBJ_bullet.display(OBJ_canvas)
-
-	x, y = OBJ_calculator.get_mouse_case()
-
-	if not OBJ_terrain.get_char_in_current_room_at(x, y) in ['/', '^', '<', 'v', 'V', '>', '*', '|', '-', '_']:
-
-		if OBJ_player.distance((x * 32, y * 32)) < 200:
-
-			pygame.draw.rect(OBJ_canvas, (255, 255, 255), (x * 32, y * 32, 32, 32))
-
-			if e.type == MOUSEBUTTONDOWN:
-				distanceX = round(x - (OBJ_player.x / 32))
-				distanceY = round(y - (OBJ_player.y / 32))
-				OBJ_player.mouse_movement(distanceX, distanceY)
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
 
