@@ -386,7 +386,6 @@ class Player(threading.Thread):
 	def left(self):
 
 		a = self.get_position()
-		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1]))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1])
 
 		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
@@ -886,6 +885,7 @@ class Terrain():
 
 	def go_right(self):
 
+		global has_mob
 		global OBJ_player
 
 		row = int(self.current_room.split('@')[0])
@@ -899,8 +899,23 @@ class Terrain():
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
 
-	def go_left(self):
+		collide = False
 
+		has_mob = False
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+					has_mob = True
+					break
+		if has_mob:
+			Player.inCombat = True
+			print('Combat')
+		else:
+			print('Pas combat')
+
+
+	def go_left(self):
+		global has_mob
 		row = int(self.current_room.split('@')[0])
 		room = int(self.current_room.split('@')[1]) - 1
 
@@ -911,9 +926,21 @@ class Terrain():
 		spawn_y = self.terrain[row][room][32]['spawns']['from_right']['y_case']
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
+		has_mob = False
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+					has_mob = True
+					break
+		if has_mob:
+			Player.inCombat = True
+			print('Combat')
+		else:
+			print('Pas combat')
+
 
 	def go_up(self):
-
+		global has_mob
 		row = int(self.current_room.split('@')[0]) - 1
 		room = int(self.current_room.split('@')[1])
 
@@ -924,9 +951,21 @@ class Terrain():
 		spawn_y = self.terrain[row][room][32]['spawns']['from_bottom']['y_case']
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
+		has_mob = False
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+					has_mob = True
+					break
+		if has_mob:
+			Player.inCombat = True
+			print('Combat')
+		else:
+			print('Pas combat')
+
 
 	def go_down(self):
-
+		global has_mob
 		row = int(self.current_room.split('@')[0]) + 1
 		room = int(self.current_room.split('@')[1])
 
@@ -937,8 +976,17 @@ class Terrain():
 		spawn_y = self.terrain[row][room][32]['spawns']['from_top']['y_case']
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
-
-
+		has_mob = False
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+					has_mob = True
+					break
+		if has_mob:
+			Player.inCombat = True
+			print('Combat')
+		else:
+			print('Pas combat')
 
 
 OBJ_terrain = Terrain()
