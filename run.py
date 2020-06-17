@@ -33,12 +33,13 @@ if True:
 
 	WINDOW_WIDTH = 1024 #GetSystemMetrics(0)
 	WINDOW_HEIGHT = 1024 #GetSystemMetrics(1)
-	WINDOW_FRAMERATE = 30
+	WINDOW_FRAMERATE = 45
 	WINDOW_FLAGS = None
 
 	CANVAS_WIDTH = CANVAS_HEIGHT = WINDOW_HEIGHT
 	CANVAS_POSITION = (round((WINDOW_WIDTH - CANVAS_WIDTH) / 2), round((WINDOW_HEIGHT - CANVAS_HEIGHT) / 2))
 	CANVAS_RATE = round(CANVAS_WIDTH / 32)
+	CANVAS_RATE_HALF = CANVAS_RATE / 2
 
 	DEFAULT_DIFFICULTY = 2
 
@@ -49,34 +50,34 @@ if True:
 
 	SPRITES_GROUND = {}
 	SPRITES_GROUND['base'] = {}
-	SPRITES_GROUND['base'][0] = pygame.image.load('./resources/sprites/grounds/ground_base.png')
-	SPRITES_GROUND['base'][1] = pygame.image.load('./resources/sprites/grounds/ground1.png')
-	SPRITES_GROUND['base'][2] = pygame.image.load('./resources/sprites/grounds/ground2.png')
-	SPRITES_GROUND['base'][3] = pygame.image.load('./resources/sprites/grounds/ground3.png')
-	SPRITES_GROUND['base'][4] = pygame.image.load('./resources/sprites/grounds/ground4.png')
-	SPRITES_GROUND['base'][5] = pygame.image.load('./resources/sprites/grounds/ground5.png')
+	SPRITES_GROUND['base'][0] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/ground_base.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['base'][1] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/ground1.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['base'][2] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/ground2.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['base'][3] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/ground3.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['base'][4] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/ground4.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['base'][5] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/ground5.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
 	SPRITES_GROUND['mud'] = {}
-	SPRITES_GROUND['mud'][0] = pygame.image.load('./resources/sprites/grounds/mud1.png')
-	SPRITES_GROUND['mud'][1] = pygame.image.load('./resources/sprites/grounds/mud2.png')
-	SPRITES_GROUND['mud'][2] = pygame.image.load('./resources/sprites/grounds/mud3.png')
+	SPRITES_GROUND['mud'][0] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/mud1.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['mud'][1] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/mud2.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['mud'][2] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/mud3.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
 	SPRITES_GROUND['moss'] = {}
-	SPRITES_GROUND['moss'][0] = pygame.image.load('./resources/sprites/grounds/moss1.png')
-	SPRITES_GROUND['moss'][1] = pygame.image.load('./resources/sprites/grounds/moss2.png')
-	SPRITES_GROUND['moss'][2] = pygame.image.load('./resources/sprites/grounds/moss3.png')
+	SPRITES_GROUND['moss'][0] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/moss1.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['moss'][1] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/moss2.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_GROUND['moss'][2] = pygame.transform.scale(pygame.image.load('./resources/sprites/grounds/moss3.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
 
 	SPRITES_WALLS = {}
 	SPRITES_WALLS['vertical'] = {}
-	SPRITES_WALLS['vertical']['normal'] = pygame.image.load('./resources/sprites/walls/wall_vertical.png')
-	SPRITES_WALLS['vertical']['highter'] = pygame.image.load('./resources/sprites/walls/wall_vertical_highter.png')
+	SPRITES_WALLS['vertical']['normal'] = pygame.transform.scale(pygame.image.load('./resources/sprites/walls/wall_vertical.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_WALLS['vertical']['highter'] = pygame.transform.scale(pygame.image.load('./resources/sprites/walls/wall_vertical_highter.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
 	SPRITES_WALLS['horizontal'] = {}
-	SPRITES_WALLS['horizontal']['normal'] = pygame.image.load('./resources/sprites/walls/wall_horizontal.png')
+	SPRITES_WALLS['horizontal']['normal'] = pygame.transform.scale(pygame.image.load('./resources/sprites/walls/wall_horizontal.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
 	SPRITES_WALLS['horizontal']['smaller'] = pygame.image.load('./resources/sprites/walls/wall_horizontal_smaller.png')
 
 	SPRITES_DOORS = {}
 	SPRITES_DOORS['vertical'] = {}
-	SPRITES_DOORS['vertical'] = pygame.image.load('./resources/sprites/doors/door_vertical.png')
+	SPRITES_DOORS['vertical'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_vertical.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
 	SPRITES_DOORS['horizontal'] = {}
-	SPRITES_DOORS['horizontal'] = pygame.image.load('./resources/sprites/doors/door_horizontal.png')
+	SPRITES_DOORS['horizontal'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_horizontal.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
 
 	SPRITE_MINION = {}
 	SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
@@ -112,6 +113,9 @@ if True:
 	GAMEVAR_FLOOR = 0
 	GAMEVAR_INFIGHT = False
 	GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor/3) + 1
+	GAMEVAR_YOURTURN = True
+	GAMEVAR_MENU_SELECTED_ITEM = 0
+	GAMEVAR_MENU_SELECTING = True
 
 
 	GAMEVAR_SCORE = 0
@@ -167,8 +171,6 @@ if True:
 
 
 """
-
-
 def get_uid(size):
 
 	chars = string.ascii_lowercase + string.digits
@@ -378,7 +380,7 @@ class Player(threading.Thread):
 			print('indeed')
 			if not collide:
 				self.facing = "east"
-				self.x += 32
+				self.x += CANVAS_RATE
 		else:
 			self.facing = "east"
 
@@ -398,7 +400,7 @@ class Player(threading.Thread):
 							break
 			if not collide:
 				self.facing = "west"
-				self.x -= 32
+				self.x -= CANVAS_RATE
 
 		else:
 			self.facing = "west"
@@ -419,7 +421,7 @@ class Player(threading.Thread):
 							break
 
 			if not collide:
-				self.y -= 32
+				self.y -= CANVAS_RATE
 
 	def down(self):
 
@@ -437,7 +439,7 @@ class Player(threading.Thread):
 							collide = True
 							break
 			if not collide:
-				self.y += 32
+				self.y += CANVAS_RATE
 
 	def fire(self, target):
 
@@ -483,27 +485,35 @@ class Player(threading.Thread):
 		self.x = round((int(position.split('@')[0]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 		self.y = round((int(position.split('@')[1]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 
-	def mouse_movement(self, cx, cy):
+	def mouse_movement(self, x, y):
 
-		char = OBJ_terrain.get_char(self.map_x, self.map_y, cx, cy)
+		global SPRITE_PLAYER_LASER
+		global GAMEVAR_INFIGHT
 
-		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
-			collide = False
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.in_room(self.map_x, self.map_y):
-						if entity.collide((cx, cy)):
-							collide = True
-							break
+		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
 
-			if not collide:
-				if round(cx * 32, self.x) >= 0:
-					self.facing = "east"
-				else:
-					self.facing = "west"
+			char = OBJ_terrain.get_char_in_current_room_at(x, y)
 
-				self.x = cx * 32
-				self.y = cy * 32
+			if not char in ["-", ">", "<", "v", "^", "/", "|"]:
+
+				collide = False
+
+				for type in GAME_ENTITIES:
+					for entity in GAME_ENTITIES[type]:
+						if entity.in_room(self.map_x, self.map_y):
+							if entity.collide((x, y)):
+								collide = True
+								break
+
+				if not collide:
+
+					if x * CANVAS_RATE - self.x >= 0:
+						self.facing = "east"
+					else:
+						self.facing = "west"
+
+					self.x += round((x * CANVAS_RATE) - self.x) - (CANVAS_RATE)
+					self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 
 
 class Minion():
@@ -543,8 +553,8 @@ class Minion():
 		global SPRITE_MINION
 		global CANVAS_RATE
 
-		player_x = position[0] * CANVAS_RATE + 16
-		player_y = position[1] * CANVAS_RATE + 16
+		player_x = position[0] * CANVAS_RATE + CANVAS_RATE_HALF
+		player_y = position[1] * CANVAS_RATE + CANVAS_RATE_HALF
 
 
 		mob_x = round(self.x * CANVAS_RATE) + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['x']
@@ -601,13 +611,13 @@ class Terrain():
 
 		self.texture_map = {}
 
-		#Calculate the rooms rate per terrain row
-		self.rooms_rate = round(random.randint(6, 12) / 5)
-
 		self.pattern = None
 		self.pattern_data = None
 
 		self.current_room = None
+
+		self.map_x = None
+		self.map_y = None
 
 	"""
 
@@ -653,9 +663,8 @@ class Terrain():
 
 		self.current_room = self.pattern_data['metadata']['spawn']
 
-		#print(GAME_ENTITIES)
-
-
+		self.map_x = int(self.current_room.split('@')[0])
+		self.map_y = int(self.current_room.split('@')[1])
 	"""
 
 		Save terrain @terrain to file @path.
@@ -671,7 +680,7 @@ class Terrain():
 
 			for r in self.terrain:
 
-				for i in range(32):
+				for i in range(CANVAS_RATE):
 
 					l = [r[0][i], r[1][i], r[2][i], r[3][i], r[4][i]]
 
@@ -687,7 +696,7 @@ class Terrain():
 
 	def get_char_in_current_room_at(self, x, y):
 
-		return self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][y][x]
+		return self.terrain[self.map_x][self.map_y][y][x]
 
 	def get_pattern(self, path):
 
@@ -704,37 +713,37 @@ class Terrain():
 			pattern.append(json.load(f))
 		return pattern
 
+	def has_any_mob_at(self, x, y):
+
+		has_mob = False
+
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(self.map_x, self.map_y):
+					if entity.collide((x, y)):
+						has_mob = True
+						break
+
+		return has_mob
+
 	def display_ground(self, surface):
 
 		global SPRITES_GROUND
 		global CANVAS_RATE
 
-		map_x = int(self.current_room.split('@')[0])
-		map_y = int(self.current_room.split('@')[1])
-
 		#print(f'Room: {map_x}@{map_y}')
 
 		y = 0
 
-		for line in self.terrain[map_x][map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:
 
 			x = 0
 
 			for box in list(line):
 
-				if box == "/":
-
-					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
-
-				elif box in ['+', 'x']:
+				if box in ['+', 'x']:
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
-
-				else:
-					pygame.draw.rect(surface, (209, 56, 179), (x * CANVAS_RATE, y * CANVAS_RATE, round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2))))
-					pygame.draw.rect(surface, (0, 0, 0), (round(x * CANVAS_RATE + (CANVAS_RATE/2)), y * CANVAS_RATE, x * CANVAS_RATE + CANVAS_RATE, round(y * CANVAS_RATE + (CANVAS_RATE/2))))
-					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, round(y * CANVAS_RATE + (CANVAS_RATE/2)), round(x * CANVAS_RATE + (CANVAS_RATE/2)), y * CANVAS_RATE + CANVAS_RATE))
-					pygame.draw.rect(surface, (209, 56, 179), (round(x * CANVAS_RATE + (CANVAS_RATE/2)), round(y * CANVAS_RATE + (CANVAS_RATE/2)), x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE))
 
 				#surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
 				x += 1
@@ -742,7 +751,7 @@ class Terrain():
 
 		y = 0
 
-		for line in self.terrain[map_x][map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:
 
 			x = 0
 
@@ -760,12 +769,17 @@ class Terrain():
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][4], (64, 64)), random.randint(0, 360)),
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][5], (64, 64)), random.randint(0, 360)),
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['mud'][0], (64, 64)), random.randint(0, 360)),
-							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['moss'][0], (64, 64)), random.randint(0, 360))
+							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['moss'][0], (64, 64)), random.randint(0, 360)),
+							None,
+							None,
+							None,
+							None,
+							None
 						]
 
 						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
-
-					surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					if self.texture_map[f'{x}@{y}'] != None:
+						surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
 				if box == "/":
 					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
 				#surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
@@ -778,12 +792,9 @@ class Terrain():
 		global IMAGE_WALL_HORIZONTAL
 		global CANVAS_RATE
 
-		map_x = int(self.current_room.split('@')[0])
-		map_y = int(self.current_room.split('@')[1])
-
 		y = 0
 
-		for line in self.terrain[map_x][map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:
 
 			x = 0
 
@@ -806,12 +817,9 @@ class Terrain():
 		global IMAGE_WALL_HORIZONTAL
 		global CANVAS_RATE
 
-		map_x = int(self.current_room.split('@')[0])
-		map_y = int(self.current_room.split('@')[1])
-
 		y = 0
 
-		for line in self.terrain[map_x][map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:
 
 			x = 0
 
@@ -844,22 +852,19 @@ class Terrain():
 
 		global CANVAS_RATE
 
-		map_x = int(self.current_room.split('@')[0])
-		map_y = int(self.current_room.split('@')[1])
-
 		y = 0
 
-		for line in self.terrain[map_x][map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:
 
 			x = 0
 
 			for box in list(line):
 
-				if box == "<" or box == ">":
+				if box in ['<', '>']:
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box == "v" or box == "^":
+				elif box in ['v', '^']:
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
@@ -868,14 +873,11 @@ class Terrain():
 
 	def display_entities(self, surface):
 
-		map_x = int(self.current_room.split('@')[0])
-		map_y = int(self.current_room.split('@')[1])
-
 		count = 0
 
 		for type in GAME_ENTITIES:
 			for e in GAME_ENTITIES[type]:
-				if e.in_room(map_x, map_y):
+				if e.in_room(self.map_x, self.map_y):
 					e.display(surface)
 					count += 1
 
@@ -890,8 +892,8 @@ class Terrain():
 
 		global OBJ_player
 
-		row = int(self.current_room.split('@')[0])
-		room = int(self.current_room.split('@')[1]) + 1
+		row = self.map_x
+		room = self.map_y + 1
 
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
@@ -901,13 +903,13 @@ class Terrain():
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
 
-		collide = False
-
+		self.map_x = int(self.current_room.split('@')[0])
+		self.map_y = int(self.current_room.split('@')[1])
 
 	def go_left(self):
 
-		row = int(self.current_room.split('@')[0])
-		room = int(self.current_room.split('@')[1]) - 1
+		row = self.map_x
+		room =  self.map_y - 1
 
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
@@ -917,10 +919,13 @@ class Terrain():
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
 
+		self.map_x = int(self.current_room.split('@')[0])
+		self.map_y = int(self.current_room.split('@')[1])
 
 	def go_up(self):
-		row = int(self.current_room.split('@')[0]) - 1
-		room = int(self.current_room.split('@')[1])
+
+		row = self.map_x - 1
+		room = self.map_y
 
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
@@ -930,11 +935,14 @@ class Terrain():
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
 
+		self.map_x = int(self.current_room.split('@')[0])
+		self.map_y = int(self.current_room.split('@')[1])
 
 
 	def go_down(self):
-		row = int(self.current_room.split('@')[0]) + 1
-		room = int(self.current_room.split('@')[1])
+
+		row = self.map_x + 1
+		room = self.map_y
 
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
@@ -944,13 +952,25 @@ class Terrain():
 
 		OBJ_player.set_position(f'{spawn_x}@{spawn_y}')
 
+		self.map_x = int(self.current_room.split('@')[0])
+		self.map_y = int(self.current_room.split('@')[1])
 
+	def can_go_at(self, x, y):
+
+		global OBJ_player
+
+		if not self.get_char_in_current_room_at(x, y) in ['^', '<', 'v', 'V', '>', '*', '|', '-', '_', '/']:
+			if OBJ_player.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200:
+				if not self.has_any_mob_at(x, y):
+					return True
+
+		return False
 
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FULLSCREEN
-OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
+OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT), pygame.SRCALPHA)
 OBJ_clock = pygame.time.Clock()
 OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
 OBJ_bullet = Bullet()
@@ -976,10 +996,10 @@ while RUN:
 
 	if has_mob:
 		GAMEVAR_INFIGHT = True
-		print('Combat')
+		#print('Combat')
 
 	else:
-		print('Pas combat')
+		#print('Pas combat')
 		GAMEVAR_INFIGHT = False
 
 	witness = datetime.datetime.now()
@@ -995,6 +1015,7 @@ while RUN:
 	OBJ_clock.tick(WINDOW_FRAMERATE) #Ticks per seconds ~= FPS
 
 	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
+	OBJ_window.fill((0, 0, 0)) # Erase pixels on canvas
 
 	OBJ_terrain.display_ground(OBJ_canvas) # Display the terrain and generates entities on the canvas
 	OBJ_terrain.display_walls(OBJ_canvas)
@@ -1003,10 +1024,13 @@ while RUN:
 
 	x, y = OBJ_calculator.get_mouse_case()
 
-	if not OBJ_terrain.get_char_in_current_room_at(x, y) in ['/', '^', '<', 'v', 'V', '>', '*', '|', '-', '_']:
-		if OBJ_player.distance((x * 32, y * 32)) < 200:
-			pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, (
-			(x * 32, y * 32), (x * 32 + 32, y * 32), (x * 32 + 32, y * 32 + 32), (x * 32, y * 32 + 32)), 2)
+	if OBJ_terrain.can_go_at(x, y) or (not GAMEVAR_INFIGHT and OBJ_terrain.get_char_in_current_room_at(x, y) != '/'):
+
+		pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+
+	elif OBJ_terrain.get_char_in_current_room_at(x, y) != '/':
+		pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+
 
 	for e in pygame.event.get():
 
@@ -1015,7 +1039,7 @@ while RUN:
 			RUN = False
 			sys.exit(0)
 
-		if GAMEVAR_INFIGHT:
+		if not GAMEVAR_INFIGHT:
 
 			if e.type == pygame.KEYDOWN:
 
@@ -1034,23 +1058,40 @@ while RUN:
 				elif e.key == pygame.K_f:
 					OBJ_player.go_through_door()
 
-		else:
+			elif e.type == MOUSEBUTTONDOWN:
 
+				OBJ_player.mouse_movement(x, y)
+
+		else:
 			if e.type == MOUSEBUTTONDOWN:
 
-				cx = math.ceil(x - (SPRITE_PLAYER_LASER['metadata']['foot']['offset']['east']['x'] / 32))
-				cy = math.ceil(y - (SPRITE_PLAYER_LASER['metadata']['foot']['offset']['east']['y'] / 32))
-				OBJ_player.mouse_movement(cx, cy)
+				OBJ_player.mouse_movement(x, y)
 
-		if e.type == MOUSEBUTTONDOWN:
+			if e.type == pygame.KEYDOWN:
 
-			OBJ_player.fire(pygame.mouse.get_pos())
+				if e.key == pygame.K_UP:
+					GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
+				if e.key == pygame.K_DOWN:
+					GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
+
+				print(GAMEVAR_MENU_SELECTED_ITEM)
+
+		'''if e.type == MOUSEBUTTONDOWN:
+
+			OBJ_player.fire(pygame.mouse.get_pos())'''
 
 	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
 
 	OBJ_terrain.display_overwalls(OBJ_canvas)
 
 	OBJ_bullet.display(OBJ_canvas)
+
+	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
+
+		pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (20, CANVAS_HEIGHT - 200, 380, 160))
+		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 100), (40, CANVAS_HEIGHT - 183, 340, 30))
+		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
+		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
 
@@ -1072,3 +1113,7 @@ while RUN:
 #TODO Changer la limace trisomique.
 
 #TODO Faire gaffe au fait que si le joueur tente de prendre une porte par le coté, ça le tp dans la salle en face de son regard.
+
+#TODO UI FIGHT MODE:  - Attaque
+#                     - Déplacement
+#                     - Inventaire
