@@ -76,8 +76,8 @@ if True:
 	SPRITES_DOORS = {}
 	SPRITES_DOORS['vertical'] = {}
 	SPRITES_DOORS['vertical'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_vertical.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
-	SPRITES_DOORS['horizontal'] = {}
-	SPRITES_DOORS['horizontal'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_horizontal.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
+	SPRITES_DOORS['horizontal_left'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_left.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
+	SPRITES_DOORS['horizontal_right'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_right.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
 
 	SPRITE_MINION = {}
 	SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
@@ -866,7 +866,11 @@ class Terrain():
 
 				elif box in ['v', '^']:
 
-					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_DOORS['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box in ['V', '*']:
+
+					surface.blit(SPRITES_DOORS['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				x += 1
 			y += 1
