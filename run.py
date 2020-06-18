@@ -76,8 +76,13 @@ if True:
 	SPRITES_DOORS = {}
 	SPRITES_DOORS['vertical'] = {}
 	SPRITES_DOORS['vertical'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_vertical.png'), (round(CANVAS_RATE), round(CANVAS_RATE)))
-	SPRITES_DOORS['horizontal_left'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_left.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
-	SPRITES_DOORS['horizontal_right'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_right.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
+	SPRITES_DOORS['horizontal'] = {}
+	SPRITES_DOORS['horizontal']['up'] = {}
+	SPRITES_DOORS['horizontal']['up']['horizontal_left'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_left.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2))), False, False)
+	SPRITES_DOORS['horizontal']['up']['horizontal_right'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_right.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2))), False, False)
+	SPRITES_DOORS['horizontal']['down'] = {}
+	SPRITES_DOORS['horizontal']['down']['horizontal_left'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_left.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
+	SPRITES_DOORS['horizontal']['down']['horizontal_right'] = pygame.transform.scale(pygame.image.load('./resources/sprites/doors/door_right.png'), (round(CANVAS_RATE), round(CANVAS_RATE * 2)))
 
 	SPRITE_MINION = {}
 	SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
@@ -368,7 +373,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1])
 
-		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_", "*", "V"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -377,7 +382,6 @@ class Player(threading.Thread):
 						if entity.collide((a[0] + 1, a[1])):
 							collide = True
 							break
-			print('indeed')
 			if not collide:
 				self.facing = "east"
 				self.x += CANVAS_RATE
@@ -389,7 +393,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] - 1, a[1])
 
-		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_", "*", "V"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -410,7 +414,7 @@ class Player(threading.Thread):
 		a = self.get_position()
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] - 1)
-		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_", "*", "V"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -429,7 +433,7 @@ class Player(threading.Thread):
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1))
 		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1] + 1)
 
-		if not char in ["-", "|", ">", "<", "v", "^", "/", "_"]:
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_", "*", "V"]:
 
 			collide = False
 			for type in GAME_ENTITIES:
@@ -864,13 +868,23 @@ class Terrain():
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box in ['v', '^']:
 
-					surface.blit(SPRITES_DOORS['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box in ['V', '*']:
+				elif box in ['v']:
 
-					surface.blit(SPRITES_DOORS['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box in ['V']:
+
+					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box in ['^']:
+
+					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE))
+
+				elif box in ['*']:
+
+					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				x += 1
 			y += 1
