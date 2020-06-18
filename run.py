@@ -1014,10 +1014,8 @@ while RUN:
 
 	if has_mob:
 		GAMEVAR_INFIGHT = True
-		#print('Combat')
 
 	else:
-		#print('Pas combat')
 		GAMEVAR_INFIGHT = False
 
 	witness = datetime.datetime.now()
@@ -1032,8 +1030,8 @@ while RUN:
 
 	OBJ_clock.tick(WINDOW_FRAMERATE) #Ticks per seconds ~= FPS
 
-	OBJ_canvas.fill((0, 0, 0)) # Erase pixels on canvas
-	OBJ_window.fill((0, 0, 0)) # Erase pixels on canvas
+	OBJ_canvas.fill((0, 0, 0))  # Erase pixels on canvas
+	OBJ_window.fill((0, 0, 0))  # Erase pixels on canvas
 
 	OBJ_terrain.display_ground(OBJ_canvas) # Display the terrain and generates entities on the canvas
 	OBJ_terrain.display_walls(OBJ_canvas)
@@ -1092,13 +1090,24 @@ while RUN:
 				if e.key == pygame.K_DOWN:
 					GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
 
+				if e.key == pygame.K_RETURN:
+					if GAMEVAR_MENU_SELECTED_ITEM == 0:
+						print("Attaque")
+						#OBJ_player.can_attack()
+
+					elif GAMEVAR_MENU_SELECTED_ITEM == 1:
+						print("Déplacement")
+
+					elif GAMEVAR_MENU_SELECTED_ITEM == 2:
+						print("Inventaire ouvert")
 				print(GAMEVAR_MENU_SELECTED_ITEM)
+
 
 		'''if e.type == MOUSEBUTTONDOWN:
 
 			OBJ_player.fire(pygame.mouse.get_pos())'''
 
-	OBJ_player.display(OBJ_canvas) # Display the player on the canvas
+	OBJ_player.display(OBJ_canvas)  # Display the player on the canvas
 
 	OBJ_terrain.display_overwalls(OBJ_canvas)
 
@@ -1111,7 +1120,9 @@ while RUN:
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
 
-	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION) #Blit  the canvas centered on the main window
+
+
+	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  #Blit  the canvas centered on the main window
 
 	pygame.display.flip() #Flip/Update the screen
 
