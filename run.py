@@ -145,14 +145,23 @@ if True:
 
 	WEAPONS = {
 		"AR": {
-			"damages": 3,
-			"munitions": 30
+			"damages": 4,
+			"munitions": 30,
+			"range": 15
 		},
 		"LASER_RIFLE": {
 			"damages": 8,
-			"munitions": 4
+			"munitions": 4,
+			"range": 32
+		},
+		"KNIFE": {
+			"damages": 2,
+			"range": 1
 		}
 	}
+
+	GAMEVAR_CURRENT_WEAPON = WEAPONS["KNIFE"]
+
 
 	OBJ_terrain = None
 	OBJ_window = None
@@ -519,6 +528,28 @@ class Player(threading.Thread):
 					self.x += round((x * CANVAS_RATE) - self.x) - (CANVAS_RATE)
 					self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 
+	def can_attack(self):
+		a = self.get_position()
+
+		if not "munitions" in GAMEVAR_CURRENT_WEAPON:
+			proxEntities = 0
+			for type in GAME_ENTITIES:
+				for entity in GAME_ENTITIES[type]:
+					if entity.in_room(self.map_x, self.map_y):
+						if entity.collide((a[0] + 1, a[1])) or entity.collide((a[0] - 1, a[1])) or entity.collide((a[0], a[1] + 1)) or entity.collide((a[0], a[1] - 1)) or entity.collide((a[0] + 1, a[1] + 1)) or entity.collide((a[0] + 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] + 1)):
+							proxEntities += 1
+
+			print(proxEntities)
+			if proxEntities <= 0:
+				print('No mobs nearby')
+			elif proxEntities == 1:
+				print("Boum")
+			elif proxEntities > 1:
+				print("Choose ennemy to fight")
+
+
+		else:
+			print('Arme a feu')
 
 class Minion():
 
@@ -1093,14 +1124,14 @@ while RUN:
 				if e.key == pygame.K_RETURN:
 					if GAMEVAR_MENU_SELECTED_ITEM == 0:
 						print("Attaque")
-						#OBJ_player.can_attack()
+						OBJ_player.can_attack()
 
 					elif GAMEVAR_MENU_SELECTED_ITEM == 1:
 						print("Déplacement")
 
 					elif GAMEVAR_MENU_SELECTED_ITEM == 2:
 						print("Inventaire ouvert")
-				print(GAMEVAR_MENU_SELECTED_ITEM)
+				#print(GAMEVAR_MENU_SELECTED_ITEM)
 
 
 		'''if e.type == MOUSEBUTTONDOWN:
