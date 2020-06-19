@@ -135,7 +135,7 @@ if True:
 	GAME_ENTITIES['RUSHERS'] = []
 	GAME_ENTITIES['HEALERS'] = []
 	GAME_ENTITIES['TORNADOS'] = []
-	GAME_ENTITIES['ALLIES'] = [] #To brainstorm
+	GAME_ENTITIES['ALLIES'] = []  #To brainstorm
 	GAME_ENTITIES['BOSS_1'] = []
 	GAME_ENTITIES['BOSS_2'] = []
 	GAME_ENTITIES['BOSS_3'] = []
@@ -502,6 +502,10 @@ class Player(threading.Thread):
 
 		global SPRITE_PLAYER_LASER
 		global GAMEVAR_INFIGHT
+		global nbMovement
+
+		nbMovementX = 0
+		nbMovementY = 0
 
 		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
 
@@ -525,14 +529,16 @@ class Player(threading.Thread):
 					else:
 						self.facing = "west"
 
-					self.x += round((x * CANVAS_RATE) - self.x) - (CANVAS_RATE)
+					self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 					self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
+
 
 	def can_attack(self):
 		a = self.get_position()
 
 		if not "munitions" in GAMEVAR_CURRENT_WEAPON:
 			proxEntities = 0
+			ennemies = []
 			for type in GAME_ENTITIES:
 				for entity in GAME_ENTITIES[type]:
 					if entity.in_room(self.map_x, self.map_y):
@@ -544,6 +550,7 @@ class Player(threading.Thread):
 				print('No mobs nearby')
 			elif proxEntities == 1:
 				print("Boum")
+				print(ennemies)
 			elif proxEntities > 1:
 				print("Choose ennemy to fight")
 
@@ -558,7 +565,7 @@ class Minion():
 		global GAMEVAR_DIFFICULTY
 		self.coordinates = coordinates
 		self.speed = GAMEVAR_DIFFICULTY * 0.5
-		self.health = 5 + (GAMEVAR_DIFFICULTY * 1.5)
+		self.health = (5 + (GAMEVAR_DIFFICULTY * 1.5))
 		self.damage = 1 + (GAMEVAR_DIFFICULTY * 1.25)
 		temp = self.coordinates.split('//')
 		self.x = int(temp[1].split('@')[0])
@@ -1109,10 +1116,17 @@ while RUN:
 
 				OBJ_player.mouse_movement(x, y)
 
-		else:
-			if e.type == MOUSEBUTTONDOWN:
+		elif GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
 
-				OBJ_player.mouse_movement(x, y)
+			if GAMEVAR_MENU_SELECTED_ITEM == 1:
+				if e.type == MOUSEBUTTONDOWN:
+
+					OBJ_player.mouse_movement(x, y)
+
+				elif e.type == pygame.KEYDOWN:
+
+					if e.key == pygame.K_f:
+						OBJ_player.go_through_door()
 
 			if e.type == pygame.KEYDOWN:
 
@@ -1146,11 +1160,15 @@ while RUN:
 
 	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
 
+
 		pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (20, CANVAS_HEIGHT - 200, 380, 160))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 100), (40, CANVAS_HEIGHT - 183, 340, 30))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
 
+		OBJ_canvas.blit(FONT.render('Fight', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 180))
+		OBJ_canvas.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 130))
+		OBJ_canvas.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 80))
 
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  #Blit  the canvas centered on the main window
