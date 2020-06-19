@@ -121,6 +121,7 @@ if True:
 	GAMEVAR_YOURTURN = True
 	GAMEVAR_MENU_SELECTED_ITEM = 0
 	GAMEVAR_MENU_SELECTING = True
+	GAMEVAR_NB_MOVEMENT = 5
 
 
 	GAMEVAR_SCORE = 0
@@ -294,6 +295,8 @@ class Player(threading.Thread):
 		self.walking = 1
 		self.running = 1
 		self.health = 20
+		self.max_Movements = GAMEVAR_NB_MOVEMENT
+		self.nb_Movement = 0
 
 		self.vector_x = 0
 		self.vector_y = 0
@@ -502,16 +505,12 @@ class Player(threading.Thread):
 
 		global SPRITE_PLAYER_LASER
 		global GAMEVAR_INFIGHT
-		global nbMovement
-
-		nbMovementX = 0
-		nbMovementY = 0
+		global GAMEVAR_YOURTURN
 
 		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
-
 			char = OBJ_terrain.get_char_in_current_room_at(x, y)
 
-			if not char in ["-", ">", "<", "v", "^", "/", "|"]:
+			if char not in ["-", ">", "<", "v", "^", "/", "|"]:
 
 				collide = False
 
@@ -525,13 +524,26 @@ class Player(threading.Thread):
 				if not collide:
 
 					if x * CANVAS_RATE - self.x >= 0:
+
 						self.facing = "east"
 					else:
 						self.facing = "west"
 
-					self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
-					self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 
+					if GAMEVAR_INFIGHT:
+						movementX = round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
+						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
+						self.nb_Movement += ((movementX / 32) + (movementY / 32))
+
+						if self.nb_Movement <= self.max_Movements:
+							self.x += movementX
+							self.y += movementY
+
+						if self.nb_Movement >= self.max_Movements:
+							GAMEVAR_YOURTURN = False
+					else:
+						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
+						self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 
 	def can_attack(self):
 		a = self.get_position()
@@ -557,6 +569,13 @@ class Player(threading.Thread):
 
 		else:
 			print('Arme a feu')
+
+	def can_move(self, x, y):
+
+		if self.nb_Movement < self.max_Movements:
+			self.mouse_movement(x, y)
+
+
 
 class Minion():
 
@@ -994,7 +1013,6 @@ class Terrain():
 		self.map_x = int(self.current_room.split('@')[0])
 		self.map_y = int(self.current_room.split('@')[1])
 
-
 	def go_down(self):
 
 		row = self.map_x + 1
@@ -1071,7 +1089,7 @@ while RUN:
 	OBJ_canvas.fill((0, 0, 0))  # Erase pixels on canvas
 	OBJ_window.fill((0, 0, 0))  # Erase pixels on canvas
 
-	OBJ_terrain.display_ground(OBJ_canvas) # Display the terrain and generates entities on the canvas
+	OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
 	OBJ_terrain.display_walls(OBJ_canvas)
 	OBJ_terrain.display_props(OBJ_canvas)
 	OBJ_terrain.display_entities(OBJ_canvas)
@@ -1120,8 +1138,7 @@ while RUN:
 
 			if GAMEVAR_MENU_SELECTED_ITEM == 1:
 				if e.type == MOUSEBUTTONDOWN:
-
-					OBJ_player.mouse_movement(x, y)
+					OBJ_player.can_move(x, y)
 
 				elif e.type == pygame.KEYDOWN:
 
@@ -1137,14 +1154,15 @@ while RUN:
 
 				if e.key == pygame.K_RETURN:
 					if GAMEVAR_MENU_SELECTED_ITEM == 0:
-						print("Attaque")
+						#print("Attaque")
 						OBJ_player.can_attack()
 
 					elif GAMEVAR_MENU_SELECTED_ITEM == 1:
-						print("Déplacement")
-
+						#print("Déplacement")
+						print("")
 					elif GAMEVAR_MENU_SELECTED_ITEM == 2:
 						print("Inventaire ouvert")
+
 				#print(GAMEVAR_MENU_SELECTED_ITEM)
 
 
@@ -1187,11 +1205,8 @@ while RUN:
 #TODO: FICHIER DE PARAMETRES
 #TODO: COMPETENCES ???
 #TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
-
 #TODO Changer la limace trisomique.
-
 #TODO Faire gaffe au fait que si le joueur tente de prendre une porte par le coté, ça le tp dans la salle en face de son regard.
-
 #TODO UI FIGHT MODE:  - Attaque
 #                     - Déplacement
 #                     - Inventaire
