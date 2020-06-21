@@ -136,7 +136,7 @@ if True:
 	GAME_ENTITIES['RUSHERS'] = []
 	GAME_ENTITIES['HEALERS'] = []
 	GAME_ENTITIES['TORNADOS'] = []
-	GAME_ENTITIES['ALLIES'] = []  #To brainstorm
+	GAME_ENTITIES['ALLIES'] = []
 	GAME_ENTITIES['BOSS_1'] = []
 	GAME_ENTITIES['BOSS_2'] = []
 	GAME_ENTITIES['BOSS_3'] = []
@@ -532,7 +532,6 @@ class Player(threading.Thread):
 						self.facing = "west"
 
 					if GAMEVAR_INFIGHT:
-						print("En combat")
 
 						movementX = round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
@@ -541,21 +540,22 @@ class Player(threading.Thread):
 						print(self.nb_Movement)
 
 						if self.nb_Movement <= self.max_Movements:
-							print('Mouvement autorise')
+
 							self.x += movementX
 							self.y += movementY
 
-						if self.nb_Movement > self.max_Movements:
+							if self.nb_Movement == self.max_Movements:
+								GAMEVAR_YOURTURN = False
 
+						if self.nb_Movement > self.max_Movements:
 							while self.nb_Movement > self.max_Movements:
 
 								if movementX > 0:
-									print("Mouvement X")
 									movementX -= 1 * CANVAS_RATE
 									temoinX = True
+
 								if movementY > 0:
-									print("Mouvement Y")
-									movementY -= 1* CANVAS_RATE
+									movementY -= 1 * CANVAS_RATE
 									temoinY = True
 
 								if temoinX and temoinY:
@@ -568,7 +568,6 @@ class Player(threading.Thread):
 									self.nb_Movement += 0
 								print(self.nb_Movement)
 
-							print('Mouvement autorise')
 							self.x += movementX
 							self.y += movementY
 							GAMEVAR_YOURTURN = False
@@ -1074,7 +1073,7 @@ class Terrain():
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
-OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) #, pygame.FULLSCREEN
+OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))  # pygame.FULLSCREEN
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT), pygame.SRCALPHA)
 OBJ_clock = pygame.time.Clock()
 OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
@@ -1115,7 +1114,7 @@ while RUN:
 
 	fps_counter += 1
 
-	OBJ_clock.tick(WINDOW_FRAMERATE) #Ticks per seconds ~= FPS
+	OBJ_clock.tick(WINDOW_FRAMERATE)  # Ticks per seconds ~= FPS
 
 	OBJ_canvas.fill((0, 0, 0))  # Erase pixels on canvas
 	OBJ_window.fill((0, 0, 0))  # Erase pixels on canvas
@@ -1161,36 +1160,44 @@ while RUN:
 				elif e.key == pygame.K_f:
 					OBJ_player.go_through_door()
 
+				elif e.key == 113:
+					print("Objet ramassé (WIP)")
+
 			elif e.type == MOUSEBUTTONDOWN:
 
 				OBJ_player.mouse_movement(x, y)
 
-		elif GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
+		elif GAMEVAR_INFIGHT:
 
-			if GAMEVAR_MENU_SELECTED_ITEM == 1:
-				if e.type == MOUSEBUTTONDOWN:
-					OBJ_player.can_move(x, y)
+			if GAMEVAR_YOURTURN:
+
+				if GAMEVAR_MENU_SELECTED_ITEM == 1:
+					if e.type == MOUSEBUTTONDOWN:
+						OBJ_player.can_move(x, y)
 
 
-				elif e.type == pygame.KEYDOWN:
+					elif e.type == pygame.KEYDOWN:
 
-					if e.key == pygame.K_f:
-						OBJ_player.go_through_door()
+						if e.key == pygame.K_f:
+							OBJ_player.go_through_door()
 
-			elif GAMEVAR_MENU_SELECTED_ITEM == 2:
-				pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
+				if e.type == pygame.KEYDOWN:
 
-			if e.type == pygame.KEYDOWN:
+					if e.key == pygame.K_UP:
+						GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
+					if e.key == pygame.K_DOWN:
+						GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
 
-				if e.key == pygame.K_UP:
-					GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
-				if e.key == pygame.K_DOWN:
-					GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
+					if e.key == pygame.K_RETURN:
+						if GAMEVAR_MENU_SELECTED_ITEM == 0:
+							OBJ_player.can_attack()
 
-				if e.key == pygame.K_RETURN:
-					if GAMEVAR_MENU_SELECTED_ITEM == 0:
-						#print("Attaque")
-						OBJ_player.can_attack()
+			elif not GAMEVAR_YOURTURN:
+
+				print("Tour des ennemis")
+				for type in GAME_ENTITIES:
+					for entity in GAME_ENTITIES[type]:
+						entity.IA()
 
 				#print(GAMEVAR_MENU_SELECTED_ITEM)
 
@@ -1217,25 +1224,27 @@ while RUN:
 		OBJ_canvas.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 130))
 		OBJ_canvas.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 80))
 
-
-	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  #Blit  the canvas centered on the main window
-
-	pygame.display.flip() #Flip/Update the screen
-
-	#print('FRAME DURATION:' + str(datetime.datetime.now() - witness))
+		if GAMEVAR_MENU_SELECTED_ITEM == 2:
+			pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
 
 
-#TODO: El famoso patern de dev
-#TODO: ARMES, MOBS, SPRITES OBJETS
-#TODO TOMORROW MAYBE: Système de combat
-#TODO: BARRE DE VIE
-#TODO: INVENTAIRE
-#TODO: MENU PRINCIPAL
-#TODO: FICHIER DE PARAMETRES
-#TODO: COMPETENCES ???
-#TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
-#TODO Changer la limace trisomique.
-#TODO Faire gaffe au fait que si le joueur tente de prendre une porte par le coté, ça le tp dans la salle en face de son regard.
-#TODO UI FIGHT MODE:  - Attaque
+	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+
+	pygame.display.flip() # Flip/Update the screen
+
+	# print('FRAME DURATION:' + str(datetime.datetime.now() - witness))
+
+
+# TODO: ARMES, MOBS, SPRITES OBJETS
+# TODO TOMORROW MAYBE: Système de combat
+# TODO: BARRE DE VIE
+# TODO: INVENTAIRE
+# TODO: MENU PRINCIPAL
+# TODO: FICHIER DE PARAMETRES
+# TODO: COMPETENCES ???
+# TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
+# TODO Changer la limace trisomique.
+# TODO UI FIGHT MODE:  - Attaque
 #                     - Déplacement
 #                     - Inventaire
+# TODO Chunks
