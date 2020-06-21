@@ -506,6 +506,8 @@ class Player(threading.Thread):
 		global SPRITE_PLAYER_LASER
 		global GAMEVAR_INFIGHT
 		global GAMEVAR_YOURTURN
+		temoinX = False
+		temoinY = False
 
 		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
 			char = OBJ_terrain.get_char_in_current_room_at(x, y)
@@ -529,17 +531,46 @@ class Player(threading.Thread):
 					else:
 						self.facing = "west"
 
-
 					if GAMEVAR_INFIGHT:
+						print("En combat")
+
 						movementX = round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
-						self.nb_Movement += ((movementX / 32) + (movementY / 32))
+						self.nb_Movement += round(abs(movementX / 32)) + round(abs(movementY / 32))
+
+						print(self.nb_Movement)
 
 						if self.nb_Movement <= self.max_Movements:
+							print('Mouvement autorise')
 							self.x += movementX
 							self.y += movementY
 
-						if self.nb_Movement >= self.max_Movements:
+						if self.nb_Movement > self.max_Movements:
+
+							while self.nb_Movement > self.max_Movements:
+
+								if movementX > 0:
+									print("Mouvement X")
+									movementX -= 1 * CANVAS_RATE
+									temoinX = True
+								if movementY > 0:
+									print("Mouvement Y")
+									movementY -= 1* CANVAS_RATE
+									temoinY = True
+
+								if temoinX and temoinY:
+									self.nb_Movement -= 2
+
+								elif temoinX or temoinY:
+									self.nb_Movement -= 1
+
+								else:
+									self.nb_Movement += 0
+								print(self.nb_Movement)
+
+							print('Mouvement autorise')
+							self.x += movementX
+							self.y += movementY
 							GAMEVAR_YOURTURN = False
 					else:
 						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
@@ -929,19 +960,19 @@ class Terrain():
 
 				elif box in ['v']:
 
-					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
 				elif box in ['V']:
 
-					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
 				elif box in ['^']:
 
-					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
 				elif box in ['*']:
 
-					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
 				x += 1
 			y += 1
@@ -1140,10 +1171,14 @@ while RUN:
 				if e.type == MOUSEBUTTONDOWN:
 					OBJ_player.can_move(x, y)
 
+
 				elif e.type == pygame.KEYDOWN:
 
 					if e.key == pygame.K_f:
 						OBJ_player.go_through_door()
+
+			elif GAMEVAR_MENU_SELECTED_ITEM == 2:
+				pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
 
 			if e.type == pygame.KEYDOWN:
 
@@ -1156,12 +1191,6 @@ while RUN:
 					if GAMEVAR_MENU_SELECTED_ITEM == 0:
 						#print("Attaque")
 						OBJ_player.can_attack()
-
-					elif GAMEVAR_MENU_SELECTED_ITEM == 1:
-						#print("Déplacement")
-						print("")
-					elif GAMEVAR_MENU_SELECTED_ITEM == 2:
-						print("Inventaire ouvert")
 
 				#print(GAMEVAR_MENU_SELECTED_ITEM)
 
