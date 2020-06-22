@@ -1083,6 +1083,7 @@ class Terrain():
 		path_finded = False
 		isAbove = True
 		isRight = True
+		isFront = False
 
 		possible = {}
 		for i in range(32):
@@ -1097,8 +1098,6 @@ class Terrain():
 
 		px, py = sx, sy
 
-		parent_x, parent_y = px, py
-
 		nodes = {}
 
 		for i in range(32):
@@ -1110,98 +1109,162 @@ class Terrain():
 				checked[i][j] = False
 
 		if sx <= tx:
-			isRight = True
 			if sy <= ty:
-				moves_patterns = ['r', 'd', 'l', 'u']
-				isAbove = False
-			else:
-				isAbove = True
-				moves_patterns = ['r', 'u', 'l', 'd']
+				moves_patterns = ['r', 'd', 'u', 'l']
+			elif sy > ty:
+				moves_patterns = ['r', 'u', 'd', 'l']
+
 		else:
-			isRight = False
 			if sy <= ty:
-				moves_patterns = ['l', 'd', 'r', 'u']
-				isAbove = False
+				moves_patterns = ['l', 'u', 'd', 'r']
 			else:
-				moves_patterns = ['l', 'u', 'r', 'd']
-				isAbove = True
+				moves_patterns = ['l', 'd', 'u', 'r']
+
+		margin = 0
 
 		while not path_finded:
 
-		#	time.sleep(0.05)
+			r = random.randint(0, 255)
+			g = random.randint(0, 255)
+			b = random.randint(0, 255)
+
+			if margin <= 0:
+				margin = 2
+				if px < tx:
+					x_state = "right"
+					if py < ty:
+						y_state = "down"
+					elif py == ty:
+						y_state = "same"
+					else:
+						y_state = "up"
+				elif sx == tx:
+					x_state = "same"
+					if py < ty:
+						y_state = "down"
+					elif py == ty:
+						y_state = "same"
+					else:
+						y_state = "up"
+				else:
+					x_state = "left"
+					if py < ty:
+						y_state = "down"
+					elif py == ty:
+						y_state = "same"
+					else:
+						y_state = "up"
+
+			else:
+				margin -= 1
+
+
+
+			for i in checked:
+				for j in checked[i]:
+					if checked[i][j]:
+						pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
 			done = False
-
 
 			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
 			pygame.display.flip()  # Flip/Update the screen
 
-
 			for move in moves_patterns:
 
 				if px == tx and py == ty:
+
+					checked[py][px] = True
 					path_finded = True
 					done = True
+
+					#for i in checked:
+					#	for j in checked[i]:
+					#		possible[i][j] = checked[i][j]
+					#		checked[i][j] = False
 					break
 
 				if px == tx:
-					if isAbove:
+					if y_state == 'up':
 						if possible[py - 1][px] and not checked[py - 1][px]:
-							checked[py - 1][px] = True
+							checked[py][px] = True
 							py -= 1
-							parent_y -= 1
+							done = True
+							pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((px * CANVAS_RATE + 16, py * CANVAS_RATE + 16), (px * CANVAS_RATE + 16, (py - 1) * CANVAS_RATE + 16)), 2)
+
+							break
+
+					elif y_state == 'down':
+						if possible[py + 1][px] and not checked[py + 1][px]:
+							checked[py][px] = True
+							py += 1
 							done = True
 							break
-						else:
-							continue
 
 					else:
-						if possible[py + 1][px] and not checked[py + 1][px]:
-							checked[py + 1][px] = True
-							py += 1
-							parent_y += 1
-							done = True
-							break
-						else:
-							continue
+
+						break
+
 
 				if py == ty:
-					if isRight:
+					if x_state == 'right':
 						if possible[py][px + 1] and not checked[py][px + 1]:
-							checked[py][px + 1] = True
+							checked[py][px] = True
 							px += 1
-							parent_x += 1
 							done = True
 							break
 
-						else:
-							continue
-
-					else:
+					elif x_state == 'left':
 						if possible[py][px - 1] and not checked[py][px - 1]:
-							checked[py][px - 1] = True
+							checked[py][px] = True
 							px -= 1
-							parent_x -= 1
 							done = True
 							break
+					else:
+						break
 
-						else:
-							continue
 
+				if y_state == 'up':
+					if possible[py - 1][px] and not checked[py - 1][px]:
+						checked[py][px] = True
+						py -= 1
+						done = True
+
+						break
+
+				elif y_state == 'down':
+					if possible[py + 1][px] and not checked[py + 1][px]:
+						checked[py][px] = True
+						py += 1
+						done = True
+
+						break
+
+				if x_state == 'right':
+					if possible[py][px + 1] and not checked[py][px + 1]:
+						checked[py][px] = True
+						px += 1
+						done = True
+
+						break
+
+				elif x_state == 'left':
+					if possible[py][px - 1] and not checked[py][px - 1]:
+						checked[py][px] = True
+						px -= 1
+						done = True
+
+						break
 
 				if move == 'r':
 
-					#print('Witness number 1: ' + str(px + 1) + " " + str())
-
 					if possible[py][px + 1] and not checked[py][px + 1]:
-
-						px += 1
-						parent_x += 1
-						done = True
 						checked[py][px] = True
-						break
+						px += 1
+						done = True
 
+						break
 					else:
 						continue
 
@@ -1211,7 +1274,6 @@ class Terrain():
 					if possible[py + 1][px] and not checked[py + 1][px]:
 						checked[py + 1][px] = True
 						py += 1
-						parent_y += 1
 						done = True
 						break
 					else:
@@ -1223,8 +1285,8 @@ class Terrain():
 					if possible[py][px - 1] and not checked[py][px - 1]:
 						checked[py][px] = True
 						px -= 1
-						parent_x -= 1
 						done = True
+
 						break
 					else:
 						continue
@@ -1234,7 +1296,6 @@ class Terrain():
 					if possible[py - 1][px] and not checked[py - 1][px]:
 						checked[py][px] = True
 						py -= 1
-						parent_y -= 1
 						done = True
 						break
 					else:
@@ -1242,8 +1303,7 @@ class Terrain():
 
 			if not done:
 
-				print('reseted')
-				print(px, py)
+				print('Pathfind returned to beginning')
 				possible[py][px] = False
 				px, py = sx, sy
 
@@ -1256,20 +1316,9 @@ class Terrain():
 
 				continue
 
+
+
 		return checked
-"""
-		while not pathFinded:
-
-			char = self.get_char_in_current_room_at(x, y)
-
-			if char not in ["-", ">", "<", "v", "^", "/", "|"]:
-				possible.append(case)
-
-			tested.append(case)
-
-
-		cases = {}
-		cases[1] = {}"""
 
 
 
