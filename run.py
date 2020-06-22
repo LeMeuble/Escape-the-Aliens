@@ -239,7 +239,6 @@ class ThreadedCalculator(threading.Thread):
 		return (self.x_case, self.y_case)
 
 
-
 class Bullet(threading.Thread):
 
 	def __init__(self):
@@ -575,6 +574,8 @@ class Player(threading.Thread):
 						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 
+		return (self.x / CANVAS_RATE), (self.y / CANVAS_RATE)
+
 	def can_attack(self):
 		a = self.get_position()
 
@@ -599,12 +600,6 @@ class Player(threading.Thread):
 
 		else:
 			print('Arme a feu')
-
-	def can_move(self, x, y):
-
-		if self.nb_Movement < self.max_Movements:
-			self.mouse_movement(x, y)
-
 
 
 class Minion():
@@ -665,8 +660,16 @@ class Minion():
 			#print("-----------------")
 			return True
 
-	def IA(self):
-		print('a')
+	def IA(self, playerX, playerY):
+
+		distanceX = playerX - self.x
+		distanceY = playerY - self.y
+		print("-----")
+		print(self.x, self.y)
+		print(distanceX, distanceY)
+		print("-----")
+
+
 
 
 """
@@ -1173,8 +1176,8 @@ while RUN:
 
 				if GAMEVAR_MENU_SELECTED_ITEM == 1:
 					if e.type == MOUSEBUTTONDOWN:
-						OBJ_player.can_move(x, y)
-
+						playerX, playerY = OBJ_player.mouse_movement(x, y)
+						print(playerX, playerY)
 
 					elif e.type == pygame.KEYDOWN:
 
@@ -1197,7 +1200,7 @@ while RUN:
 				print("Tour des ennemis")
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
-						entity.IA()
+						entity.IA(playerX, playerY)
 
 				#print(GAMEVAR_MENU_SELECTED_ITEM)
 
