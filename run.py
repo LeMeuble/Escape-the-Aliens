@@ -1080,10 +1080,9 @@ class Terrain():
 		global CANVAS_RATE
 		global CANVAS_POSITION
 
+		path = []
+
 		path_finded = False
-		isAbove = True
-		isRight = True
-		isFront = False
 
 		possible = {}
 		for i in range(32):
@@ -1097,8 +1096,6 @@ class Terrain():
 		tx, ty = target
 
 		px, py = sx, sy
-
-		nodes = {}
 
 		for i in range(32):
 			for j in range(32):
@@ -1160,102 +1157,101 @@ class Terrain():
 
 
 
-			for i in checked:
-				for j in checked[i]:
-					if checked[i][j]:
-						pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
+			#for i in checked:
+			#	for j in checked[i]:
+			#		if checked[i][j]:
+			#			pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
 			done = False
 
-			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+			#OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
-			pygame.display.flip()  # Flip/Update the screen
+			#pygame.display.flip()  # Flip/Update the screen
 
-			for move in moves_patterns:
+			if px == tx and py == ty:
 
-				if px == tx and py == ty:
+				checked[py][px] = True
+				path_finded = True
+				done = True
 
-					checked[py][px] = True
-					path_finded = True
-					done = True
+				for i in checked:
+					for j in checked[i]:
+						possible[i][j] = checked[i][j]
+						checked[i][j] = False
 
-					#for i in checked:
-					#	for j in checked[i]:
-					#		possible[i][j] = checked[i][j]
-					#		checked[i][j] = False
-					break
+				break
 
-				if px == tx:
-					if y_state == 'up':
-						if possible[py - 1][px] and not checked[py - 1][px]:
-							checked[py][px] = True
-							py -= 1
-							done = True
-							pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((px * CANVAS_RATE + 16, py * CANVAS_RATE + 16), (px * CANVAS_RATE + 16, (py - 1) * CANVAS_RATE + 16)), 2)
-
-							break
-
-					elif y_state == 'down':
-						if possible[py + 1][px] and not checked[py + 1][px]:
-							checked[py][px] = True
-							py += 1
-							done = True
-							break
-
-					else:
-
-						break
-
-
-				if py == ty:
-					if x_state == 'right':
-						if possible[py][px + 1] and not checked[py][px + 1]:
-							checked[py][px] = True
-							px += 1
-							done = True
-							break
-
-					elif x_state == 'left':
-						if possible[py][px - 1] and not checked[py][px - 1]:
-							checked[py][px] = True
-							px -= 1
-							done = True
-							break
-					else:
-						break
-
-
+			if px == tx:
 				if y_state == 'up':
 					if possible[py - 1][px] and not checked[py - 1][px]:
 						checked[py][px] = True
 						py -= 1
 						done = True
-
-						break
+						path.append((px, py))
+						continue
 
 				elif y_state == 'down':
 					if possible[py + 1][px] and not checked[py + 1][px]:
 						checked[py][px] = True
 						py += 1
 						done = True
+						path.append((px, py))
+						continue
 
-						break
-
+			if py == ty:
 				if x_state == 'right':
 					if possible[py][px + 1] and not checked[py][px + 1]:
 						checked[py][px] = True
 						px += 1
 						done = True
-
-						break
+						path.append((px, py))
+						continue
 
 				elif x_state == 'left':
 					if possible[py][px - 1] and not checked[py][px - 1]:
 						checked[py][px] = True
 						px -= 1
 						done = True
+						path.append((px, py))
+						continue
 
-						break
+			if y_state == 'up':
+				if possible[py - 1][px] and not checked[py - 1][px]:
+					checked[py][px] = True
+					py -= 1
+					done = True
+					path.append((px, py))
+
+					continue
+
+			elif y_state == 'down':
+				if possible[py + 1][px] and not checked[py + 1][px]:
+					checked[py][px] = True
+					py += 1
+					done = True
+					path.append((px, py))
+
+					continue
+
+			if x_state == 'right':
+				if possible[py][px + 1] and not checked[py][px + 1]:
+					checked[py][px] = True
+					px += 1
+					done = True
+					path.append((px, py))
+
+					continue
+
+			elif x_state == 'left':
+				if possible[py][px - 1] and not checked[py][px - 1]:
+					checked[py][px] = True
+					px -= 1
+					done = True
+					path.append((px, py))
+
+					continue
+
+			for move in moves_patterns:
 
 				if move == 'r':
 
@@ -1263,6 +1259,7 @@ class Terrain():
 						checked[py][px] = True
 						px += 1
 						done = True
+						path.append((px, py))
 
 						break
 					else:
@@ -1275,6 +1272,7 @@ class Terrain():
 						checked[py + 1][px] = True
 						py += 1
 						done = True
+						path.append((px, py))
 						break
 					else:
 						continue
@@ -1286,7 +1284,7 @@ class Terrain():
 						checked[py][px] = True
 						px -= 1
 						done = True
-
+						path.append((px, py))
 						break
 					else:
 						continue
@@ -1297,6 +1295,7 @@ class Terrain():
 						checked[py][px] = True
 						py -= 1
 						done = True
+						path.append((px, py))
 						break
 					else:
 						continue
@@ -1313,12 +1312,11 @@ class Terrain():
 					for j in range(32):
 						checked[i][j] = False
 
+				path = []
 
 				continue
 
-
-
-		return checked
+		return path
 
 
 
@@ -1488,11 +1486,7 @@ while RUN:
 
 
 	for i in plist:
-		for j in plist[i]:
-			if plist[i][j]:
-				pygame.draw.lines(OBJ_canvas, (0, 255, 0), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
-			else:
-				pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
+		pygame.draw.lines(OBJ_canvas, (0, 255, 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
