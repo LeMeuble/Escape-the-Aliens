@@ -536,7 +536,7 @@ class Player(threading.Thread):
 						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 						self.nb_Movement += round(abs(movementX / 32)) + round(abs(movementY / 32))
 
-						print(self.nb_Movement)
+						#print(self.nb_Movement)
 
 						if self.nb_Movement <= self.max_Movements:
 
@@ -751,7 +751,7 @@ class Terrain():
 
 					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
 
-						for i in range(random.randint(0, 4)):
+						for i in range(random.randint(0, 0)):
 
 							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
@@ -839,7 +839,7 @@ class Terrain():
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				#surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
+				surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
 				x += 1
 			y += 1
 
@@ -1073,6 +1073,208 @@ class Terrain():
 
 		return False
 
+	def gen_path(self, src, target):
+
+		global OBJ_canvas
+		global OBJ_window
+		global CANVAS_RATE
+		global CANVAS_POSITION
+
+		path_finded = False
+		isAbove = True
+		isRight = True
+
+		possible = {}
+		for i in range(32):
+			possible[i] = {}
+
+		checked = {}
+		for i in range(32):
+			checked[i] = {}
+
+		sx, sy = src
+		tx, ty = target
+
+		px, py = sx, sy
+
+		parent_x, parent_y = px, py
+
+		nodes = {}
+
+		for i in range(32):
+			for j in range(32):
+				if self.get_char_in_current_room_at(j, i) in ['+', 'x']:
+					possible[i][j] = True
+				else:
+					possible[i][j] = False
+				checked[i][j] = False
+
+		if sx <= tx:
+			isRight = True
+			if sy <= ty:
+				moves_patterns = ['r', 'd', 'l', 'u']
+				isAbove = False
+			else:
+				isAbove = True
+				moves_patterns = ['r', 'u', 'l', 'd']
+		else:
+			isRight = False
+			if sy <= ty:
+				moves_patterns = ['l', 'd', 'r', 'u']
+				isAbove = False
+			else:
+				moves_patterns = ['l', 'u', 'r', 'd']
+				isAbove = True
+
+		while not path_finded:
+
+		#	time.sleep(0.05)
+
+			done = False
+
+
+			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+
+			pygame.display.flip()  # Flip/Update the screen
+
+
+			for move in moves_patterns:
+
+				if px == tx and py == ty:
+					path_finded = True
+					done = True
+					break
+
+				if px == tx:
+					if isAbove:
+						if possible[py - 1][px] and not checked[py - 1][px]:
+							checked[py - 1][px] = True
+							py -= 1
+							parent_y -= 1
+							done = True
+							break
+						else:
+							continue
+
+					else:
+						if possible[py + 1][px] and not checked[py + 1][px]:
+							checked[py + 1][px] = True
+							py += 1
+							parent_y += 1
+							done = True
+							break
+						else:
+							continue
+
+				if py == ty:
+					if isRight:
+						if possible[py][px + 1] and not checked[py][px + 1]:
+							checked[py][px + 1] = True
+							px += 1
+							parent_x += 1
+							done = True
+							break
+
+						else:
+							continue
+
+					else:
+						if possible[py][px - 1] and not checked[py][px - 1]:
+							checked[py][px - 1] = True
+							px -= 1
+							parent_x -= 1
+							done = True
+							break
+
+						else:
+							continue
+
+
+				if move == 'r':
+
+					#print('Witness number 1: ' + str(px + 1) + " " + str())
+
+					if possible[py][px + 1] and not checked[py][px + 1]:
+
+						px += 1
+						parent_x += 1
+						done = True
+						checked[py][px] = True
+						break
+
+					else:
+						continue
+
+
+				elif move == 'd':
+
+					if possible[py + 1][px] and not checked[py + 1][px]:
+						checked[py + 1][px] = True
+						py += 1
+						parent_y += 1
+						done = True
+						break
+					else:
+						continue
+
+
+				elif move == 'l':
+
+					if possible[py][px - 1] and not checked[py][px - 1]:
+						checked[py][px] = True
+						px -= 1
+						parent_x -= 1
+						done = True
+						break
+					else:
+						continue
+
+				elif move == 'u':
+
+					if possible[py - 1][px] and not checked[py - 1][px]:
+						checked[py][px] = True
+						py -= 1
+						parent_y -= 1
+						done = True
+						break
+					else:
+						continue
+
+			if not done:
+
+				print('reseted')
+				print(px, py)
+				possible[py][px] = False
+				px, py = sx, sy
+
+				checked = {}
+				for i in range(32):
+					checked[i] = {}
+					for j in range(32):
+						checked[i][j] = False
+
+
+				continue
+
+		return checked
+"""
+		while not pathFinded:
+
+			char = self.get_char_in_current_room_at(x, y)
+
+			if char not in ["-", ">", "<", "v", "^", "/", "|"]:
+				possible.append(case)
+
+			tested.append(case)
+
+
+		cases = {}
+		cases[1] = {}"""
+
+
+
+
+
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
@@ -1091,6 +1293,8 @@ atexit.register(OBJ_terrain.save_to_file, path='backup.terrain')
 
 fps_timer = datetime.datetime.now()
 fps_counter = 0
+
+plist = {}
 
 while RUN:
 
@@ -1168,7 +1372,10 @@ while RUN:
 
 			elif e.type == MOUSEBUTTONDOWN:
 
-				OBJ_player.mouse_movement(x, y)
+				#OBJ_player.mouse_movement(x, y)
+				print(OBJ_player.get_position())
+				plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
+
 
 		elif GAMEVAR_INFIGHT:
 
@@ -1230,6 +1437,13 @@ while RUN:
 		if GAMEVAR_MENU_SELECTED_ITEM == 2:
 			pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
 
+
+	for i in plist:
+		for j in plist[i]:
+			if plist[i][j]:
+				pygame.draw.lines(OBJ_canvas, (0, 255, 0), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
+			else:
+				pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
