@@ -122,6 +122,7 @@ if True:
 	GAMEVAR_MENU_SELECTED_ITEM = 0
 	GAMEVAR_MENU_SELECTING = True
 	GAMEVAR_NB_MOVEMENT = 5
+	GAMEVAR_MAX_HEALTH = 20
 
 
 	GAMEVAR_SCORE = 0
@@ -270,7 +271,6 @@ class Bullet(threading.Thread):
 
 			time.sleep(0.05)
 
-
 	def display(self, surface):
 
 		for bullet in self.bullets:
@@ -293,7 +293,8 @@ class Player(threading.Thread):
 
 		self.walking = 1
 		self.running = 1
-		self.health = 20
+		#self.health = GAMEVAR_MAX_HEALTH
+		self.health = 8
 		self.max_Movements = GAMEVAR_NB_MOVEMENT
 		self.nb_Movement = 0
 
@@ -601,6 +602,33 @@ class Player(threading.Thread):
 		else:
 			print('Arme a feu')
 
+	def update_life(self, heal=0, damages=0, armor=0, boost=0):
+
+		global GAMEVAR_MAX_HEALTH
+
+		if heal > 0 and self.health < GAMEVAR_MAX_HEALTH:
+			if self.health + heal <= GAMEVAR_MAX_HEALTH:
+				self.health += heal
+				print("Healing " + str(heal) + " HP")
+			elif self.health + heal > GAMEVAR_MAX_HEALTH:
+				print("Healing " + str(GAMEVAR_MAX_HEALTH - self.health) + " HP")
+				self.health += (GAMEVAR_MAX_HEALTH - self.health)
+
+		if damages > 0:
+			if self.health - damages > 0:
+				self.health -= damages
+				print("Taking " + str(damages) + " damages")
+
+			else:
+				self.health = 0
+				print("Dead")
+				'''if got_Resurection:
+					print("Do you want to rez yourself ?")
+'''
+
+		elif self.health == GAMEVAR_MAX_HEALTH:
+			pass
+
 
 class Minion():
 
@@ -751,7 +779,7 @@ class Terrain():
 
 					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
 
-						for i in range(random.randint(0, 0)):
+						for i in range(random.randint(0, 4)):
 
 							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
@@ -1345,6 +1373,7 @@ plist = {}
 
 while RUN:
 
+
 	has_mob = False
 	for type in GAME_ENTITIES:
 		for entity in GAME_ENTITIES[type]:
@@ -1402,20 +1431,23 @@ while RUN:
 				if e.key == 97 or e.key == 276:
 					OBJ_player.left()
 
-				elif e.key == 100 or e.key == 275:
+				if e.key == 100 or e.key == 275:
 					OBJ_player.right()
 
-				elif e.key == 119 or e.key == 273:
+				if e.key == 119 or e.key == 273:
 					OBJ_player.up()
 
-				elif e.key == 115 or e.key == 274:
+				if e.key == 115 or e.key == 274:
 					OBJ_player.down()
 
-				elif e.key == pygame.K_f:
+				if e.key == pygame.K_f:
 					OBJ_player.go_through_door()
 
-				elif e.key == 113:
+				if e.key == 113:
 					print("Objet ramassé (WIP)")
+
+				if e.key == 104:
+					OBJ_player.update_life(damages=3)
 
 			elif e.type == MOUSEBUTTONDOWN:
 
@@ -1488,6 +1520,9 @@ while RUN:
 	for i in plist:
 		pygame.draw.lines(OBJ_canvas, (0, 255, 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
+	pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
+	pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, OBJ_player.health * 10, CANVAS_HEIGHT - 1008))
+
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
 	pygame.display.flip() # Flip/Update the screen
@@ -1505,6 +1540,6 @@ while RUN:
 # TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
 # TODO Changer la limace trisomique.
 # TODO UI FIGHT MODE:  - Attaque
-#                     - Déplacement
-#                     - Inventaire
+#                      - Déplacement
+#                      - Inventaire
 # TODO Chunks
