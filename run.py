@@ -627,6 +627,7 @@ class Player(threading.Thread):
 '''
 
 		elif self.health == GAMEVAR_MAX_HEALTH:
+			print("Max health !")
 			pass
 
 
@@ -1447,7 +1448,7 @@ while RUN:
 					print("Objet ramassé (WIP)")
 
 				if e.key == 104:
-					OBJ_player.update_life(damages=3)
+					OBJ_player.update_life(heal=3)
 
 			elif e.type == MOUSEBUTTONDOWN:
 
@@ -1515,6 +1516,9 @@ while RUN:
 
 		if GAMEVAR_MENU_SELECTED_ITEM == 2:
 			pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
+			#for i in range(8):
+			#pygame.draw.rect(OBJ_canvas, (0, 0, 255, 100), (600 + (0 * 24) + 4, CANVAS_HEIGHT - 200, 624 + (0 * 24)+4, 20))
+			pygame.draw.rect(OBJ_canvas, (0, 0, 255, 100), (15, 15, 1000, 100))
 
 
 	for i in plist:
