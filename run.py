@@ -27,7 +27,7 @@ pygame.font.init()
 
 if True:
 
-	FONT = pygame.font.SysFont('Helvetica', 20, True)
+	FONT = pygame.font.Font('./resources/texts/fonts/base.ttf', 20)
 
 	"""@@@@@ INIT BASES VARIABLES @@@@@"""
 
@@ -120,9 +120,26 @@ if True:
 	GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor/3) + 1
 	GAMEVAR_YOURTURN = True
 	GAMEVAR_MENU_SELECTED_ITEM = 0
+	GAMEVAR_INVENTORY_SELECTED_ITEM = 0
 	GAMEVAR_MENU_SELECTING = True
 	GAMEVAR_NB_MOVEMENT = 5
 	GAMEVAR_MAX_HEALTH = 20
+	GAMEVAR_IN_INVENTORY = False
+
+	GAMEVAR_INVENTORY = {
+		"laser": 1,
+		"ar": 1,
+		"knife": 1,
+		"medpack": 1,
+		"stims": 1,
+		"shield": 1,
+		"grenade": 1,
+		"special_item_1": 1,
+		"special_item_2": 1,
+		"special_item_3": 1,
+		"key_1": 1,
+		"extra_life": 1
+	}
 
 
 	GAMEVAR_SCORE = 0
@@ -187,6 +204,21 @@ if True:
 
 
 """
+
+def get_inventory_total_usefull_slots():
+
+	global GAMEVAR_INVENTORY
+
+	total = -1
+
+	for item in GAMEVAR_INVENTORY:
+
+		if GAMEVAR_INVENTORY[item] > 0:
+
+			total += 1
+
+	return total
+
 def get_uid(size):
 
 	chars = string.ascii_lowercase + string.digits
@@ -778,7 +810,7 @@ class Terrain():
 
 				if ground != []:
 
-					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
+					if f'{row}@{room}d' != self.pattern_data['metadata']['spawn']:
 
 						for i in range(random.randint(0, 4)):
 
@@ -1348,10 +1380,6 @@ class Terrain():
 		return path
 
 
-
-
-
-
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))  # pygame.FULLSCREEN
@@ -1373,7 +1401,6 @@ fps_counter = 0
 plist = {}
 
 while RUN:
-
 
 	has_mob = False
 	for type in GAME_ENTITIES:
@@ -1448,7 +1475,7 @@ while RUN:
 					print("Objet ramassé (WIP)")
 
 				if e.key == 104:
-					OBJ_player.update_life(heal=3)
+					OBJ_player.update_life(damages=4)
 
 			elif e.type == MOUSEBUTTONDOWN:
 
@@ -1470,6 +1497,22 @@ while RUN:
 
 						if e.key == pygame.K_f:
 							OBJ_player.go_through_door()
+
+				if GAMEVAR_MENU_SELECTED_ITEM == 2:
+					if e.type == pygame.KEYDOWN:
+
+						if e.key == 276:
+							if GAMEVAR_IN_INVENTORY:
+								GAMEVAR_INVENTORY_SELECTED_ITEM += -1 if GAMEVAR_INVENTORY_SELECTED_ITEM > 0 else get_inventory_total_usefull_slots()
+
+						if e.key == 275:
+							if GAMEVAR_IN_INVENTORY:
+								GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_usefull_slots() else - get_inventory_total_usefull_slots()
+							else:
+								GAMEVAR_IN_INVENTORY = True
+								GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_usefull_slots() else - get_inventory_total_usefull_slots()
+						if e.key  == 8:
+							GAMEVAR_IN_INVENTORY = False
 
 				if e.type == pygame.KEYDOWN:
 
@@ -1504,25 +1547,54 @@ while RUN:
 
 	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
 
-
 		pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (20, CANVAS_HEIGHT - 200, 380, 160))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 100), (40, CANVAS_HEIGHT - 183, 340, 30))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
 		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
 
-		OBJ_canvas.blit(FONT.render('Fight', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 180))
-		OBJ_canvas.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 130))
-		OBJ_canvas.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 80))
+		OBJ_canvas.blit(FONT.render('Fight', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 177))
+		OBJ_canvas.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 127))
+		OBJ_canvas.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 77))
 
 		if GAMEVAR_MENU_SELECTED_ITEM == 2:
+
 			pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
-			#for i in range(8):
-			#pygame.draw.rect(OBJ_canvas, (0, 0, 255, 100), (600 + (0 * 24) + 4, CANVAS_HEIGHT - 200, 624 + (0 * 24)+4, 20))
-			pygame.draw.rect(OBJ_canvas, (0, 0, 255, 100), (15, 15, 1000, 100))
+
+			slot_x = 0
+			slot_y = 0
+			sup5 = False
+
+			i = 0
+
+			for item in GAMEVAR_INVENTORY:
+
+				if GAMEVAR_INVENTORY[item] > 0:
+
+					#print(str(((600 + 10) + ((slot_x + 10) * 24), (CANVAS_HEIGHT - 200 + 10) + ((slot_y + 10) * 24), 24, 24)))
+
+					if GAMEVAR_INVENTORY_SELECTED_ITEM == i:
+						print('HIGHTLIGHED!')
+						pygame.draw.rect(OBJ_canvas, (255, 0, 0), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
+
+					else:
+						pygame.draw.rect(OBJ_canvas, (0, 0, 255), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
+
+					print(GAMEVAR_INVENTORY_SELECTED_ITEM, i)
+
+					slot_x += 1
+					if slot_x > 5:
+						slot_x = 0
+						slot_y += 1
+
+					i += 1
 
 
+	r, g, b = 0, 0, 0
 	for i in plist:
-		pygame.draw.lines(OBJ_canvas, (0, 255, 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+		r += 10
+		g += 1
+		b += 5
+		pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
 	pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
 	pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, OBJ_player.health * 10, CANVAS_HEIGHT - 1008))
@@ -1536,7 +1608,6 @@ while RUN:
 
 # TODO: ARMES, MOBS, SPRITES OBJETS
 # TODO TOMORROW MAYBE: Système de combat
-# TODO: BARRE DE VIE
 # TODO: INVENTAIRE
 # TODO: MENU PRINCIPAL
 # TODO: FICHIER DE PARAMETRES
@@ -1547,3 +1618,5 @@ while RUN:
 #                      - Déplacement
 #                      - Inventaire
 # TODO Chunks
+
+# (top, left, width, height)
