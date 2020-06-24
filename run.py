@@ -539,6 +539,8 @@ class Player(threading.Thread):
 		temoinX = False
 		temoinY = False
 
+		print("Souris")
+
 		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
 			char = OBJ_terrain.get_char_in_current_room_at(x, y)
 
@@ -596,10 +598,12 @@ class Player(threading.Thread):
 
 								else:
 									self.nb_Movement += 0
-								print(self.nb_Movement)
+								#print(self.nb_Movement)
 
 							self.x += movementX
 							self.y += movementY
+							self.nb_Movement = 0
+							print(self.nb_Movement)
 							GAMEVAR_YOURTURN = False
 					else:
 						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
@@ -719,17 +723,38 @@ class Minion():
 			#print("-----------------")
 			return True
 
-	def IA(self, playerX, playerY):
+	def IA(self):
 
+		global CANVAS_RATE
 
-		distanceX = playerX - self.x
-		distanceY = playerY - self.y
-		print("-----")
-		print(self.x, self.y)
-		print(distanceX, distanceY)
-		print("-----")
+		if OBJ_player.distance((self.x * 32, self.y * 32)) <= 76:
+			print('NEAR')
+		else:
 
+			#print(self.x, self.y)
 
+			path = OBJ_terrain.gen_path(
+				(self.x, self.y),
+				OBJ_player.get_position()
+			)
+
+			print(path)
+			tp = None
+			tp_case = 0
+
+			for case in path:
+
+				tp_case += 1
+				tp = case
+
+				if tp_case >= 3:
+					tp = case
+					break
+
+			try:
+				self.x, self.y = tp
+			except:
+				pass
 
 
 """
@@ -744,6 +769,8 @@ class Minion():
 
 
 """
+
+
 class Terrain():
 
 	"""
@@ -755,11 +782,11 @@ class Terrain():
 
 		#Initialize the terrain matrix charmap
 		self.terrain = [
-			[[], [], [], [], []], #row 1
-			[[], [], [], [], []], #row 2
-			[[], [], [], [], []], #row 3
-			[[], [], [], [], []], #row 4
-			[[], [], [], [], []]  #row 5
+			[[], [], [], [], []], # row 1
+			[[], [], [], [], []], # row 2
+			[[], [], [], [], []], # row 3
+			[[], [], [], [], []], # row 4
+			[[], [], [], [], []]  # row 5
 
 		]
 
@@ -809,7 +836,7 @@ class Terrain():
 
 				if ground != []:
 
-					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
+					if f'{row}@{room}d' != self.pattern_data['metadata']['spawn']:
 
 						for i in range(random.randint(0, 4)):
 
@@ -1049,6 +1076,8 @@ class Terrain():
 					e.display(surface)
 					count += 1
 
+		#print('Mobs : ' + str(count))
+
 	def get_spawn(self):
 
 		x = int(self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][32]['spawns']['main']['x_case'])
@@ -1178,6 +1207,7 @@ class Terrain():
 				moves_patterns = ['l', 'd', 'u', 'r']
 
 		margin = 0
+		total_IT = 0
 
 		while not path_finded:
 
@@ -1215,20 +1245,22 @@ class Terrain():
 			else:
 				margin -= 1
 
-			print(x_state, y_state)
+			#print(x_state, y_state)
 
 
 
-			#for i in checked:
-			#	for j in checked[i]:
-			#		if checked[i][j]:
-			#			pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
+			for i in checked:
+				for j in checked[i]:
+					if checked[i][j]:
+						pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
 			done = False
 
-			#OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
-			#pygame.display.flip()  # Flip/Update the screen
+			pygame.display.flip()  # Flip/Update the screen
+
+			time.sleep(0.025)
 
 			if px == tx and py == ty:
 
@@ -1364,7 +1396,9 @@ class Terrain():
 
 			if not done:
 
-				print('Pathfind returned to beginning')
+				total_IT += 1
+				if total_IT > 10:
+					break
 				possible[py][px] = False
 				px, py = sx, sy
 
@@ -1403,7 +1437,11 @@ fps_counter = 0
 
 plist = {}
 
+go_to_beginning = False
+
 while RUN:
+
+	#print(GAMEVAR_MENU_SELECTED_ITEM)
 
 	has_mob = False
 	for type in GAME_ENTITIES:
@@ -1495,21 +1533,18 @@ while RUN:
 				else:
 					DEBUG_MODE = True
 
-		elif GAMEVAR_INFIGHT:
-
+		if GAMEVAR_INFIGHT:
 			if GAMEVAR_YOURTURN:
-
 				if GAMEVAR_MENU_SELECTED_ITEM == 1:
 					if e.type == MOUSEBUTTONDOWN:
 						playerX, playerY = OBJ_player.mouse_movement(x, y)
 						#print(playerX, playerY)
-
 					elif e.type == pygame.KEYDOWN:
 
 						if e.key == pygame.K_f:
 							OBJ_player.go_through_door()
 
-				if GAMEVAR_MENU_SELECTED_ITEM == 2:
+				elif GAMEVAR_MENU_SELECTED_ITEM == 2:
 					if e.type == pygame.KEYDOWN:
 
 						if GAMEVAR_IN_INVENTORY:
@@ -1560,10 +1595,8 @@ while RUN:
 					if not GAMEVAR_IN_INVENTORY:
 						if e.key == pygame.K_UP:
 							GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
-							print("Vers le haut pas dans l'inventaire")
 						if e.key == pygame.K_DOWN:
 							GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
-							print("Vers le bas pas dans l'inventaire")
 
 					if e.key == pygame.K_RETURN:
 						if GAMEVAR_MENU_SELECTED_ITEM == 0:
@@ -1574,8 +1607,14 @@ while RUN:
 				print("Tour des ennemis")
 
 				for type in GAME_ENTITIES:
-					for entity in GAME_ENTITIES[type]:
-						entity.IA(playerX, playerY)
+					for e in GAME_ENTITIES[type]:
+						if e.in_room(OBJ_player.map_x, OBJ_player.map_y):
+							e.IA()
+
+
+				GAMEVAR_YOURTURN = True
+				go_to_beginning = True
+				break
 
 				#print(GAMEVAR_MENU_SELECTED_ITEM)
 
@@ -1583,6 +1622,10 @@ while RUN:
 		'''if e.type == MOUSEBUTTONDOWN:
 
 			OBJ_player.fire(pygame.mouse.get_pos())'''
+
+	if go_to_beginning:
+		go_to_beginning = False
+		continue
 
 	OBJ_player.display(OBJ_canvas)  # Display the player on the canvas
 
@@ -1650,18 +1693,21 @@ while RUN:
 
 	# print('FRAME DURATION:' + str(datetime.datetime.now() - witness))
 
-
-# TODO: ARMES, MOBS, SPRITES OBJETS
 # TODO TOMORROW MAYBE: Système de combat
-# TODO: INVENTAIRE
-# TODO: MENU PRINCIPAL
-# TODO: FICHIER DE PARAMETRES
-# TODO: COMPETENCES ???
-# TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNR SALLE)
-# TODO Changer la limace trisomique.
+# TODO: ARMES, MOBS, SPRITES OBJETS
 # TODO UI FIGHT MODE:  - Attaque
 #                      - Déplacement
 #                      - Inventaire
+# TODO: INVENTAIRE ( entree pour rentrer l'afficher )
+# TODO patcher la barre de vie
+
+# TODO pathfinding dans le pathfinding
+
+# TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNE SALLE)
+
 # TODO Chunks
+
+# TODO: MENU PRINCIPAL
+# TODO: FICHIER DE PARAMETRES
 
 # (top, left, width, height)
