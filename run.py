@@ -27,6 +27,8 @@ pygame.font.init()
 
 if True:
 
+	DEBUG_MODE = False
+
 	FONT = pygame.font.Font('./resources/texts/fonts/base.ttf', 20)
 
 	"""@@@@@ INIT BASES VARIABLES @@@@@"""
@@ -132,13 +134,13 @@ if True:
 		"knife": 1,
 		"medpack": 1,
 		"stims": 1,
-		"shield": 1,
-		"grenade": 1,
-		"special_item_1": 1,
-		"special_item_2": 1,
-		"special_item_3": 1,
-		"key_1": 1,
-		"extra_life": 1
+		"shield": 0,
+		"grenade": 0,
+		"special_item_1": 0,
+		"special_item_2": 0,
+		"special_item_3": 0,
+		"key_1": 0,
+		"extra_life": 0
 	}
 
 
@@ -181,15 +183,6 @@ if True:
 
 	GAMEVAR_CURRENT_WEAPON = WEAPONS["KNIFE"]
 
-
-	OBJ_terrain = None
-	OBJ_window = None
-	OBJ_canvas = None
-	OBJ_clock = None
-	OBJ_player = None
-	OBJ_bullet = None
-
-
 """@@@@@ INIT ENTITIES VARIABLES @@@@@"""
 
 """
@@ -205,6 +198,7 @@ if True:
 
 """
 
+
 def get_inventory_total_usefull_slots():
 
 	global GAMEVAR_INVENTORY
@@ -219,6 +213,7 @@ def get_inventory_total_usefull_slots():
 
 	return total
 
+
 def get_uid(size):
 
 	chars = string.ascii_lowercase + string.digits
@@ -230,9 +225,11 @@ def get_uid(size):
 
 	return uuid
 
+
 def parse_location(point):
 
 	return math.floor(point / CANVAS_RATE)
+
 
 def mouse_global_case():
 
@@ -399,10 +396,11 @@ class Player(threading.Thread):
 		#print(OBJ_terrain.get_char(self.map_x, self.map_y, a[0], a[1]))
 		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (round(self.x), round(self.y)))
 
-		pygame.draw.rect(surface, (0, 0, 255), (
-		self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x'],
-		self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'], 10, 10))
-		pygame.draw.rect(surface, (255, 0, 0), (round(self.x), round(self.y), 10, 10))
+		if DEBUG_MODE:
+			pygame.draw.rect(surface, (0, 0, 255), (
+				self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x'],
+				self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'], 10, 10))
+			pygame.draw.rect(surface, (255, 0, 0), (round(self.x), round(self.y), 10, 10))
 
 	def distance(self, target):
 
@@ -723,6 +721,7 @@ class Minion():
 
 	def IA(self, playerX, playerY):
 
+
 		distanceX = playerX - self.x
 		distanceY = playerY - self.y
 		print("-----")
@@ -810,7 +809,7 @@ class Terrain():
 
 				if ground != []:
 
-					if f'{row}@{room}d' != self.pattern_data['metadata']['spawn']:
+					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
 
 						for i in range(random.randint(0, 4)):
 
@@ -899,8 +898,8 @@ class Terrain():
 				if box in ['+', 'x']:
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
-
-				surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
+				if DEBUG_MODE:
+					surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
 				x += 1
 			y += 1
 
@@ -1187,7 +1186,7 @@ class Terrain():
 			b = random.randint(0, 255)
 
 			if margin <= 0:
-				margin = 2
+				margin = 4
 				if px < tx:
 					x_state = "right"
 					if py < ty:
@@ -1196,7 +1195,7 @@ class Terrain():
 						y_state = "same"
 					else:
 						y_state = "up"
-				elif sx == tx:
+				elif px == tx:
 					x_state = "same"
 					if py < ty:
 						y_state = "down"
@@ -1215,6 +1214,8 @@ class Terrain():
 
 			else:
 				margin -= 1
+
+			print(x_state, y_state)
 
 
 
@@ -1382,7 +1383,9 @@ class Terrain():
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
-OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))  # pygame.FULLSCREEN
+OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)  # pygame.FULLSCREEN
+pygame.display.set_caption('Escape The Aliens', 'Escape The Aliens')
+pygame.display.set_icon(pygame.image.load('./icon.ico'))
 OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT), pygame.SRCALPHA)
 OBJ_clock = pygame.time.Clock()
 OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
@@ -1483,6 +1486,14 @@ while RUN:
 				print(OBJ_player.get_position())
 				plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
 
+		if e.type == pygame.KEYDOWN:
+
+			if e.key == pygame.K_p:
+
+				if DEBUG_MODE:
+					DEBUG_MODE = False
+				else:
+					DEBUG_MODE = True
 
 		elif GAMEVAR_INFIGHT:
 
@@ -1491,7 +1502,7 @@ while RUN:
 				if GAMEVAR_MENU_SELECTED_ITEM == 1:
 					if e.type == MOUSEBUTTONDOWN:
 						playerX, playerY = OBJ_player.mouse_movement(x, y)
-						print(playerX, playerY)
+						#print(playerX, playerY)
 
 					elif e.type == pygame.KEYDOWN:
 
@@ -1501,25 +1512,58 @@ while RUN:
 				if GAMEVAR_MENU_SELECTED_ITEM == 2:
 					if e.type == pygame.KEYDOWN:
 
-						if e.key == 276:
-							if GAMEVAR_IN_INVENTORY:
+						if GAMEVAR_IN_INVENTORY:
+
+							if e.key == pygame.K_LEFT:
 								GAMEVAR_INVENTORY_SELECTED_ITEM += -1 if GAMEVAR_INVENTORY_SELECTED_ITEM > 0 else get_inventory_total_usefull_slots()
 
-						if e.key == 275:
-							if GAMEVAR_IN_INVENTORY:
+							if e.key == pygame.K_RIGHT:
 								GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_usefull_slots() else - get_inventory_total_usefull_slots()
-							else:
+
+							if e.key == pygame.K_UP:
+
+								if get_inventory_total_usefull_slots() >= 6:
+
+									if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:
+										if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_usefull_slots():
+											GAMEVAR_INVENTORY_SELECTED_ITEM += 6
+										else:
+											GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_usefull_slots()
+									else:
+										if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:
+											GAMEVAR_INVENTORY_SELECTED_ITEM -= 6
+
+							if e.key == pygame.K_DOWN:
+
+								if get_inventory_total_usefull_slots() >= 6:
+
+									if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:
+
+										if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_usefull_slots():
+											GAMEVAR_INVENTORY_SELECTED_ITEM += 6
+										else:
+											GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_usefull_slots()
+									else:
+										if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:
+											GAMEVAR_INVENTORY_SELECTED_ITEM -= 6
+
+
+							if e.key == 8:
+								GAMEVAR_IN_INVENTORY = False
+
+						else:
+
+							if e.key == 13:
 								GAMEVAR_IN_INVENTORY = True
-								GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_usefull_slots() else - get_inventory_total_usefull_slots()
-						if e.key  == 8:
-							GAMEVAR_IN_INVENTORY = False
 
 				if e.type == pygame.KEYDOWN:
-
-					if e.key == pygame.K_UP:
-						GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
-					if e.key == pygame.K_DOWN:
-						GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
+					if not GAMEVAR_IN_INVENTORY:
+						if e.key == pygame.K_UP:
+							GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
+							print("Vers le haut pas dans l'inventaire")
+						if e.key == pygame.K_DOWN:
+							GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
+							print("Vers le bas pas dans l'inventaire")
 
 					if e.key == pygame.K_RETURN:
 						if GAMEVAR_MENU_SELECTED_ITEM == 0:
@@ -1528,6 +1572,7 @@ while RUN:
 			elif not GAMEVAR_YOURTURN:
 
 				print("Tour des ennemis")
+
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
 						entity.IA(playerX, playerY)
@@ -1573,13 +1618,13 @@ while RUN:
 					#print(str(((600 + 10) + ((slot_x + 10) * 24), (CANVAS_HEIGHT - 200 + 10) + ((slot_y + 10) * 24), 24, 24)))
 
 					if GAMEVAR_INVENTORY_SELECTED_ITEM == i:
-						print('HIGHTLIGHED!')
+						#print('HIGHTLIGHED!')
 						pygame.draw.rect(OBJ_canvas, (255, 0, 0), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
 
 					else:
 						pygame.draw.rect(OBJ_canvas, (0, 0, 255), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
 
-					print(GAMEVAR_INVENTORY_SELECTED_ITEM, i)
+					#print(GAMEVAR_INVENTORY_SELECTED_ITEM, i)
 
 					slot_x += 1
 					if slot_x > 5:
