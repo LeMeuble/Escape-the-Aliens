@@ -576,6 +576,7 @@ class Player(threading.Thread):
 							tp = None
 
 							self.display(OBJ_canvas)
+							OBJ_terrain.display_entities(OBJ_canvas)
 							OBJ_terrain.display_overwalls(OBJ_canvas)
 
 							for case in path:
@@ -805,7 +806,8 @@ class Minion():
 			tp = None
 			tp_case = 0
 
-			self.display(OBJ_canvas)
+			OBJ_player.display(OBJ_canvas)
+			OBJ_terrain.display_entities(OBJ_canvas)
 			OBJ_terrain.display_overwalls(OBJ_canvas)
 
 			for case in path:
@@ -912,7 +914,7 @@ class Terrain():
 
 					if f'{row}@{room}d' != self.pattern_data['metadata']['spawn']:
 
-						for i in range(random.randint(0, 0)):
+						for i in range(random.randint(0, 4)):
 
 							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
