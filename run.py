@@ -124,7 +124,7 @@ if True:
 	GAMEVAR_MENU_SELECTED_ITEM = 0
 	GAMEVAR_INVENTORY_SELECTED_ITEM = 0
 	GAMEVAR_MENU_SELECTING = True
-	GAMEVAR_NB_MOVEMENT = 5
+	GAMEVAR_NB_ACTIONS = 5
 	GAMEVAR_MAX_HEALTH = 20
 	GAMEVAR_IN_INVENTORY = False
 
@@ -167,12 +167,12 @@ if True:
 	WEAPONS = {
 		"AR": {
 			"damages": 4,
-			"munitions": 30,
+			"ammos": 30,
 			"range": 15
 		},
 		"LASER_RIFLE": {
 			"damages": 8,
-			"munitions": 4,
+			"ammos": 4,
 			"range": 32
 		},
 		"KNIFE": {
@@ -322,13 +322,9 @@ class Player(threading.Thread):
 
 		self.walking = 1
 		self.running = 1
-		#self.health = GAMEVAR_MAX_HEALTH
-		self.health = 8
-		self.max_Movements = GAMEVAR_NB_MOVEMENT
-		self.nb_Movement = 0
-
-		self.vector_x = 0
-		self.vector_y = 0
+		self.health = GAMEVAR_MAX_HEALTH
+		self.max_Actions = GAMEVAR_NB_ACTIONS
+		self.nb_Actions = 0
 
 		self.load_coordinates_from_string(self.coordinates)
 
@@ -557,6 +553,8 @@ class Player(threading.Thread):
 
 				if not collide:
 
+					print("Peut bouger")
+
 					if x * CANVAS_RATE - self.x >= 0:
 
 						self.facing = "east"
@@ -565,22 +563,31 @@ class Player(threading.Thread):
 
 					if GAMEVAR_INFIGHT:
 
+						print("En combat")
+
 						movementX = round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
-						self.nb_Movement += round(abs(movementX / 32)) + round(abs(movementY / 32))
+						self.nb_Actions += round(abs(movementX / 32)) + round(abs(movementY / 32))
+						print(movementX, movementY, self.nb_Actions)
 
-						#print(self.nb_Movement)
 
-						if self.nb_Movement <= self.max_Movements:
+						print(self.nb_Actions)
 
+						if self.nb_Actions <= self.max_Actions:
+							print("Move")
 							self.x += movementX
 							self.y += movementY
 
-							if self.nb_Movement == self.max_Movements:
+							if self.nb_Actions == self.max_Actions:
+								print("End of your turn")
+								self.nb_Actions = 0
 								GAMEVAR_YOURTURN = False
 
-						if self.nb_Movement > self.max_Movements:
-							while self.nb_Movement > self.max_Movements:
+
+
+
+						'''elif self.nb_Movement > self.max_Actions:
+							while self.nb_Movement > self.max_Actions:
 
 								if movementX > 0:
 									movementX -= 1 * CANVAS_RATE
@@ -602,9 +609,9 @@ class Player(threading.Thread):
 
 							self.x += movementX
 							self.y += movementY
-							self.nb_Movement = 0
-							print(self.nb_Movement)
 							GAMEVAR_YOURTURN = False
+							self.nb_Movement = 0
+							print(self.nb_Movement)'''
 					else:
 						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
@@ -622,13 +629,22 @@ class Player(threading.Thread):
 					if entity.in_room(self.map_x, self.map_y):
 						if entity.collide((a[0] + 1, a[1])) or entity.collide((a[0] - 1, a[1])) or entity.collide((a[0], a[1] + 1)) or entity.collide((a[0], a[1] - 1)) or entity.collide((a[0] + 1, a[1] + 1)) or entity.collide((a[0] + 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] + 1)):
 							proxEntities += 1
+							ennemies.append(entity)
 
 			print(proxEntities)
 			if proxEntities <= 0:
 				print('No mobs nearby')
 			elif proxEntities == 1:
-				print("Boum")
 				print(ennemies)
+				print(ennemies[0].health)
+				if not "ammos" in GAMEVAR_CURRENT_WEAPON:
+					ennemies[0].health -= GAMEVAR_CURRENT_WEAPON["damages"]
+					print("Boum")
+					print(ennemies[0].health)
+					if ennemies[0].health <= 0:
+						ennemies[0].kill()
+						print('Ennemi killed')
+
 			elif proxEntities > 1:
 				print("Choose ennemy to fight")
 
@@ -681,6 +697,13 @@ class Minion():
 		self.map_y = int(temp[0].split('@')[1])
 		self.collide_radius = 50
 		self.facing = random.choice(["east", "west"])
+
+
+	def kill(self):
+
+		global GAME_ENTITIES
+
+		GAME_ENTITIES["MINIONS"].remove(self)
 
 	def display(self, surface):
 
@@ -1154,13 +1177,16 @@ class Terrain():
 	def can_go_at(self, x, y):
 
 		global OBJ_player
-
+		#print(x, y, (OBJ_player.x / 32) + 1, (OBJ_player.y / 32) + 3)
 		if not self.get_char_in_current_room_at(x, y) in ['^', '<', 'v', 'V', '>', '*', '|', '-', '_', '/']:
-			if OBJ_player.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200:
+
+			if (OBJ_player.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < (OBJ_player.max_Actions - OBJ_player.nb_Actions) * CANVAS_RATE) and ((round(OBJ_player.x + 1) >= x) or (round(OBJ_player.y + 3) >= y)):
 				if not self.has_any_mob_at(x, y):
 					return True
 
-		return False
+			elif OBJ_player.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < (OBJ_player.max_Actions - OBJ_player.nb_Actions) * CANVAS_RATE + CANVAS_RATE:
+				if not self.has_any_mob_at(x, y):
+					return True
 
 	def gen_path(self, src, target):
 
@@ -1482,7 +1508,7 @@ while RUN:
 
 		pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
-	elif OBJ_terrain.get_char_in_current_room_at(x, y) != '/':
+	elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
 		pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
 
@@ -1693,7 +1719,7 @@ while RUN:
 
 	# print('FRAME DURATION:' + str(datetime.datetime.now() - witness))
 
-# TODO TOMORROW MAYBE: Système de combat
+# TODO: Système de combat
 # TODO: ARMES, MOBS, SPRITES OBJETS
 # TODO UI FIGHT MODE:  - Attaque
 #                      - Déplacement
@@ -1710,4 +1736,6 @@ while RUN:
 # TODO: MENU PRINCIPAL
 # TODO: FICHIER DE PARAMETRES
 
+
+#TODO PATCH : Fonction Terrain.can_go_at qui laisse se déplacer de 6 cases
 # (top, left, width, height)
