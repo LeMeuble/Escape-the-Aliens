@@ -347,7 +347,6 @@ class Player(threading.Thread):
 		time.sleep(5)
 		sys.exit(0)
 
-
 	def load_coordinates_from_string(self, coordinates):
 
 		self.coordinates = coordinates
@@ -565,78 +564,82 @@ class Player(threading.Thread):
 
 					if GAMEVAR_INFIGHT:
 
-						path = OBJ_terrain.gen_path(
-							(self.x, self.y),
-							(x * CANVAS_RATE, y * CANVAS_RATE)
-						)
-
-						tp = None
-						tp_case = 0
-
-						for case in path:
-
-							tp_case += 1
-							tp = case
-
-							if tp_case >= 5:
-								tp = case
-								break
-
-						try:
-							self.x, self.y = tp
-						except:
-							pass
-
-						'''movementX = round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
-						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
-						
-						self.nb_Actions += round(abs(movementX / 32)) + round(abs(movementY / 32))
-
 						if self.nb_Actions <= self.max_Actions:
 
-							self.x += movementX
-							self.y += movementY
+							playerX, playerY = self.get_position()
 
-							self.update_life(heal=1 if random.randint(0, 8) == 4 else 0)
+							path = OBJ_terrain.gen_path(
+								(playerX, playerY),
+								(x, y)
+							)
 
-							if self.nb_Actions == self.max_Actions:
+							tp = None
 
-								self.nb_Actions = 0
-								GAMEVAR_YOURTURN = False
+							self.display(OBJ_canvas)
+							OBJ_terrain.display_overwalls(OBJ_canvas)
 
-							elif self.nb_Actions > self.max_Actions:
-								GAMEVAR_YOURTURN = False'''
-						'''elif self.nb_Movement > self.max_Actions:
-							while self.nb_Movement > self.max_Actions:
+							for case in path:
 
-								if movementX > 0:
-									movementX -= 1 * CANVAS_RATE
-									temoinX = True
+								tp = case
+								self.nb_Actions += 1
 
-								if movementY > 0:
-									movementY -= 1 * CANVAS_RATE
-									temoinY = True
+								if self.nb_Actions >= self.max_Actions:
+									tp = case
+									GAMEVAR_YOURTURN = False
+									self.nb_Actions = 0
+									break
 
-								if temoinX and temoinY:
-									self.nb_Movement -= 2
+								try:
+									self.x = (tp[0] - 1) * CANVAS_RATE
+									self.y = (tp[1] - 3) * CANVAS_RATE
 
-								elif temoinX or temoinY:
-									self.nb_Movement -= 1
-
-								else:
-									self.nb_Movement += 0
-								#print(self.nb_Movement)
-
-							self.x += movementX
-							self.y += movementY
+									OBJ_window.blit(OBJ_canvas,CANVAS_POSITION)  # Blit  the canvas centered on the main window
+									OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
+									OBJ_terrain.display_walls(OBJ_canvas)
+									OBJ_terrain.display_props(OBJ_canvas)
+									OBJ_terrain.display_entities(OBJ_canvas)
+									self.display(OBJ_canvas)
+									OBJ_terrain.display_overwalls(OBJ_canvas)
+									pygame.display.flip()  # Flip/Update the screen
+								except:
+									pass
+						else:
 							GAMEVAR_YOURTURN = False
-							self.nb_Movement = 0
-							print(self.nb_Movement)'''
-					else:
-						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
-						self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
+							self.nb_Actions = 0
 
-						self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))
+					else:
+						print("Movement not in combat")
+						playerX, playerY = self.get_position()
+
+						print(playerX, playerY, x, y)
+
+						path = OBJ_terrain.gen_path(
+								(playerX, playerY),
+								(x, y)
+						)
+
+
+						tp = None
+
+						self.display(OBJ_canvas)
+						OBJ_terrain.display_overwalls(OBJ_canvas)
+
+						for case in path:
+							print(case)
+
+							self.x = (case[0] - 1) * CANVAS_RATE
+							self.y = (case[1] - 3) * CANVAS_RATE
+
+
+							OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+							OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
+							OBJ_terrain.display_walls(OBJ_canvas)
+							OBJ_terrain.display_props(OBJ_canvas)
+							self.display(OBJ_canvas)
+							OBJ_terrain.display_overwalls(OBJ_canvas)
+							pygame.display.flip()  # Flip/Update the screen
+
+							self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))
 
 		return (self.x / CANVAS_RATE), (self.y / CANVAS_RATE)
 
@@ -695,7 +698,7 @@ class Player(threading.Thread):
 '''
 
 		elif self.health == GAMEVAR_MAX_HEALTH:
-			print("Max health !")
+			#print("Max health !")
 			pass
 
 
@@ -793,7 +796,6 @@ class Minion():
 
 		else:
 
-			#print(self.x, self.y)
 
 			path = OBJ_terrain.gen_path(
 				(self.x, self.y),
@@ -802,6 +804,9 @@ class Minion():
 
 			tp = None
 			tp_case = 0
+
+			self.display(OBJ_canvas)
+			OBJ_terrain.display_overwalls(OBJ_canvas)
 
 			for case in path:
 
@@ -812,10 +817,18 @@ class Minion():
 					tp = case
 					break
 
-			try:
-				self.x, self.y = tp
-			except:
-				pass
+				try:
+					self.x, self.y = tp
+					OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+					OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
+					OBJ_terrain.display_walls(OBJ_canvas)
+					OBJ_terrain.display_props(OBJ_canvas)
+					OBJ_terrain.display_entities(OBJ_canvas)
+					self.display(OBJ_canvas)
+					OBJ_terrain.display_overwalls(OBJ_canvas)
+					pygame.display.flip()  # Flip/Update the screen
+				except:
+					pass
 
 
 """
@@ -899,7 +912,7 @@ class Terrain():
 
 					if f'{row}@{room}d' != self.pattern_data['metadata']['spawn']:
 
-						for i in range(random.randint(0, 4)):
+						for i in range(random.randint(0, 0)):
 
 							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
@@ -1137,8 +1150,6 @@ class Terrain():
 					e.display(surface)
 					count += 1
 
-		#print('Mobs : ' + str(count))
-
 	def get_spawn(self):
 
 		x = int(self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][32]['spawns']['main']['x_case'])
@@ -1312,24 +1323,24 @@ class Terrain():
 			else:
 				margin -= 1
 
-			#print(x_state, y_state)
+			# print(x_state, y_state)
 
-
-
-			for i in checked:
-				for j in checked[i]:
-					if checked[i][j]:
-						pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
+			if DEBUG_MODE:
+				for i in checked:
+					for j in checked[i]:
+						if checked[i][j]:
+							pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
 			done = False
 
-			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+			if DEBUG_MODE:
+				OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
-			pygame.display.flip()  # Flip/Update the screen
+				pygame.display.flip()  # Flip/Update the screen
 
-			time.sleep(0.025)
+			#time.sleep(0.025)
 
-			print(possible)
+			#print(possible)
 
 			if px == tx and py == ty:
 
@@ -1346,7 +1357,6 @@ class Terrain():
 
 			if px == tx:
 				if y_state == 'up':
-					print(possible[py][px], possible[py - 1][px])
 					if possible[py - 1][px] and not checked[py - 1][px]:
 						checked[py][px] = True
 						py -= 1
@@ -1355,7 +1365,6 @@ class Terrain():
 						continue
 
 				elif y_state == 'down':
-					print(possible[py][px], possible[py+1][px])
 					if possible[py + 1][px] and not checked[py + 1][px]:
 						checked[py][px] = True
 						py += 1
@@ -1365,7 +1374,6 @@ class Terrain():
 
 			if py == ty:
 				if x_state == 'right':
-					print(possible[py][px], possible[py][px + 1])
 					if possible[py][px + 1] and not checked[py][px + 1]:
 						checked[py][px] = True
 						px += 1
@@ -1374,7 +1382,6 @@ class Terrain():
 						continue
 
 				elif x_state == 'left':
-					print(possible[py][px], possible[py][px - 1])
 					if possible[py][px - 1] and not checked[py][px - 1]:
 						checked[py][px] = True
 						px -= 1
@@ -1383,7 +1390,6 @@ class Terrain():
 						continue
 
 			if y_state == 'up':
-				print(possible[py][px], possible[py - 1][px])
 				if possible[py - 1][px] and not checked[py - 1][px]:
 					checked[py][px] = True
 					py -= 1
@@ -1402,7 +1408,6 @@ class Terrain():
 					continue
 
 			if x_state == 'right':
-				print(possible[py][px], possible[py][px + 1])
 				if possible[py][px + 1] and not checked[py][px + 1]:
 					checked[py][px] = True
 					px += 1
@@ -1412,7 +1417,6 @@ class Terrain():
 					continue
 
 			elif x_state == 'left':
-				print(possible[py][px], possible[py][px - 1])
 				if possible[py][px - 1] and not checked[py][px - 1]:
 					checked[py][px] = True
 					px -= 1
@@ -1511,7 +1515,7 @@ atexit.register(OBJ_terrain.save_to_file, path='backup.terrain')
 fps_timer = datetime.datetime.now()
 fps_counter = 0
 
-plist = {}
+# plist = {}
 
 go_to_beginning = False
 
@@ -1561,7 +1565,6 @@ while RUN:
 	elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
 		pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
-
 	for e in pygame.event.get():
 
 		if e.type == pygame.QUIT:
@@ -1597,8 +1600,9 @@ while RUN:
 			elif e.type == MOUSEBUTTONDOWN:
 
 				#OBJ_player.mouse_movement(x, y)
-				print(OBJ_player.get_position())
-				plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
+				#print(OBJ_player.get_position())
+				OBJ_player.mouse_movement(x, y)
+				# plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
 
 		if e.type == pygame.KEYDOWN:
 
@@ -1748,14 +1752,14 @@ while RUN:
 
 					i += 1
 
-
-	r, g, b = 0, 0, 0
+	'''r, g, b = 0, 0, 0
 	for i in plist:
 		r += 10
 		g += 1
 		b += 5
 		pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
+'''
 	pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
 	pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, int(OBJ_player.health * 10), CANVAS_HEIGHT - 1008))
 
