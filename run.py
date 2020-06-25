@@ -342,6 +342,12 @@ class Player(threading.Thread):
 
 		threading.Thread.__init__(self)
 
+	def kill(self):
+		print("You got killed")
+		time.sleep(5)
+		sys.exit(0)
+
+
 	def load_coordinates_from_string(self, coordinates):
 
 		self.coordinates = coordinates
@@ -535,8 +541,6 @@ class Player(threading.Thread):
 		temoinX = False
 		temoinY = False
 
-		print("Souris")
-
 		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
 			char = OBJ_terrain.get_char_in_current_room_at(x, y)
 
@@ -553,8 +557,6 @@ class Player(threading.Thread):
 
 				if not collide:
 
-					print("Peut bouger")
-
 					if x * CANVAS_RATE - self.x >= 0:
 
 						self.facing = "east"
@@ -563,29 +565,24 @@ class Player(threading.Thread):
 
 					if GAMEVAR_INFIGHT:
 
-						print("En combat")
-
 						movementX = round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						movementY = round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 						self.nb_Actions += round(abs(movementX / 32)) + round(abs(movementY / 32))
-						print(movementX, movementY, self.nb_Actions)
-
-
-						print(self.nb_Actions)
 
 						if self.nb_Actions <= self.max_Actions:
-							print("Move")
+
 							self.x += movementX
 							self.y += movementY
 
+							self.update_life(heal=1 if random.randint(0, 8) == 4 else 0)
+
 							if self.nb_Actions == self.max_Actions:
-								print("End of your turn")
+
 								self.nb_Actions = 0
 								GAMEVAR_YOURTURN = False
 
-
-
-
+							elif self.nb_Actions > self.max_Actions:
+								GAMEVAR_YOURTURN = False
 						'''elif self.nb_Movement > self.max_Actions:
 							while self.nb_Movement > self.max_Actions:
 
@@ -616,36 +613,34 @@ class Player(threading.Thread):
 						self.x += round((x * CANVAS_RATE) - self.x) - CANVAS_RATE
 						self.y += round((y * CANVAS_RATE) - self.y) - (3*CANVAS_RATE)
 
+						self.update_life(heal=1 if random.randint(0, 5) == 3 else 0)
+
 		return (self.x / CANVAS_RATE), (self.y / CANVAS_RATE)
 
 	def can_attack(self):
+
+		global GAMEVAR_YOURTURN
+
 		a = self.get_position()
 
-		if not "munitions" in GAMEVAR_CURRENT_WEAPON:
-			proxEntities = 0
+		if "munitions" not in GAMEVAR_CURRENT_WEAPON:
+			inRangeEnnemies = 0
 			ennemies = []
 			for type in GAME_ENTITIES:
 				for entity in GAME_ENTITIES[type]:
 					if entity.in_room(self.map_x, self.map_y):
-						if entity.collide((a[0] + 1, a[1])) or entity.collide((a[0] - 1, a[1])) or entity.collide((a[0], a[1] + 1)) or entity.collide((a[0], a[1] - 1)) or entity.collide((a[0] + 1, a[1] + 1)) or entity.collide((a[0] + 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] + 1)):
-							proxEntities += 1
+						if entity.collide((a[0] + 2, a[1])) or entity.collide((a[0] - 2, a[1])) or entity.collide((a[0], a[1] + 2)) or entity.collide((a[0], a[1] - 2)) or entity.collide((a[0] + 1, a[1] + 1)) or entity.collide((a[0] + 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] + 1)):
+							inRangeEnnemies += 1
 							ennemies.append(entity)
 
-			print(proxEntities)
-			if proxEntities <= 0:
+			if inRangeEnnemies <= 0:
 				print('No mobs nearby')
-			elif proxEntities == 1:
-				print(ennemies)
-				print(ennemies[0].health)
-				if not "ammos" in GAMEVAR_CURRENT_WEAPON:
-					ennemies[0].health -= GAMEVAR_CURRENT_WEAPON["damages"]
-					print("Boum")
-					print(ennemies[0].health)
-					if ennemies[0].health <= 0:
-						ennemies[0].kill()
-						print('Ennemi killed')
+			elif inRangeEnnemies == 1:
+				if "ammos" not in GAMEVAR_CURRENT_WEAPON:
+					ennemies[0].update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
+					GAMEVAR_YOURTURN = False
 
-			elif proxEntities > 1:
+			elif inRangeEnnemies > 1:
 				print("Choose ennemy to fight")
 
 
@@ -698,7 +693,6 @@ class Minion():
 		self.collide_radius = 50
 		self.facing = random.choice(["east", "west"])
 
-
 	def kill(self):
 
 		global GAME_ENTITIES
@@ -746,12 +740,34 @@ class Minion():
 			#print("-----------------")
 			return True
 
+	def update_life(self, heal=0, damages=0, armor=0, boost=0):
+
+		global GAMEVAR_MAX_HEALTH
+
+		if heal > 0 and self.health < GAMEVAR_MAX_HEALTH:
+			if self.health + heal <= GAMEVAR_MAX_HEALTH:
+				self.health += heal
+
+			elif self.health + heal > GAMEVAR_MAX_HEALTH:
+				self.health += (GAMEVAR_MAX_HEALTH - self.health)
+
+		if damages > 0:
+			if self.health - damages > 0:
+				self.health -= damages
+
+			else:
+				self.health = 0
+				self.kill()
+		elif self.health == GAMEVAR_MAX_HEALTH:
+			pass
+
 	def IA(self):
 
 		global CANVAS_RATE
+		if OBJ_player.distance((self.x * 32, self.y * 32)) <= 100:
+			OBJ_player.update_life(damages=self.damage)
 
-		if OBJ_player.distance((self.x * 32, self.y * 32)) <= 76:
-			print('NEAR')
+
 		else:
 
 			#print(self.x, self.y)
@@ -761,7 +777,6 @@ class Minion():
 				OBJ_player.get_position()
 			)
 
-			print(path)
 			tp = None
 			tp_case = 0
 
@@ -1630,7 +1645,6 @@ while RUN:
 
 			elif not GAMEVAR_YOURTURN:
 
-				print("Tour des ennemis")
 
 				for type in GAME_ENTITIES:
 					for e in GAME_ENTITIES[type]:
@@ -1670,7 +1684,7 @@ while RUN:
 		OBJ_canvas.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 127))
 		OBJ_canvas.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 77))
 
-		if GAMEVAR_MENU_SELECTED_ITEM == 2:
+		if GAMEVAR_MENU_SELECTED_ITEM == 2 and GAMEVAR_IN_INVENTORY:
 
 			pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
 
@@ -1684,16 +1698,13 @@ while RUN:
 
 				if GAMEVAR_INVENTORY[item] > 0:
 
-					#print(str(((600 + 10) + ((slot_x + 10) * 24), (CANVAS_HEIGHT - 200 + 10) + ((slot_y + 10) * 24), 24, 24)))
 
 					if GAMEVAR_INVENTORY_SELECTED_ITEM == i:
-						#print('HIGHTLIGHED!')
 						pygame.draw.rect(OBJ_canvas, (255, 0, 0), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
 
 					else:
 						pygame.draw.rect(OBJ_canvas, (0, 0, 255), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
 
-					#print(GAMEVAR_INVENTORY_SELECTED_ITEM, i)
 
 					slot_x += 1
 					if slot_x > 5:
@@ -1703,15 +1714,16 @@ while RUN:
 					i += 1
 
 
-	r, g, b = 0, 0, 0
+	'''r, g, b = 0, 0, 0
 	for i in plist:
 		r += 10
 		g += 1
 		b += 5
 		pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
+'''
 	pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
-	pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, OBJ_player.health * 10, CANVAS_HEIGHT - 1008))
+	pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, int(OBJ_player.health * 10), CANVAS_HEIGHT - 1008))
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
