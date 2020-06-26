@@ -393,7 +393,7 @@ class Player(threading.Thread):
 						for type in GAME_ENTITIES:
 							for entity in GAME_ENTITIES[type]:
 								entity.clear_cache()
-								print('CACHE CLEAR FOR INSTANCE ' + str(entity))
+								#print('CACHE CLEAR FOR INSTANCE ' + str(entity))
 
 						OBJ_terrain.restart()
 						OBJ_terrain = Terrain()
@@ -700,7 +700,7 @@ class Player(threading.Thread):
 						OBJ_terrain.display_overwalls(OBJ_canvas)
 
 						for case in path:
-							print(case)
+							#print(case)
 
 							self.x = (case[0] - 1) * CANVAS_RATE
 							self.y = (case[1] - 3) * CANVAS_RATE
@@ -941,7 +941,8 @@ class Minion():
 
 			path = OBJ_terrain.gen_path(
 				(self.x, self.y),
-				OBJ_player.get_position()
+				OBJ_player.get_position(),
+				[(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x, self.y), (self.x - 1, self.y)]
 			)
 
 			tp = None
@@ -966,10 +967,14 @@ class Minion():
 					OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
 					OBJ_terrain.display_walls(OBJ_canvas)
 					OBJ_terrain.display_props(OBJ_canvas)
+					OBJ_player.display(OBJ_canvas)
 					OBJ_terrain.display_entities(OBJ_canvas)
 					self.display(OBJ_canvas)
 					OBJ_terrain.display_overwalls(OBJ_canvas)
 					pygame.display.flip()  # Flip/Update the screen
+
+					time.sleep(0.015)
+
 				except:
 					pass
 
@@ -1036,6 +1041,8 @@ class Terrain():
 	"""
 	def generate(self):
 
+		min, max = int(input('min: ')), int(input('max: '))
+
 		global GAME_ENTITIES
 
 		self.pattern = random.choice(os.listdir('./resources/terrain/paths'))
@@ -1067,7 +1074,7 @@ class Terrain():
 
 					if f'{row}@{room}d' != self.pattern_data['metadata']['spawn']:
 
-						for i in range(random.randint(0, 4)):
+						for i in range(random.randint(min, max)):
 
 							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
 
@@ -1394,7 +1401,7 @@ class Terrain():
 				if not self.has_any_mob_at(x, y):
 					return True
 
-	def gen_path(self, src, target):
+	def gen_path(self, src, target, forced_cases=[]):
 
 		global OBJ_canvas
 		global OBJ_window
@@ -1429,10 +1436,13 @@ class Terrain():
 					not_possible.append((entity.x, entity.y))
 					not_possible.append((entity.x - 1, entity.y))
 
+		for f in forced_cases:
+			not_possible.remove(f)
+
 		for i in range(32):
 			for j in range(32):
 				if self.get_char_in_current_room_at(j, i) in ['+', 'x']:
-					if (i, j) in not_possible:
+					if (j, i) in not_possible:
 						possible[i][j] = False
 						print('NOT POSSIBLE')
 					else:
@@ -1503,7 +1513,7 @@ class Terrain():
 							pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
 				for a in not_possible:
-					print(a)
+					#print(a)
 					pygame.draw.lines(OBJ_canvas, (255, 0, 255), True, (
 					(a[0] * CANVAS_RATE, a[1] * CANVAS_RATE), (a[0] * CANVAS_RATE + CANVAS_RATE, a[1] * CANVAS_RATE),
 					(a[0] * CANVAS_RATE + CANVAS_RATE, a[1] * CANVAS_RATE + CANVAS_RATE),
@@ -2090,10 +2100,7 @@ while RUN:
 
 # TODO: Système de combat
 # TODO: ARMES, MOBS, SPRITES OBJETS
-# TODO UI FIGHT MODE:  - Attaque
-#                      - Déplacement
-#                      - Inventaire
-# TODO: INVENTAIRE ( entree pour rentrer l'afficher )
+# TODO: fonctions INVENTAIRE
 
 
 # TODO pathfinding dans le pathfinding
@@ -2108,4 +2115,5 @@ while RUN:
 # TODO baisser les dégats des minions
 
 # TODO PATCH : les displays qui sont buggés pendant les déplacements
+# TODO PATCH : le pathfinding lag
 # (top, left, width, height)
