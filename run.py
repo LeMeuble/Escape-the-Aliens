@@ -25,6 +25,7 @@ from win32api import GetSystemMetrics
 pygame.init()
 pygame.font.init()
 
+
 if True:
 
 	DEBUG_MODE = False
@@ -43,12 +44,18 @@ if True:
 	CANVAS_RATE = round(CANVAS_WIDTH / 32)
 	CANVAS_RATE_HALF = CANVAS_RATE / 2
 
-	DEFAULT_DIFFICULTY = 2
-
 	RUN = True
 
 
 	"""@@@@@ INIT SPRITES/IMAGES/WALL/GROUNDS IMAGES VARIABLES @@@@@"""
+
+	UI_GAMEOVER = {}
+	UI_GAMEOVER['left'] = pygame.transform.scale(pygame.image.load('./resources/sprites/ui/gameover_sl.png'), (CANVAS_WIDTH, CANVAS_WIDTH))
+	UI_GAMEOVER['right'] = pygame.transform.scale(pygame.image.load('./resources/sprites/ui/gameover_sr.png'), (CANVAS_WIDTH, CANVAS_WIDTH))
+
+	UI_HEALTH_BAR = {}
+	for i in range(0, 51):
+		UI_HEALTH_BAR[str(i)] = pygame.transform.scale(pygame.image.load(f'./resources/sprites/ui/health/bar{i}.jpg'), (math.ceil(CANVAS_WIDTH / 6), math.ceil(CANVAS_HEIGHT / 38.4)))
 
 	SPRITES_GROUND = {}
 	SPRITES_GROUND['base'] = {}
@@ -116,7 +123,7 @@ if True:
 
 	"""@@@@@ INIT GAMES VARIABLES @@@@@"""
 
-	GAMEVAR_DIFFICULTY = DEFAULT_DIFFICULTY
+	GAMEVAR_DIFFICULTY = 2
 	GAMEVAR_FLOOR = 0
 	GAMEVAR_INFIGHT = False
 	GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor/3) + 1
@@ -183,6 +190,7 @@ if True:
 
 	GAMEVAR_CURRENT_WEAPON = WEAPONS["KNIFE"]
 
+
 """@@@@@ INIT ENTITIES VARIABLES @@@@@"""
 
 """
@@ -199,7 +207,7 @@ if True:
 """
 
 
-def get_inventory_total_usefull_slots():
+def get_inventory_total_useful_slots():
 
 	global GAMEVAR_INVENTORY
 
@@ -249,7 +257,6 @@ class ThreadedCalculator(threading.Thread):
 
 		threading.Thread.__init__(self)
 
-
 	def run(self):
 
 		global RUN
@@ -262,7 +269,6 @@ class ThreadedCalculator(threading.Thread):
 			time.sleep(0.001)
 
 			self.x_case, self.y_case = mouse_global_case()
-
 
 	def get_mouse_case(self):
 
@@ -294,7 +300,6 @@ class Bullet(threading.Thread):
 		global RUN
 
 		while True:
-
 			if not RUN:
 				sys.exit(0)
 
@@ -343,9 +348,70 @@ class Player(threading.Thread):
 		threading.Thread.__init__(self)
 
 	def kill(self):
-		print("You got killed")
-		time.sleep(5)
-		sys.exit(0)
+
+		global OBJ_terrain, OBJ_player, OBJ_bullet, OBJ_calculator, RUN, GAME_ENTITIES, UI_GAMEOVER
+
+		CONTINUE = True
+
+		SELECTED = 'left'
+
+		while CONTINUE:
+
+			OBJ_canvas.fill((0, 0, 0))  # Erase pixels on canvas
+			OBJ_canvas.blit(UI_GAMEOVER[SELECTED], (0, 0))
+			OBJ_window.fill((0, 0, 0))  # Erase pixels on canvas
+			OBJ_window.blit(OBJ_canvas, (0, 0))
+			pygame.display.flip()
+
+			for e in pygame.event.get():
+
+				if e.type == pygame.QUIT:
+					CONTINUE = False
+					sys.exit(0)
+
+				if e.type == pygame.KEYDOWN:
+
+					if e.key == pygame.K_LEFT or e.key == pygame.K_RIGHT:
+
+						if SELECTED == 'left':
+							SELECTED = 'right'
+						else:
+							SELECTED = 'left'
+
+					if e.key == pygame.K_RETURN:
+
+						if SELECTED == 'right':
+							RUN = False
+							sys.exit(0)
+
+						RUN = False
+
+						for type in GAME_ENTITIES:
+							for entity in GAME_ENTITIES[type]:
+								entity.clear_cache()
+								print('CACHE CLEAR FOR INSTANCE ' + str(entity))
+
+						OBJ_terrain.restart()
+						OBJ_terrain = Terrain()
+
+						time.sleep(1)
+
+						RUN = True
+
+						OBJ_terrain.generate()
+						OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
+						OBJ_bullet = Bullet()
+						OBJ_bullet.start()
+						OBJ_player.start()
+
+						OBJ_calculator = ThreadedCalculator()
+						OBJ_calculator.start()
+
+						CONTINUE = False
+
+					if e.key == pygame.K_ESCAPE:
+						CONTINUE = False
+						sys.exit(0)
 
 	def load_coordinates_from_string(self, coordinates):
 
@@ -368,15 +434,19 @@ class Player(threading.Thread):
 		while True:
 
 			if not RUN:
+
 				sys.exit(0)
 
 			time.sleep(0.01)
 
-			pos = self.get_position()
-			self.side_chars['up'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] - 1)
-			self.side_chars['down'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] + 1)
-			self.side_chars['right'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] + 1, pos[1])
-			self.side_chars['left'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] - 1, pos[1])
+			try:
+				pos = self.get_position()
+				self.side_chars['up'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] - 1)
+				self.side_chars['down'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] + 1)
+				self.side_chars['right'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] + 1, pos[1])
+				self.side_chars['left'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] - 1, pos[1])
+			except:
+				sys.exit(0)
 
 			for char in self.side_chars:
 
@@ -694,6 +764,7 @@ class Player(threading.Thread):
 			else:
 				self.health = 0
 				print("Dead")
+				self.kill()
 				'''if got_Resurection:
 					print("Do you want to rez yourself ?")
 '''
@@ -702,6 +773,9 @@ class Player(threading.Thread):
 			#print("Max health !")
 			pass
 
+	def terminate(self):
+
+		self.setDaemon(True)
 
 class Minion():
 
@@ -832,6 +906,18 @@ class Minion():
 				except:
 					pass
 
+	def clear_cache(self):
+
+		del self.coordinates
+		del self.speed
+		del self.health
+		del self.damage
+		del self.x
+		del self.y
+		del self.map_x
+		del self.map_y
+		del self.collide_radius
+		del self.facing
 
 """
 	
@@ -1117,11 +1203,12 @@ class Terrain():
 
 			for box in list(line):
 
+				if box in ['<', '>', 'v', 'V', '^', '*']:
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
+
 				if box in ['<', '>']:
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
-
-
 
 				elif box in ['v']:
 
@@ -1496,6 +1583,116 @@ class Terrain():
 
 		return path
 
+	def restart(self):
+
+		global RUN
+		global DEBUG_MODE
+		global WINDOW_WIDTH
+		global WINDOW_HEIGHT
+		global WINDOW_FRAMERATE
+		global WINDOW_FLAGS
+		global CANVAS_WIDTH
+		global CANVAS_POSITION
+		global CANVAS_RATE
+		global CANVAS_RATE_HALF
+		global GAMEVAR_DIFFICULTY
+		global GAMEVAR_FLOOR
+		global GAMEVAR_INFIGHT
+		global GAMEVAR_MAXMOB
+		global GAMEVAR_YOURTURN
+		global GAMEVAR_MENU_SELECTED_ITEM
+		global GAMEVAR_INVENTORY_SELECTED_ITEM
+		global GAMEVAR_MENU_SELECTING
+		global GAMEVAR_NB_ACTIONS
+		global GAMEVAR_MAX_HEALTH
+		global GAMEVAR_IN_INVENTORY
+		global GAMEVAR_INVENTORY
+		global GAMEVAR_SCORE
+		global GAMEVAR_KEYBOARD
+		global GAME_ENTITIES
+		global WEAPONS
+		global GAMEVAR_CURRENT_WEAPON
+
+		DEBUG_MODE = False
+
+		"""@@@@@ INIT BASES VARIABLES @@@@@"""
+
+		WINDOW_WIDTH = 1024  # GetSystemMetrics(0)
+		WINDOW_HEIGHT = 1024  # GetSystemMetrics(1)
+		WINDOW_FRAMERATE = 45
+		WINDOW_FLAGS = None
+
+		CANVAS_WIDTH = CANVAS_HEIGHT = WINDOW_HEIGHT
+		CANVAS_POSITION = (round((WINDOW_WIDTH - CANVAS_WIDTH) / 2), round((WINDOW_HEIGHT - CANVAS_HEIGHT) / 2))
+		CANVAS_RATE = round(CANVAS_WIDTH / 32)
+		CANVAS_RATE_HALF = CANVAS_RATE / 2
+
+		"""@@@@@ INIT GAMES VARIABLES @@@@@"""
+
+		GAMEVAR_DIFFICULTY = 2
+		GAMEVAR_FLOOR = 0
+		GAMEVAR_INFIGHT = False
+		GAMEVAR_MAXMOB = lambda difficulty, floor: difficulty * 2 * (floor / 3) + 1
+		GAMEVAR_YOURTURN = True
+		GAMEVAR_MENU_SELECTED_ITEM = 0
+		GAMEVAR_INVENTORY_SELECTED_ITEM = 0
+		GAMEVAR_MENU_SELECTING = True
+		GAMEVAR_NB_ACTIONS = 5
+		GAMEVAR_MAX_HEALTH = 20
+		GAMEVAR_IN_INVENTORY = False
+
+		GAMEVAR_INVENTORY = {
+			"laser": 1,
+			"ar": 1,
+			"knife": 1,
+			"medpack": 1,
+			"stims": 1,
+			"shield": 0,
+			"grenade": 0,
+			"special_item_1": 0,
+			"special_item_2": 0,
+			"special_item_3": 0,
+			"key_1": 0,
+			"extra_life": 0
+		}
+
+		GAMEVAR_SCORE = 0
+		GAMEVAR_KEYBOARD = []
+
+		"""@@@@@ INIT ENTITIES VARIABLES @@@@@"""
+
+		GAME_ENTITIES = {}
+		GAME_ENTITIES['MINIONS'] = []
+		GAME_ENTITIES['ARCHEROS'] = []
+		GAME_ENTITIES['RUSHERS'] = []
+		GAME_ENTITIES['HEALERS'] = []
+		GAME_ENTITIES['TORNADOS'] = []
+		GAME_ENTITIES['ALLIES'] = []
+		GAME_ENTITIES['BOSS_1'] = []
+		GAME_ENTITIES['BOSS_2'] = []
+		GAME_ENTITIES['BOSS_3'] = []
+		GAME_ENTITIES['BOSS_4'] = []
+		GAME_ENTITIES['BOSS_5'] = []
+
+		WEAPONS = {
+			"AR": {
+				"damages": 4,
+				"ammos": 30,
+				"range": 15
+			},
+			"LASER_RIFLE": {
+				"damages": 8,
+				"ammos": 4,
+				"range": 32
+			},
+			"KNIFE": {
+				"damages": 2,
+				"range": 1
+			}
+		}
+
+		GAMEVAR_CURRENT_WEAPON = WEAPONS["KNIFE"]
+
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
@@ -1517,7 +1714,7 @@ atexit.register(OBJ_terrain.save_to_file, path='backup.terrain')
 fps_timer = datetime.datetime.now()
 fps_counter = 0
 
-# plist = {}
+plist = {}
 
 go_to_beginning = False
 
@@ -1596,17 +1793,17 @@ while RUN:
 				if e.key == 113:
 					print("Objet ramassé (WIP)")
 
-				if e.key == 104:
-					OBJ_player.update_life(damages=4)
-
 			elif e.type == MOUSEBUTTONDOWN:
 
 				#OBJ_player.mouse_movement(x, y)
 				#print(OBJ_player.get_position())
 				OBJ_player.mouse_movement(x, y)
-				# plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
+				if DEBUG_MODE:
+					plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
 
 		if e.type == pygame.KEYDOWN:
+			if e.key == 104:
+				OBJ_player.update_life(damages=1)
 
 			if e.key == pygame.K_p:
 
@@ -1632,34 +1829,34 @@ while RUN:
 						if GAMEVAR_IN_INVENTORY:
 
 							if e.key == pygame.K_LEFT:
-								GAMEVAR_INVENTORY_SELECTED_ITEM += -1 if GAMEVAR_INVENTORY_SELECTED_ITEM > 0 else get_inventory_total_usefull_slots()
+								GAMEVAR_INVENTORY_SELECTED_ITEM += -1 if GAMEVAR_INVENTORY_SELECTED_ITEM > 0 else get_inventory_total_useful_slots()
 
 							if e.key == pygame.K_RIGHT:
-								GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_usefull_slots() else - get_inventory_total_usefull_slots()
+								GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_useful_slots() else - get_inventory_total_useful_slots()
 
 							if e.key == pygame.K_UP:
 
-								if get_inventory_total_usefull_slots() >= 6:
+								if get_inventory_total_useful_slots() >= 6:
 
 									if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:
-										if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_usefull_slots():
+										if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_useful_slots():
 											GAMEVAR_INVENTORY_SELECTED_ITEM += 6
 										else:
-											GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_usefull_slots()
+											GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_useful_slots()
 									else:
 										if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:
 											GAMEVAR_INVENTORY_SELECTED_ITEM -= 6
 
 							if e.key == pygame.K_DOWN:
 
-								if get_inventory_total_usefull_slots() >= 6:
+								if get_inventory_total_useful_slots() >= 6:
 
 									if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:
 
-										if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_usefull_slots():
+										if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_useful_slots():
 											GAMEVAR_INVENTORY_SELECTED_ITEM += 6
 										else:
-											GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_usefull_slots()
+											GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_useful_slots()
 									else:
 										if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:
 											GAMEVAR_INVENTORY_SELECTED_ITEM -= 6
@@ -1754,16 +1951,20 @@ while RUN:
 
 					i += 1
 
-	'''r, g, b = 0, 0, 0
-	for i in plist:
-		r += 10
-		g += 1
-		b += 5
-		pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+	if DEBUG_MODE:
+		r, g, b = 0, 0, 0
+		for i in plist:
+			r += 10
+			g += 1
+			b += 5
+			pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
-'''
-	pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
-	pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, int(OBJ_player.health * 10), CANVAS_HEIGHT - 1008))
+
+	OBJ_canvas.blit(UI_HEALTH_BAR[str(math.floor(OBJ_player.health / (GAMEVAR_MAX_HEALTH / 50)))], (10, CANVAS_HEIGHT - (CANVAS_HEIGHT - 10)))
+
+
+	#pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
+	#pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, int(OBJ_player.health * 10), CANVAS_HEIGHT - 1008))
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
@@ -1777,7 +1978,7 @@ while RUN:
 #                      - Déplacement
 #                      - Inventaire
 # TODO: INVENTAIRE ( entree pour rentrer l'afficher )
-# TODO patcher la barre de vie
+
 
 # TODO pathfinding dans le pathfinding
 
@@ -1788,6 +1989,9 @@ while RUN:
 # TODO: MENU PRINCIPAL
 # TODO: FICHIER DE PARAMETRES
 
+# TODO baisser les dégats des minions
 
-#TODO PATCH : Fonction Terrain.can_go_at qui laisse se déplacer de 6 cases
+# TODO PATCH : la barre de vie
+# TODO PATCH : les portes qui sont buggées pendant les mouvements
+
 # (top, left, width, height)
