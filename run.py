@@ -248,6 +248,61 @@ def mouse_global_case():
 	return (x, y)
 
 
+def display_ui(surface):
+
+	global UI_HEALTH_BAR
+	global GAMEVAR_MAX_HEALTH
+	global CANVAS_HEIGHT
+	global GAMEVAR_YOURTURN
+	global GAMEVAR_INFIGHT
+	global GAMEVAR_MENU_SELECTED_ITEM
+	global GAMEVAR_IN_INVENTORY
+	global GAMEVAR_INVENTORY
+
+	global OBJ_player
+
+	surface.blit(UI_HEALTH_BAR[str(math.floor(OBJ_player.health / (GAMEVAR_MAX_HEALTH / 50)))], (10, CANVAS_HEIGHT - (CANVAS_HEIGHT - 10)))
+
+	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
+
+		pygame.draw.rect(surface, (100, 100, 100), (20, CANVAS_HEIGHT - 200, 380, 160))
+		pygame.draw.rect(surface, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 100), (40, CANVAS_HEIGHT - 183, 340, 30))
+		pygame.draw.rect(surface, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
+		pygame.draw.rect(surface, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
+
+		surface.blit(FONT.render('Fight', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 177))
+		surface.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 127))
+		surface.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 77))
+
+		if GAMEVAR_MENU_SELECTED_ITEM == 2 and GAMEVAR_IN_INVENTORY:
+
+			pygame.draw.rect(surface, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
+
+			slot_x = 0
+			slot_y = 0
+
+			i = 0
+
+			for item in GAMEVAR_INVENTORY:
+
+				if GAMEVAR_INVENTORY[item] > 0:
+
+
+					if GAMEVAR_INVENTORY_SELECTED_ITEM == i:
+						pygame.draw.rect(surface, (255, 0, 0), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
+
+					else:
+						pygame.draw.rect(surface, (0, 0, 255), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
+
+
+					slot_x += 1
+					if slot_x > 5:
+						slot_x = 0
+						slot_y += 1
+
+					i += 1
+
+
 class ThreadedCalculator(threading.Thread):
 
 	def __init__(self):
@@ -261,7 +316,7 @@ class ThreadedCalculator(threading.Thread):
 
 		global RUN
 
-		while True:
+		while RUN:
 
 			if not RUN:
 				sys.exit(0)
@@ -299,7 +354,7 @@ class Bullet(threading.Thread):
 
 		global RUN
 
-		while True:
+		while RUN:
 			if not RUN:
 				sys.exit(0)
 
@@ -435,7 +490,7 @@ class Player(threading.Thread):
 
 		global RUN
 
-		while True:
+		while RUN:
 
 			if not RUN:
 
@@ -459,6 +514,8 @@ class Player(threading.Thread):
 					# print('You are in front of a door, do you want to cross it ?')
 				else:
 					self.side_doors[char] = False
+
+		sys.exit(0)
 
 	def display(self, surface):
 
@@ -652,6 +709,7 @@ class Player(threading.Thread):
 							self.display(OBJ_canvas)
 							OBJ_terrain.display_entities(OBJ_canvas)
 							OBJ_terrain.display_overwalls(OBJ_canvas)
+							display_ui(OBJ_canvas)
 
 							for case in path:
 
@@ -668,13 +726,15 @@ class Player(threading.Thread):
 									self.x = (tp[0] - 1) * CANVAS_RATE
 									self.y = (tp[1] - 3) * CANVAS_RATE
 
-									OBJ_window.blit(OBJ_canvas,CANVAS_POSITION)  # Blit  the canvas centered on the main window
+									OBJ_canvas.fill((0, 0, 0))
 									OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
 									OBJ_terrain.display_walls(OBJ_canvas)
 									OBJ_terrain.display_props(OBJ_canvas)
 									OBJ_terrain.display_entities(OBJ_canvas)
 									self.display(OBJ_canvas)
 									OBJ_terrain.display_overwalls(OBJ_canvas)
+									display_ui(OBJ_canvas)
+									OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 									pygame.display.flip()  # Flip/Update the screen
 								except:
 									pass
@@ -698,6 +758,7 @@ class Player(threading.Thread):
 
 						self.display(OBJ_canvas)
 						OBJ_terrain.display_overwalls(OBJ_canvas)
+						display_ui(OBJ_canvas)
 
 						for case in path:
 							#print(case)
@@ -706,12 +767,14 @@ class Player(threading.Thread):
 							self.y = (case[1] - 3) * CANVAS_RATE
 
 
-							OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+							OBJ_canvas.fill((0, 0, 0))
 							OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
 							OBJ_terrain.display_walls(OBJ_canvas)
 							OBJ_terrain.display_props(OBJ_canvas)
 							self.display(OBJ_canvas)
 							OBJ_terrain.display_overwalls(OBJ_canvas)
+							display_ui(OBJ_canvas)
+							OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 							pygame.display.flip()  # Flip/Update the screen
 
 							self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))
@@ -792,7 +855,6 @@ class Player(threading.Thread):
 
 		return self.is_dead_docker
 
-
 	def update_life(self, heal=0, damages=0, armor=0, boost=0):
 
 		global GAMEVAR_MAX_HEALTH
@@ -823,16 +885,15 @@ class Player(threading.Thread):
 			pass
 
 
-
-class Minion():
+class Minion(threading.Thread):
 
 	def __init__(self, coordinates):
 
 		global GAMEVAR_DIFFICULTY
 		self.coordinates = coordinates
 		self.speed = GAMEVAR_DIFFICULTY * 0.5
-		self.health = (5 + (GAMEVAR_DIFFICULTY * 1.5))
-		self.damage = 1 + (GAMEVAR_DIFFICULTY * 1.25)
+		self.health = (5 + (GAMEVAR_DIFFICULTY * 1.25))
+		self.damage = 1 + (GAMEVAR_DIFFICULTY * 0.5)
 		temp = self.coordinates.split('//')
 		self.x = int(temp[1].split('@')[0])
 		self.y = int(temp[1].split('@')[1])
@@ -841,11 +902,29 @@ class Minion():
 		self.collide_radius = 50
 		self.facing = random.choice(["east", "west"])
 
+		self.alive = True
+
+		threading.Thread.__init__(self)
+
+	def run(self):
+
+		global RUN
+
+		while RUN and self.alive:
+			time.sleep(0.15)
+
+		sys.exit(0)
+
 	def kill(self):
 
 		global GAME_ENTITIES
 
 		GAME_ENTITIES["MINIONS"].remove(self)
+
+		self.clear_cache()
+
+		self.alive = False
+
 
 	def display(self, surface):
 
@@ -948,8 +1027,9 @@ class Minion():
 			tp = None
 			tp_case = 0
 
-			OBJ_player.display(OBJ_canvas)
+
 			OBJ_terrain.display_entities(OBJ_canvas)
+			OBJ_player.display(OBJ_canvas)
 			OBJ_terrain.display_overwalls(OBJ_canvas)
 
 			for case in path:
@@ -1076,7 +1156,10 @@ class Terrain():
 
 						for i in range(random.randint(min, max)):
 
-							GAME_ENTITIES['MINIONS'].append(Minion(random.choice(ground)))
+							sub_instance = Minion(random.choice(ground))
+							sub_instance.start()
+
+							GAME_ENTITIES['MINIONS'].append(sub_instance)
 
 		self.current_room = self.pattern_data['metadata']['spawn']
 
@@ -1797,10 +1880,10 @@ class Terrain():
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
-OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)  # pygame.FULLSCREEN
+OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))  # pygame.FULLSCREEN
 pygame.display.set_caption('Escape The Aliens', 'Escape The Aliens')
 pygame.display.set_icon(pygame.image.load('./icon.ico'))
-OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT), pygame.SRCALPHA)
+OBJ_canvas = pygame.Surface((CANVAS_WIDTH, CANVAS_HEIGHT))
 OBJ_clock = pygame.time.Clock()
 OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
 OBJ_bullet = Bullet()
@@ -2011,7 +2094,6 @@ while RUN:
 				for type in GAME_ENTITIES:
 					for e in GAME_ENTITIES[type]:
 						if e.in_room(OBJ_player.map_x, OBJ_player.map_y):
-							time.sleep(0.5)
 							if not OBJ_player.is_dead():
 								e.IA()
 
@@ -2037,66 +2119,21 @@ while RUN:
 
 	OBJ_bullet.display(OBJ_canvas)
 
-	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
-
-		pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (20, CANVAS_HEIGHT - 200, 380, 160))
-		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 100), (40, CANVAS_HEIGHT - 183, 340, 30))
-		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
-		pygame.draw.rect(OBJ_canvas, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
-
-		OBJ_canvas.blit(FONT.render('Fight', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 177))
-		OBJ_canvas.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 127))
-		OBJ_canvas.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 77))
-
-		if GAMEVAR_MENU_SELECTED_ITEM == 2 and GAMEVAR_IN_INVENTORY:
-
-			pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
-
-			slot_x = 0
-			slot_y = 0
-			sup5 = False
-
-			i = 0
-
-			for item in GAMEVAR_INVENTORY:
-
-				if GAMEVAR_INVENTORY[item] > 0:
-
-
-					if GAMEVAR_INVENTORY_SELECTED_ITEM == i:
-						pygame.draw.rect(OBJ_canvas, (255, 0, 0), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
-
-					else:
-						pygame.draw.rect(OBJ_canvas, (0, 0, 255), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
-
-
-					slot_x += 1
-					if slot_x > 5:
-						slot_x = 0
-						slot_y += 1
-
-					i += 1
+	display_ui(OBJ_canvas)
 
 	if DEBUG_MODE:
 		r, g, b = 0, 0, 0
 		for i in plist:
-			r += 10
+			r += 5
 			g += 1
-			b += 5
+			b += 2
+
 			pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
-
-	OBJ_canvas.blit(UI_HEALTH_BAR[str(math.floor(OBJ_player.health / (GAMEVAR_MAX_HEALTH / 50)))], (10, CANVAS_HEIGHT - (CANVAS_HEIGHT - 10)))
-
-
-	#pygame.draw.rect(OBJ_canvas, (255, 255, 255, 100), (10, CANVAS_HEIGHT - 1014, 222, CANVAS_HEIGHT - 1000))
-	#pygame.draw.rect(OBJ_canvas, (255, 0, 0), (14, CANVAS_HEIGHT - 1010, int(OBJ_player.health * 10), CANVAS_HEIGHT - 1008))
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
 	pygame.display.flip() # Flip/Update the screen
-
-	# print('FRAME DURATION:' + str(datetime.datetime.now() - witness))
 
 # TODO: Système de combat
 # TODO: ARMES, MOBS, SPRITES OBJETS
@@ -2107,13 +2144,14 @@ while RUN:
 
 # TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNE SALLE)
 
-# TODO Chunks
+
 
 # TODO: MENU PRINCIPAL
 # TODO: FICHIER DE PARAMETRES
 
 # TODO baisser les dégats des minions
 
+# TODO Chunks
 # TODO PATCH : les displays qui sont buggés pendant les déplacements
 # TODO PATCH : le pathfinding lag
 # (top, left, width, height)
