@@ -96,9 +96,9 @@ if True:
 	SPRITE_MINION = {}
 	SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
 	SPRITE_MINION['east'] = {}
-	SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5)))
+	SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
 	SPRITE_MINION['west'] = {}
-	SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2.5), round(CANVAS_RATE * 2.5))), True, False)
+	SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
 
 	SPRITE_PLAYER_LASER = {}
 	SPRITE_PLAYER_LASER['metadata'] = json.load(open('./resources/sprites/characters/persoLaser.metadata', 'r'))
@@ -184,7 +184,7 @@ if True:
 		},
 		"KNIFE": {
 			"damages": 2,
-			"range": 1
+			"range": 2
 		}
 	}
 
@@ -345,11 +345,15 @@ class Player(threading.Thread):
 		self.side_chars['right'] = None
 		self.side_chars['left'] = None
 
+		self.is_dead_docker = False
+
 		threading.Thread.__init__(self)
 
 	def kill(self):
 
 		global OBJ_terrain, OBJ_player, OBJ_bullet, OBJ_calculator, RUN, GAME_ENTITIES, UI_GAMEOVER
+
+		self.is_dead_docker = True
 
 		CONTINUE = True
 
@@ -679,10 +683,10 @@ class Player(threading.Thread):
 							self.nb_Actions = 0
 
 					else:
-						print("Movement not in combat")
+						#print("Movement not in combat")
 						playerX, playerY = self.get_position()
 
-						print(playerX, playerY, x, y)
+						#print(playerX, playerY, x, y)
 
 						path = OBJ_terrain.gen_path(
 								(playerX, playerY),
@@ -720,29 +724,74 @@ class Player(threading.Thread):
 
 		a = self.get_position()
 
-		if "munitions" not in GAMEVAR_CURRENT_WEAPON:
-			inRangeEnnemies = 0
-			ennemies = []
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.in_room(self.map_x, self.map_y):
-						if entity.collide((a[0] + 2, a[1])) or entity.collide((a[0] - 2, a[1])) or entity.collide((a[0], a[1] + 2)) or entity.collide((a[0], a[1] - 2)) or entity.collide((a[0] + 1, a[1] + 1)) or entity.collide((a[0] + 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] - 1)) or entity.collide((a[0] - 1, a[1] + 1)):
-							inRangeEnnemies += 1
-							ennemies.append(entity)
+		caseHasMob = []
+		ennemiesCoordinates = []
+		inRangeEnnemies = 0
 
-			if inRangeEnnemies <= 0:
-				print('No mobs nearby')
-			elif inRangeEnnemies == 1:
-				if "ammos" not in GAMEVAR_CURRENT_WEAPON:
-					ennemies[0].update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
-					GAMEVAR_YOURTURN = False
+		enemies = {}
 
-			elif inRangeEnnemies > 1:
-				print("Choose ennemy to fight")
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(self.map_x, self.map_y):
+					if entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1])) or entity.collide((a[0], a[1] + GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1] + GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1] + GAMEVAR_CURRENT_WEAPON["range"])):
 
+						inRangeEnnemies += 1
+						enemies[entity] = (entity.x, entity.y)
 
-		else:
-			print('Arme a feu')
+		if inRangeEnnemies <= 0:
+			pass
+
+		elif inRangeEnnemies == 1:
+
+			for e in enemies:
+				e.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
+
+			GAMEVAR_YOURTURN = False
+
+		elif inRangeEnnemies > 1:
+
+			choose = False
+
+			while not choose:
+
+				OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+				OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
+				OBJ_terrain.display_walls(OBJ_canvas)
+				OBJ_terrain.display_props(OBJ_canvas)
+				OBJ_terrain.display_entities(OBJ_canvas)
+				self.display(OBJ_canvas)
+				OBJ_terrain.display_overwalls(OBJ_canvas)
+
+				x, y = OBJ_calculator.get_mouse_case()
+
+				selected = None
+
+				for entity in enemies:
+
+					if entity.collide((x, y)):
+
+						entity.glow(OBJ_canvas)
+						selected = entity
+						break
+
+				for e in pygame.event.get():
+					if e.type == MOUSEBUTTONDOWN:
+
+						if selected != None:
+
+							selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
+							choose = True
+
+							GAMEVAR_YOURTURN = False
+
+							break
+
+				pygame.display.flip()  # Flip/Update the screen
+
+	def is_dead(self):
+
+		return self.is_dead_docker
+
 
 	def update_life(self, heal=0, damages=0, armor=0, boost=0):
 
@@ -773,9 +822,7 @@ class Player(threading.Thread):
 			#print("Max health !")
 			pass
 
-	def terminate(self):
 
-		self.setDaemon(True)
 
 class Minion():
 
@@ -806,13 +853,24 @@ class Minion():
 
 		if self.x > 0 and self.x <= CANVAS_RATE:
 			if self.y > 0 and self.y <= CANVAS_RATE:
-				surface.blit(SPRITE_MINION[self.facing]['frame_1'], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2.5 / 2))))
-				#pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
+				surface.blit(SPRITE_MINION[self.facing]['frame_1'], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2 / 2))))
+
+				if DEBUG_MODE:
+					pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
+					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
+						(self.x * CANVAS_RATE, self.y * CANVAS_RATE),
+						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE),
+						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE),
+						(self.x * CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE)), 2)
 
 	def in_room(self, map_x, map_y):
-		if map_x == self.map_x and map_y == self.map_y:
-			return True
-		else:
+
+		try:
+			if map_x == self.map_x and map_y == self.map_y:
+				return True
+			else:
+				return False
+		except:
 			return False
 
 	def collide(self, position):
@@ -841,6 +899,15 @@ class Minion():
 			#print("-----------------")
 			return True
 
+	def glow(self, surface):
+
+		pygame.draw.lines(surface, (0, 0, 255), True, (
+			((self.x - 1) * CANVAS_RATE, (self.y - 1) * CANVAS_RATE),
+			((self.x + 1) * CANVAS_RATE, (self.y - 1) * CANVAS_RATE),
+			((self.x + 1) * CANVAS_RATE, (self.y + 1) * CANVAS_RATE),
+			((self.x - 1) * CANVAS_RATE, (self.y + 1) * CANVAS_RATE)), 2
+		)
+
 	def update_life(self, heal=0, damages=0, armor=0, boost=0):
 
 		global GAMEVAR_MAX_HEALTH
@@ -865,12 +932,12 @@ class Minion():
 	def IA(self):
 
 		global CANVAS_RATE
+
 		if OBJ_player.distance((self.x * 32, self.y * 32)) <= 100:
+
 			OBJ_player.update_life(damages=self.damage)
 
-
 		else:
-
 
 			path = OBJ_terrain.gen_path(
 				(self.x, self.y),
@@ -1333,6 +1400,7 @@ class Terrain():
 		global OBJ_window
 		global CANVAS_RATE
 		global CANVAS_POSITION
+		global GAME_ENTITIES
 
 		path = []
 
@@ -1351,15 +1419,29 @@ class Terrain():
 
 		px, py = sx, sy
 
-		#print(sx, sy, tx, ty, px, py)
+		not_possible = []
+
+		for type in GAME_ENTITIES:
+			for entity in GAME_ENTITIES[type]:
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+					not_possible.append((entity.x - 1, entity.y - 1))
+					not_possible.append((entity.x, entity.y - 1))
+					not_possible.append((entity.x, entity.y))
+					not_possible.append((entity.x - 1, entity.y))
 
 		for i in range(32):
 			for j in range(32):
 				if self.get_char_in_current_room_at(j, i) in ['+', 'x']:
-					possible[i][j] = True
+					if (i, j) in not_possible:
+						possible[i][j] = False
+						print('NOT POSSIBLE')
+					else:
+						possible[i][j] = True
 				else:
 					possible[i][j] = False
 				checked[i][j] = False
+
+		#print(possible)
 
 		if sx <= tx:
 			if sy <= ty:
@@ -1420,6 +1502,14 @@ class Terrain():
 						if checked[i][j]:
 							pygame.draw.lines(OBJ_canvas, (r, g, b), True, ((j * CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE), (j * CANVAS_RATE + CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE), (j * CANVAS_RATE, i * CANVAS_RATE + CANVAS_RATE)), 2)
 
+				for a in not_possible:
+					print(a)
+					pygame.draw.lines(OBJ_canvas, (255, 0, 255), True, (
+					(a[0] * CANVAS_RATE, a[1] * CANVAS_RATE), (a[0] * CANVAS_RATE + CANVAS_RATE, a[1] * CANVAS_RATE),
+					(a[0] * CANVAS_RATE + CANVAS_RATE, a[1] * CANVAS_RATE + CANVAS_RATE),
+					(a[0] * CANVAS_RATE, a[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+
+
 			done = False
 
 			if DEBUG_MODE:
@@ -1427,7 +1517,8 @@ class Terrain():
 
 				pygame.display.flip()  # Flip/Update the screen
 
-			#time.sleep(0.025)
+			if DEBUG_MODE:
+				time.sleep(0.08)
 
 			#print(possible)
 
@@ -1720,14 +1811,15 @@ go_to_beginning = False
 
 while RUN:
 
+	caseHasMob = []
 	#print(GAMEVAR_MENU_SELECTED_ITEM)
-
+	mobsCoordinates = []
 	has_mob = False
 	for type in GAME_ENTITIES:
 		for entity in GAME_ENTITIES[type]:
 			if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
 				has_mob = True
-				break
+				#mobsCoordinates.append((entity.x, entity.y))
 
 	if has_mob:
 		GAMEVAR_INFIGHT = True
@@ -1757,12 +1849,35 @@ while RUN:
 
 	x, y = OBJ_calculator.get_mouse_case()
 
-	if OBJ_terrain.can_go_at(x, y) or (not GAMEVAR_INFIGHT and OBJ_terrain.get_char_in_current_room_at(x, y) != '/'):
+	for coordinates in mobsCoordinates:
+		if (x, y) == coordinates:
+			caseHasMob.append((x, y))
+		elif (x+1, y) == coordinates:
+			caseHasMob.append((x+1, y))
+		elif (x, y+1) == coordinates:
+			caseHasMob.append((x, y+1))
+		elif (x+1, y+1) == coordinates:
+			caseHasMob.append((x+1, y+1))
 
-		pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+	if OBJ_terrain.can_go_at(x, y) or (not GAMEVAR_INFIGHT and OBJ_terrain.get_char_in_current_room_at(x, y) != '/'):
+		if caseHasMob == (x, y):
+			pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
+				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
+				(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
+				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+		else:
+			pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
 	elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
-		pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+
+		if caseHasMob == (x, y):
+			pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
+				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
+				(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
+				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+		else:
+			pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+
 
 	for e in pygame.event.get():
 
@@ -1883,15 +1998,16 @@ while RUN:
 
 			elif not GAMEVAR_YOURTURN:
 
-
 				for type in GAME_ENTITIES:
 					for e in GAME_ENTITIES[type]:
 						if e.in_room(OBJ_player.map_x, OBJ_player.map_y):
-							e.IA()
-
+							time.sleep(0.5)
+							if not OBJ_player.is_dead():
+								e.IA()
 
 				GAMEVAR_YOURTURN = True
 				go_to_beginning = True
+
 				break
 
 				#print(GAMEVAR_MENU_SELECTED_ITEM)
@@ -1991,7 +2107,5 @@ while RUN:
 
 # TODO baisser les dégats des minions
 
-# TODO PATCH : la barre de vie
-# TODO PATCH : les portes qui sont buggées pendant les mouvements
-
+# TODO PATCH : les displays qui sont buggés pendant les déplacements
 # (top, left, width, height)
