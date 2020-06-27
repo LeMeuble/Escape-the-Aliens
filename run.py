@@ -31,6 +31,7 @@ if True:
 	DEBUG_MODE = False
 
 	FONT = pygame.font.Font('./resources/texts/fonts/base.ttf', 20)
+	FONT_ITEMS = pygame.font.Font('./resources/texts/fonts/base.ttf', 10)
 
 	"""@@@@@ INIT BASES VARIABLES @@@@@"""
 
@@ -63,8 +64,11 @@ if True:
 	UI_HUD['press_f'] = pygame.transform.scale(pygame.image.load('./resources/sprites/ui/hud/press_f.png'), (round(540 / 2.8), round(31 / 2.8)))
 
 	UI_HEALTH_BAR = {}
+	UI_HEALTH_BAR_MOB = {}
 	for i in range(0, 51):
 		UI_HEALTH_BAR[str(i)] = pygame.transform.scale(pygame.image.load(f'./resources/sprites/ui/health/bar{i}.jpg'), (math.ceil(CANVAS_WIDTH / 6), math.ceil(CANVAS_HEIGHT / 38.4)))
+		UI_HEALTH_BAR_MOB[str(i)] = pygame.transform.scale(pygame.image.load(f'./resources/sprites/ui/health/bar{i}.jpg'), (math.ceil(CANVAS_WIDTH / 22.5), math.ceil(CANVAS_HEIGHT / 144)))
+
 
 	SPRITES_GROUND = {}
 	SPRITES_GROUND['base'] = {}
@@ -175,6 +179,7 @@ if True:
 	SPRITES_ITEMS['SHIELD'] = pygame.image.load('./resources/sprites/items/shield.png')
 	SPRITES_ITEMS['EXTRA_LIFE'] = pygame.image.load('./resources/sprites/items/extra_life.png')
 	SPRITES_ITEMS['GRENADE'] = pygame.image.load('./resources/sprites/items/grenade.png')
+	SPRITES_ITEMS['MEDKIT'] = pygame.image.load('./resources/sprites/items/medkit.png')
 
 
 
@@ -198,10 +203,10 @@ if True:
 		"METAL_KEY": 1,
 		"ROUND_METAL_KEY": 1,
 		"AR": 0,
-		"MEDPACK": 1,
+		"MEDKIT": 1,
 		"STIMS": 1,
 		"SHIELD": 1,
-		"GRENADE": 1,
+		"GRENADE": 150,
 		"SPECIAL_1": 1,
 		"SPECIAL_2": 1,
 		"EXTRA_LIFE": 1
@@ -237,20 +242,24 @@ if True:
 
 	WEAPONS = {
 		"AR": {
+			"name": "AR",
 			"damages": 4,
 			"ammos": 30,
 			"range": 15
 		},
 		"LASER_RIFLE": {
+			"name": "LASER_RIFLE",
 			"damages": 8,
 			"ammos": 4,
 			"range": 32
 		},
 		"KNIFE": {
+			"name": "KNIFE",
 			"damages": 2,
 			"range": 2
 		},
 		"GRENADE": {
+			"name": "GRENADE",
 			"damages": 10,
 			"ammos": 1,
 			"range": 8
@@ -276,6 +285,10 @@ if True:
 
 """
 
+
+def distance(source, target):
+
+	return math.sqrt(abs(source[0] - target[0])**2 + abs(source[1] - target[1])**2)
 
 def get_selected_item():
 
@@ -346,7 +359,6 @@ def display_ui(surface):
 	surface.blit(UI_HEALTH_BAR[str(math.floor(OBJ_player.health / (GAMEVAR_MAX_HEALTH / 50)))], (10, CANVAS_HEIGHT - (CANVAS_HEIGHT - 10)))
 
 
-
 	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
 
 
@@ -372,10 +384,13 @@ def display_ui(surface):
 					else:
 						surface.blit(UI_HUD['case'], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
 
+
 					try:
 						surface.blit(SPRITES_ITEMS[item], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
 					except:
 						surface.blit(SPRITES_ITEMS['UNKNOWN'], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
+
+					surface.blit(FONT_ITEMS.render(str(GAMEVAR_INVENTORY[item]), True, (0, 0, 0)), ((662) + ((slot_x) * 54 - ((len(str(GAMEVAR_INVENTORY[item])) - 1) * 10)), (CANVAS_HEIGHT - 183 + 60) + ((slot_y) * 54)))
 
 					slot_x += 1
 					if slot_x > 5:
@@ -952,7 +967,22 @@ class Player(threading.Thread):
 
 						if selected != None:
 
+							if GAMEVAR_CURRENT_WEAPON['name'] == 'GRENADE':
+
+								for type in GAME_ENTITIES:
+									for entity in GAME_ENTITIES[type]:
+										if entity.in_room(self.map_x, self.map_y) and entity != selected:
+
+											d = distance((selected.x, selected.y), (entity.x, entity.y))
+
+											if d <= 4:
+
+												print('distance: ' + str(d) + ' will take ' + str(GAMEVAR_CURRENT_WEAPON["damages"]/d if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"]))
+
+												entity.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"]/d) if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"])
+
 							selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
+
 							choose = True
 
 							GAMEVAR_YOURTURN = False
@@ -1086,14 +1116,18 @@ class Minion(threading.Thread):
 		if self.x > 0 and self.x <= CANVAS_RATE:
 			if self.y > 0 and self.y <= CANVAS_RATE:
 				surface.blit(SPRITE_MINION[state][self.facing][f'frame_{frame}'], (round((self.x * CANVAS_RATE) - CANVAS_RATE), round((self.y * CANVAS_RATE) - CANVAS_RATE)))
+				surface.blit(UI_HEALTH_BAR_MOB[str(math.floor(self.health / ((5 + (GAMEVAR_DIFFICULTY * 1.25)) / 50)))], (round((self.x - 0.75) * CANVAS_RATE), round((self.y - 0.95) * CANVAS_RATE)))
 
 				if DEBUG_MODE:
+
+
 					pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
 					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
 						(self.x * CANVAS_RATE, self.y * CANVAS_RATE),
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE),
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE),
 						(self.x * CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE)), 2)
+					surface.blit(FONT.render(str(self.health), True, (255, 255, 255)), (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
 
 	def in_room(self, map_x, map_y):
 
@@ -2380,4 +2414,11 @@ while RUN:
 # TODO Chunks
 # TODO pathfinding dans le pathfinding
 
+
+
+# PLAN
+# BARRES DE VIES DES MOBS
+# EXPLOSIONS
+# DISTANCE EN COMBAT
+# ESCALIERS
 # (top, left, width, height)
