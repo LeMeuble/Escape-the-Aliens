@@ -245,24 +245,28 @@ if True:
 			"name": "AR",
 			"damages": 4,
 			"ammos": 30,
-			"range": 15
+			"range": 15,
+			"in_inventory": False
 		},
 		"LASER_RIFLE": {
 			"name": "LASER_RIFLE",
 			"damages": 8,
 			"ammos": 4,
-			"range": 32
+			"range": 32,
+			"in_inventory": False
 		},
 		"KNIFE": {
 			"name": "KNIFE",
 			"damages": 2,
-			"range": 2
+			"range": 2,
+			"in_inventory": True
 		},
 		"GRENADE": {
 			"name": "GRENADE",
 			"damages": 10,
 			"ammos": 1,
-			"range": 8
+			"range": 8,
+			"in_inventory": False
 		}
 
 	}
