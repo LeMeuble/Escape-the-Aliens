@@ -53,6 +53,15 @@ if True:
 	UI_GAMEOVER['left'] = pygame.transform.scale(pygame.image.load('./resources/sprites/ui/gameover_sl.png'), (CANVAS_WIDTH, CANVAS_WIDTH))
 	UI_GAMEOVER['right'] = pygame.transform.scale(pygame.image.load('./resources/sprites/ui/gameover_sr.png'), (CANVAS_WIDTH, CANVAS_WIDTH))
 
+	UI_HUD = {}
+	UI_HUD[0] = pygame.image.load('./resources/sprites/ui/hud/hud_fight_0.png')
+	UI_HUD[1] = pygame.image.load('./resources/sprites/ui/hud/hud_fight_1.png')
+	UI_HUD[2] = pygame.image.load('./resources/sprites/ui/hud/hud_fight_2.png')
+	UI_HUD['inventory'] = pygame.image.load('./resources/sprites/ui/hud/hud_inventory.png')
+	UI_HUD['case'] = pygame.image.load('./resources/sprites/ui/hud/case.png')
+	UI_HUD['case_selected'] = pygame.image.load('./resources/sprites/ui/hud/case_selected.png')
+	UI_HUD['press_f'] = pygame.transform.scale(pygame.image.load('./resources/sprites/ui/hud/press_f.png'), (round(540 / 2.8), round(31 / 2.8)))
+
 	UI_HEALTH_BAR = {}
 	for i in range(0, 51):
 		UI_HEALTH_BAR[str(i)] = pygame.transform.scale(pygame.image.load(f'./resources/sprites/ui/health/bar{i}.jpg'), (math.ceil(CANVAS_WIDTH / 6), math.ceil(CANVAS_HEIGHT / 38.4)))
@@ -140,6 +149,35 @@ if True:
 	SPRITE_PLAYER_RIFLE['west'] = {}
 	SPRITE_PLAYER_RIFLE['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/characters/persoAR.png'), (CANVAS_RATE * 4, CANVAS_RATE * 4)), True, False)
 
+	PROPS = {}
+	PROPS['MINIONS_CORPSE'] = {}
+	PROPS['MINIONS_CORPSE']['east'] = SPRITE_MINION['dead']['east']['frame_7']
+	PROPS['MINIONS_CORPSE']['west'] = SPRITE_MINION['dead']['west']['frame_7']
+	PROPS['BLOOD_1'] = {}
+	PROPS['BLOOD_1']['east'] = pygame.image.load('./resources/sprites/details/blood1.png')
+	PROPS['BLOOD_1']['west'] = pygame.transform.flip(pygame.image.load('./resources/sprites/details/blood1.png'), True, False)
+	PROPS['BLOOD_2'] = {}
+	PROPS['BLOOD_2']['east'] = pygame.image.load('./resources/sprites/details/blood2.png')
+	PROPS['BLOOD_2']['west'] = pygame.transform.flip(pygame.image.load('./resources/sprites/details/blood2.png'), True, False)
+	PROPS['BLOOD_3'] = {}
+	PROPS['BLOOD_3']['east'] = pygame.image.load('./resources/sprites/details/blood3.png')
+	PROPS['BLOOD_3']['west'] = pygame.transform.flip(pygame.image.load('./resources/sprites/details/blood3.png'), True, False)
+	PROPS['LASER'] = {}
+	PROPS['LASER']['east'] = {}
+	PROPS['LASER']['west'] = {}
+
+	SPRITES_ITEMS = {}
+	SPRITES_ITEMS['ROUND_METAL_KEY'] = pygame.image.load('./resources/sprites/items/round_metal_key.png')
+	SPRITES_ITEMS['METAL_KEY'] = pygame.image.load('./resources/sprites/items/metal_key.png')
+	SPRITES_ITEMS['UNKNOWN'] = pygame.image.load('./resources/sprites/items/unknown.png')
+	SPRITES_ITEMS['KNIFE'] = pygame.image.load('./resources/sprites/items/knife.png')
+	SPRITES_ITEMS['LASER'] = pygame.image.load('./resources/sprites/items/lasergun.png')
+	SPRITES_ITEMS['SHIELD'] = pygame.image.load('./resources/sprites/items/shield.png')
+	SPRITES_ITEMS['EXTRA_LIFE'] = pygame.image.load('./resources/sprites/items/extra_life.png')
+	SPRITES_ITEMS['GRENADE'] = pygame.image.load('./resources/sprites/items/grenade.png')
+
+
+
 	"""@@@@@ INIT GAMES VARIABLES @@@@@"""
 
 	GAMEVAR_DIFFICULTY = 2
@@ -155,18 +193,18 @@ if True:
 	GAMEVAR_IN_INVENTORY = False
 
 	GAMEVAR_INVENTORY = {
-		"laser": 1,
-		"ar": 1,
-		"knife": 1,
-		"medpack": 1,
-		"stims": 1,
-		"shield": 0,
-		"grenade": 0,
-		"special_item_1": 0,
-		"special_item_2": 0,
-		"special_item_3": 0,
-		"key_1": 0,
-		"extra_life": 0
+		"LASER": 1,
+		"KNIFE": 1,
+		"METAL_KEY": 1,
+		"ROUND_METAL_KEY": 1,
+		"AR": 0,
+		"MEDPACK": 1,
+		"STIMS": 1,
+		"SHIELD": 1,
+		"GRENADE": 1,
+		"SPECIAL_1": 1,
+		"SPECIAL_2": 1,
+		"EXTRA_LIFE": 1
 	}
 
 
@@ -188,6 +226,13 @@ if True:
 	GAME_ENTITIES['BOSS_3'] = []
 	GAME_ENTITIES['BOSS_4'] = []
 	GAME_ENTITIES['BOSS_5'] = []
+
+	GAME_PROPS = {}
+	GAME_PROPS['MINIONS_CORPSE'] = []
+	GAME_PROPS['BLOOD_1'] = []
+	GAME_PROPS['BLOOD_2'] = []
+	GAME_PROPS['BLOOD_3'] = []
+	GAME_PROPS['LASER'] = []
 
 
 	WEAPONS = {
@@ -224,6 +269,18 @@ if True:
 
 
 """
+
+
+def get_selected_item():
+
+	i = -1
+	for item in GAMEVAR_INVENTORY:
+		if GAMEVAR_INVENTORY[item] > 0:
+
+			i += 1
+
+		if i == GAMEVAR_INVENTORY_SELECTED_ITEM:
+			return item
 
 
 def get_inventory_total_useful_slots():
@@ -282,20 +339,16 @@ def display_ui(surface):
 
 	surface.blit(UI_HEALTH_BAR[str(math.floor(OBJ_player.health / (GAMEVAR_MAX_HEALTH / 50)))], (10, CANVAS_HEIGHT - (CANVAS_HEIGHT - 10)))
 
+
+
 	if GAMEVAR_INFIGHT and GAMEVAR_YOURTURN:
 
-		pygame.draw.rect(surface, (100, 100, 100), (20, CANVAS_HEIGHT - 200, 380, 160))
-		pygame.draw.rect(surface, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 0 else 0, 100), (40, CANVAS_HEIGHT - 183, 340, 30))
-		pygame.draw.rect(surface, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 1 else 0, 100), (40, CANVAS_HEIGHT - 133, 340, 30))
-		pygame.draw.rect(surface, (255, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 200 if GAMEVAR_MENU_SELECTED_ITEM == 2 else 0, 100), (40, CANVAS_HEIGHT - 83, 340, 30))
 
-		surface.blit(FONT.render('Fight', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 177))
-		surface.blit(FONT.render('Movement', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 127))
-		surface.blit(FONT.render('Inventory', False, (255, 255, 255)), (50, CANVAS_HEIGHT - 77))
+		surface.blit(UI_HUD[GAMEVAR_MENU_SELECTED_ITEM], (40, CANVAS_HEIGHT - 183, 340, 30))
 
 		if GAMEVAR_MENU_SELECTED_ITEM == 2 and GAMEVAR_IN_INVENTORY:
 
-			pygame.draw.rect(surface, (255, 255, 255, 100), (600, CANVAS_HEIGHT - 200, 380, 160))
+			surface.blit(UI_HUD['inventory'], (600, CANVAS_HEIGHT - 183, 380, 160))
 
 			slot_x = 0
 			slot_y = 0
@@ -308,11 +361,15 @@ def display_ui(surface):
 
 
 					if GAMEVAR_INVENTORY_SELECTED_ITEM == i:
-						pygame.draw.rect(surface, (255, 0, 0), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
+						surface.blit(UI_HUD['case_selected'], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
 
 					else:
-						pygame.draw.rect(surface, (0, 0, 255), ((600 + 30) + ((slot_x) * 54), (CANVAS_HEIGHT - 200 + 30) + ((slot_y) * 54), 44, 44))
+						surface.blit(UI_HUD['case'], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
 
+					try:
+						surface.blit(SPRITES_ITEMS[item], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
+					except:
+						surface.blit(SPRITES_ITEMS['UNKNOWN'], ((600 + 32) + ((slot_x) * 54), (CANVAS_HEIGHT - 183 + 33) + ((slot_y) * 54), 44, 44))
 
 					slot_x += 1
 					if slot_x > 5:
@@ -320,6 +377,10 @@ def display_ui(surface):
 						slot_y += 1
 
 					i += 1
+
+	if OBJ_player.is_near_interact_object('door'):
+
+		surface.blit(UI_HUD['press_f'], (OBJ_player.x - 45, (OBJ_player.y)))
 
 
 class ThreadedCalculator(threading.Thread):
@@ -412,6 +473,8 @@ class Player(threading.Thread):
 		self.side_doors['down'] = False
 		self.side_doors['right'] = False
 		self.side_doors['left'] = False
+
+		self.side_stairs = False
 
 		self.side_chars = {}
 		self.side_chars['up'] = None
@@ -526,13 +589,17 @@ class Player(threading.Thread):
 			except:
 				sys.exit(0)
 
+			self.side_stairs = False
+
 			for char in self.side_chars:
 
 				if (self.side_chars[char] == "<") or (self.side_chars[char] == ">") or (self.side_chars[char] == "v") or (self.side_chars[char] == "^"):
 					self.side_doors[char] = True
-					# print('You are in front of a door, do you want to cross it ?')
 				else:
 					self.side_doors[char] = False
+
+				if ((self.side_chars[char] == "$") or (self.side_chars[char] == "£")) and not self.side_stairs:
+					self.side_stairs = True
 
 		sys.exit(0)
 
@@ -672,6 +739,14 @@ class Player(threading.Thread):
 		elif self.side_doors['up']:
 			OBJ_terrain.go_up()
 
+	def go_through_stairs(self):
+
+		global OBJ_terrain
+
+		if self.side_stairs:
+
+			OBJ_terrain.up_stair()
+
 	def set_room(self, room):
 
 		self.map_x = int(room.split('@')[0])
@@ -687,8 +762,6 @@ class Player(threading.Thread):
 		global SPRITE_PLAYER_LASER
 		global GAMEVAR_INFIGHT
 		global GAMEVAR_YOURTURN
-		temoinX = False
-		temoinY = False
 
 		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
 			char = OBJ_terrain.get_char_in_current_room_at(x, y)
@@ -796,7 +869,7 @@ class Player(threading.Thread):
 							OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 							pygame.display.flip()  # Flip/Update the screen
 
-							self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))
+						self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))
 
 		return (self.x / CANVAS_RATE), (self.y / CANVAS_RATE)
 
@@ -877,6 +950,7 @@ class Player(threading.Thread):
 	def update_life(self, heal=0, damages=0, armor=0, boost=0):
 
 		global GAMEVAR_MAX_HEALTH
+		global OBJ_terrain
 
 		if heal > 0 and self.health < GAMEVAR_MAX_HEALTH:
 			if self.health + heal <= GAMEVAR_MAX_HEALTH:
@@ -889,19 +963,49 @@ class Player(threading.Thread):
 		if damages > 0:
 			if self.health - damages > 0:
 				self.health -= damages
-				print("Taking " + str(damages) + " damages")
+				#print("Taking " + str(damages) + " damages")
 
 			else:
 				self.health = 0
-				print("Dead")
 				self.kill()
-				'''if got_Resurection:
-					print("Do you want to rez yourself ?")
-'''
+
+			OBJ_terrain.create_props(random.choice(['BLOOD_1', 'BLOOD_2', 'BLOOD_3']), ((self.map_x, self.map_y), (math.floor((self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x'] + random.uniform(-20, 20)) / CANVAS_RATE), math.floor((self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'] + random.uniform(-20, 20))  / CANVAS_RATE)), self.facing))
 
 		elif self.health == GAMEVAR_MAX_HEALTH:
 			#print("Max health !")
 			pass
+
+	def is_near_interact_object(self, object):
+
+		result = False
+
+		if object == 'door':
+
+			for p in self.side_doors:
+				if self.side_doors[p] == True:
+					result = True
+					break
+			if not result:
+				for p in self.side_chars:
+					if self.side_chars[p] == '$':
+						result = True
+						break
+
+		return result
+
+	def throw_grenade(self):
+
+		while True:
+			if OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
+
+				if caseHasMob == (x, y):
+					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
+						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
+						(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
+						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+				else:
+					pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+
 
 
 class Minion(threading.Thread):
@@ -930,35 +1034,43 @@ class Minion(threading.Thread):
 		global RUN
 
 		while RUN and self.alive:
+
 			time.sleep(0.15)
 
 		sys.exit(0)
 
-	def kill(self):
+	def kill(self, no_animation=False):
 
 		global GAME_ENTITIES
+		global OBJ_terrain
 
-		for i in range(1, 8):
+		if not no_animation:
 
-			OBJ_canvas.fill((0, 0, 0))
-			OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
-			OBJ_terrain.display_walls(OBJ_canvas)
-			OBJ_terrain.display_props(OBJ_canvas)
-			OBJ_player.display(OBJ_canvas)
-			OBJ_terrain.display_entities(OBJ_canvas, non_displayed=self)
-			self.display(OBJ_canvas, state='dead', frame=i)
-			OBJ_terrain.display_overwalls(OBJ_canvas)
-			display_ui(OBJ_canvas)
-			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
-			pygame.display.flip()  # Flip/Update the screen
+			for i in range(1, 8):
 
-			time.sleep(0.025)
+				OBJ_canvas.fill((0, 0, 0))
+				OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
+				OBJ_terrain.display_walls(OBJ_canvas)
+				OBJ_terrain.display_props(OBJ_canvas)
+				OBJ_player.display(OBJ_canvas)
+				OBJ_terrain.display_entities(OBJ_canvas, non_displayed=self)
+				self.display(OBJ_canvas, state='dead', frame=i)
+				OBJ_terrain.display_overwalls(OBJ_canvas)
+				display_ui(OBJ_canvas)
+				OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+				pygame.display.flip()  # Flip/Update the screen
 
-		GAME_ENTITIES["MINIONS"].remove(self)
+				time.sleep(0.05)
+
+			OBJ_terrain.create_props('MINIONS_CORPSE', ((self.map_x, self.map_y), (self.x - 1, self.y - 1), self.facing))
+
+			GAME_ENTITIES["MINIONS"].remove(self)
 
 		self.clear_cache()
 
 		self.alive = False
+
+		print('KILLED')
 
 	def display(self, surface, state='alive', frame=1):
 
@@ -966,7 +1078,7 @@ class Minion(threading.Thread):
 
 		if self.x > 0 and self.x <= CANVAS_RATE:
 			if self.y > 0 and self.y <= CANVAS_RATE:
-				surface.blit(SPRITE_MINION[state][self.facing]['frame_' + str(frame)], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2 / 2))))
+				surface.blit(SPRITE_MINION[state][self.facing][f'frame_{frame}'], (round((self.x * CANVAS_RATE) - CANVAS_RATE), round((self.y * CANVAS_RATE) - CANVAS_RATE)))
 
 				if DEBUG_MODE:
 					pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
@@ -975,7 +1087,6 @@ class Minion(threading.Thread):
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE),
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE),
 						(self.x * CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE)), 2)
-
 
 	def in_room(self, map_x, map_y):
 
@@ -1078,14 +1189,16 @@ class Minion(threading.Thread):
 
 				try:
 					self.x, self.y = tp
-					OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+					OBJ_canvas.fill((0, 0, 0))
+
 					OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
 					OBJ_terrain.display_walls(OBJ_canvas)
 					OBJ_terrain.display_props(OBJ_canvas)
-					OBJ_player.display(OBJ_canvas)
 					OBJ_terrain.display_entities(OBJ_canvas)
 					self.display(OBJ_canvas)
+					OBJ_player.display(OBJ_canvas)
 					OBJ_terrain.display_overwalls(OBJ_canvas)
+					OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 					pygame.display.flip()  # Flip/Update the screen
 
 					time.sleep(0.015)
@@ -1387,6 +1500,7 @@ class Terrain():
 	def display_props(self, surface):
 
 		global CANVAS_RATE
+		global GAME_PROPS
 
 		y = 0
 
@@ -1421,6 +1535,15 @@ class Terrain():
 
 				x += 1
 			y += 1
+
+
+		for props_type in GAME_PROPS:
+
+			for prop in GAME_PROPS[props_type]:
+
+				if prop[0] == (self.map_x, self.map_y):
+
+					surface.blit(PROPS[props_type][prop[2]], (prop[1][0] * CANVAS_RATE, prop[1][1] * CANVAS_RATE))
 
 	def display_entities(self, surface, non_displayed=None):
 
@@ -1572,14 +1695,11 @@ class Terrain():
 				if self.get_char_in_current_room_at(j, i) in ['+', 'x']:
 					if (j, i) in not_possible:
 						possible[i][j] = False
-						print('NOT POSSIBLE')
 					else:
 						possible[i][j] = True
 				else:
 					possible[i][j] = False
 				checked[i][j] = False
-
-		#print(possible)
 
 		if sx <= tx:
 			if sy <= ty:
@@ -1631,8 +1751,6 @@ class Terrain():
 
 			else:
 				margin -= 1
-
-			# print(x_state, y_state)
 
 			if DEBUG_MODE:
 				for i in checked:
@@ -1812,6 +1930,37 @@ class Terrain():
 
 		return path
 
+	def up_stair(self):
+
+		global GAME_ENTITIES
+		global GAME_PROPS
+
+		print('uped')
+
+		for type in GAME_ENTITIES:
+			for e in GAME_ENTITIES[type]:
+				e.kill(no_animation=True)
+
+		GAME_ENTITIES = {}
+		GAME_ENTITIES['MINIONS'] = []
+		GAME_ENTITIES['ARCHEROS'] = []
+		GAME_ENTITIES['RUSHERS'] = []
+		GAME_ENTITIES['HEALERS'] = []
+		GAME_ENTITIES['TORNADOS'] = []
+		GAME_ENTITIES['ALLIES'] = []
+		GAME_ENTITIES['BOSS_1'] = []
+		GAME_ENTITIES['BOSS_2'] = []
+		GAME_ENTITIES['BOSS_3'] = []
+		GAME_ENTITIES['BOSS_4'] = []
+		GAME_ENTITIES['BOSS_5'] = []
+
+		GAME_PROPS = {}
+		GAME_PROPS['MINIONS_CORPSE'] = []
+		GAME_PROPS['BLOOD_1'] = []
+		GAME_PROPS['BLOOD_2'] = []
+		GAME_PROPS['BLOOD_3'] = []
+		GAME_PROPS['LASER'] = []
+
 	def restart(self):
 
 		global RUN
@@ -1841,6 +1990,7 @@ class Terrain():
 		global GAME_ENTITIES
 		global WEAPONS
 		global GAMEVAR_CURRENT_WEAPON
+		global GAME_PROPS
 
 		DEBUG_MODE = False
 
@@ -1922,6 +2072,18 @@ class Terrain():
 
 		GAMEVAR_CURRENT_WEAPON = WEAPONS["KNIFE"]
 
+		GAME_PROPS = {}
+		GAME_PROPS['MINIONS_CORPSE'] = []
+		GAME_PROPS['BLOOD_1'] = []
+		GAME_PROPS['BLOOD_2'] = []
+		GAME_PROPS['BLOOD_3'] = []
+		GAME_PROPS['LASER'] = []
+
+	def create_props(self, type, location):
+
+		global GAME_PROPS
+
+		GAME_PROPS[type].append(location)
 
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
@@ -1997,24 +2159,25 @@ while RUN:
 		elif (x+1, y+1) == coordinates:
 			caseHasMob.append((x+1, y+1))
 
-	if OBJ_terrain.can_go_at(x, y) or (not GAMEVAR_INFIGHT and OBJ_terrain.get_char_in_current_room_at(x, y) != '/'):
-		if caseHasMob == (x, y):
-			pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
-				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
-				(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
-				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
-		else:
-			pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+	if GAMEVAR_MENU_SELECTED_ITEM == 1 or not GAMEVAR_INFIGHT:
+		if OBJ_terrain.can_go_at(x, y) or (not GAMEVAR_INFIGHT and OBJ_terrain.get_char_in_current_room_at(x, y) != '/'):
+			if caseHasMob == (x, y):
+				pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
+					(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
+					(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
+					(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+			else:
+				pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
-	elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
+		elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
 
-		if caseHasMob == (x, y):
-			pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
-				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
-				(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
-				(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
-		else:
-			pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
+			if caseHasMob == (x, y):
+				pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
+					(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
+					(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
+					(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
+			else:
+				pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
 
 	for e in pygame.event.get():
@@ -2042,6 +2205,7 @@ while RUN:
 
 				if e.key == pygame.K_f:
 					OBJ_player.go_through_door()
+					OBJ_player.go_through_stairs()
 
 				if e.key == 113:
 					print("Objet ramassé (WIP)")
@@ -2056,7 +2220,7 @@ while RUN:
 
 		if e.type == pygame.KEYDOWN:
 			if e.key == 104:
-				OBJ_player.update_life(damages=1)
+				OBJ_player.update_life(heal=1)
 
 			if e.key == pygame.K_p:
 
@@ -2075,6 +2239,7 @@ while RUN:
 
 						if e.key == pygame.K_f:
 							OBJ_player.go_through_door()
+							OBJ_player.go_through_stairs()
 
 				elif GAMEVAR_MENU_SELECTED_ITEM == 2:
 					if e.type == pygame.KEYDOWN:
@@ -2114,6 +2279,12 @@ while RUN:
 										if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:
 											GAMEVAR_INVENTORY_SELECTED_ITEM -= 6
 
+							if e.key == pygame.K_RETURN:
+
+								object = get_selected_item()
+
+								if object == "GRENADE":
+									OBJ_player.throw_grenade()
 
 							if e.key == 8:
 								GAMEVAR_IN_INVENTORY = False
@@ -2185,9 +2356,6 @@ while RUN:
 # TODO: ARMES, MOBS, SPRITES OBJETS
 # TODO: fonctions INVENTAIRE
 
-
-# TODO pathfinding dans le pathfinding
-
 # TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNE SALLE)
 
 
@@ -2196,6 +2364,6 @@ while RUN:
 
 
 # TODO Chunks
-# TODO PATCH : les displays qui sont buggés pendant les déplacements
-# TODO PATCH : le pathfinding lag
+# TODO pathfinding dans le pathfinding
+
 # (top, left, width, height)
