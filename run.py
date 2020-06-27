@@ -95,10 +95,29 @@ if True:
 
 	SPRITE_MINION = {}
 	SPRITE_MINION['metadata'] = json.load(open('./resources/sprites/mobs/minion.metadata', 'r'))
-	SPRITE_MINION['east'] = {}
-	SPRITE_MINION['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
-	SPRITE_MINION['west'] = {}
-	SPRITE_MINION['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['alive'] = {}
+	SPRITE_MINION['alive']['east'] = {}
+	SPRITE_MINION['alive']['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['alive']['west'] = {}
+	SPRITE_MINION['alive']['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/minion.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+
+	SPRITE_MINION['dead'] = {}
+	SPRITE_MINION['dead']['east'] = {}
+	SPRITE_MINION['dead']['east']['frame_1'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['east']['frame_2'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob2.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['east']['frame_3'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob3.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['east']['frame_4'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob4.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['east']['frame_5'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob5.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['east']['frame_6'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob6.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['east']['frame_7'] = pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob7.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2)))
+	SPRITE_MINION['dead']['west'] = {}
+	SPRITE_MINION['dead']['west']['frame_1'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['dead']['west']['frame_2'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob2.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['dead']['west']['frame_3'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob3.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['dead']['west']['frame_4'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob4.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['dead']['west']['frame_5'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob5.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['dead']['west']['frame_6'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob6.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
+	SPRITE_MINION['dead']['west']['frame_7'] = pygame.transform.flip(pygame.transform.scale(pygame.image.load('./resources/sprites/mobs/blob7.png'), (round(CANVAS_RATE * 2), round(CANVAS_RATE * 2))), True, False)
 
 	SPRITE_PLAYER_LASER = {}
 	SPRITE_PLAYER_LASER['metadata'] = json.load(open('./resources/sprites/characters/persoLaser.metadata', 'r'))
@@ -919,20 +938,35 @@ class Minion(threading.Thread):
 
 		global GAME_ENTITIES
 
+		for i in range(1, 8):
+
+			OBJ_canvas.fill((0, 0, 0))
+			OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
+			OBJ_terrain.display_walls(OBJ_canvas)
+			OBJ_terrain.display_props(OBJ_canvas)
+			OBJ_player.display(OBJ_canvas)
+			OBJ_terrain.display_entities(OBJ_canvas, non_displayed=self)
+			self.display(OBJ_canvas, state='dead', frame=i)
+			OBJ_terrain.display_overwalls(OBJ_canvas)
+			display_ui(OBJ_canvas)
+			OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
+			pygame.display.flip()  # Flip/Update the screen
+
+			time.sleep(0.025)
+
 		GAME_ENTITIES["MINIONS"].remove(self)
 
 		self.clear_cache()
 
 		self.alive = False
 
-
-	def display(self, surface):
+	def display(self, surface, state='alive', frame=1):
 
 		global SPRITE_MINION
 
 		if self.x > 0 and self.x <= CANVAS_RATE:
 			if self.y > 0 and self.y <= CANVAS_RATE:
-				surface.blit(SPRITE_MINION[self.facing]['frame_1'], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2 / 2))))
+				surface.blit(SPRITE_MINION[state][self.facing]['frame_' + str(frame)], (round((self.x * CANVAS_RATE) - (CANVAS_RATE * 2 / 2)), round((self.y * CANVAS_RATE) - (CANVAS_RATE * 2 / 2))))
 
 				if DEBUG_MODE:
 					pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
@@ -941,6 +975,7 @@ class Minion(threading.Thread):
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE),
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE),
 						(self.x * CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE)), 2)
+
 
 	def in_room(self, map_x, map_y):
 
@@ -1070,6 +1105,7 @@ class Minion(threading.Thread):
 		del self.map_y
 		del self.collide_radius
 		del self.facing
+
 
 """
 	
@@ -1386,15 +1422,24 @@ class Terrain():
 				x += 1
 			y += 1
 
-	def display_entities(self, surface):
+	def display_entities(self, surface, non_displayed=None):
 
 		count = 0
 
 		for type in GAME_ENTITIES:
 			for e in GAME_ENTITIES[type]:
 				if e.in_room(self.map_x, self.map_y):
-					e.display(surface)
-					count += 1
+					if not non_displayed:
+						e.display(surface)
+						count += 1
+
+					elif non_displayed:
+						if e == non_displayed:
+							continue
+
+						else:
+							e.display(surface)
+							count += 1
 
 	def get_spawn(self):
 
@@ -2135,6 +2180,7 @@ while RUN:
 
 	pygame.display.flip() # Flip/Update the screen
 
+
 # TODO: Système de combat
 # TODO: ARMES, MOBS, SPRITES OBJETS
 # TODO: fonctions INVENTAIRE
@@ -2145,11 +2191,9 @@ while RUN:
 # TODO: AJOUTS LES ETAGES (=> BLOCK D'ESCALIER A GENERER DANS UNE SALLE)
 
 
-
 # TODO: MENU PRINCIPAL
 # TODO: FICHIER DE PARAMETRES
 
-# TODO baisser les dégats des minions
 
 # TODO Chunks
 # TODO PATCH : les displays qui sont buggés pendant les déplacements
