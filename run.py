@@ -249,7 +249,13 @@ if True:
 		"KNIFE": {
 			"damages": 2,
 			"range": 2
+		},
+		"GRENADE": {
+			"damages": 10,
+			"ammos": 1,
+			"range": 8
 		}
+
 	}
 
 	GAMEVAR_CURRENT_WEAPON = WEAPONS["KNIFE"]
@@ -876,6 +882,7 @@ class Player(threading.Thread):
 	def can_attack(self):
 
 		global GAMEVAR_YOURTURN
+		global GAMEVAR_CURRENT_WEAPON
 
 		a = self.get_position()
 
@@ -888,18 +895,29 @@ class Player(threading.Thread):
 		for type in GAME_ENTITIES:
 			for entity in GAME_ENTITIES[type]:
 				if entity.in_room(self.map_x, self.map_y):
-					if entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1])) or entity.collide((a[0], a[1] + GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1] + GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1] + GAMEVAR_CURRENT_WEAPON["range"])):
 
+					if entity.in_radius_of_player(GAMEVAR_CURRENT_WEAPON["range"]):
+						#if entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1])) or entity.collide((a[0], a[1] + GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1] + GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] + GAMEVAR_CURRENT_WEAPON["range"], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1] - GAMEVAR_CURRENT_WEAPON["range"])) or entity.collide((a[0] - GAMEVAR_CURRENT_WEAPON["range"], a[1] + GAMEVAR_CURRENT_WEAPON["range"])):
 						inRangeEnnemies += 1
 						enemies[entity] = (entity.x, entity.y)
+						print(inRangeEnnemies, enemies[entity])
 
 		if inRangeEnnemies <= 0:
+			print("No ennemies in range")
+			print(GAMEVAR_CURRENT_WEAPON["range"])
 			pass
 
 		elif inRangeEnnemies == 1:
 
 			for e in enemies:
 				e.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
+
+			if "ammos" in GAMEVAR_CURRENT_WEAPON:
+				print(GAMEVAR_CURRENT_WEAPON)
+				GAMEVAR_CURRENT_WEAPON["ammos"] -= 1
+				print(GAMEVAR_CURRENT_WEAPON)
+
+
 
 			GAMEVAR_YOURTURN = False
 
@@ -995,18 +1013,7 @@ class Player(threading.Thread):
 
 	def throw_grenade(self):
 
-		while True:
-			if OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
-
-				if caseHasMob == (x, y):
-					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
-						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
-						(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
-						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
-				else:
-					pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
-
-
+		print("GRENADA")
 
 class Minion(threading.Thread):
 
@@ -1219,6 +1226,12 @@ class Minion(threading.Thread):
 		del self.collide_radius
 		del self.facing
 
+	def in_radius_of_player(self, radius):
+
+		if OBJ_player.distance((self.x * CANVAS_RATE, self.y * CANVAS_RATE)) <= radius * CANVAS_RATE:
+			return True
+		else:
+			return False
 
 """
 	
@@ -2284,7 +2297,8 @@ while RUN:
 								object = get_selected_item()
 
 								if object == "GRENADE":
-									OBJ_player.throw_grenade()
+									GAMEVAR_CURRENT_WEAPON = WEAPONS["GRENADE"]
+									OBJ_player.can_attack()
 
 							if e.key == 8:
 								GAMEVAR_IN_INVENTORY = False
