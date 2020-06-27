@@ -47,7 +47,6 @@ if True:
 
 	RUN = True
 
-
 	"""@@@@@ INIT SPRITES/IMAGES/WALL/GROUNDS IMAGES VARIABLES @@@@@"""
 
 
