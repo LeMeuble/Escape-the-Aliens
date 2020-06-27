@@ -959,7 +959,7 @@ class Minion(threading.Thread):
 		self.clear_cache()
 
 		self.alive = False
-
+		print('temp')
 	def display(self, surface, state='alive', frame=1):
 
 		global SPRITE_MINION
