@@ -2,17 +2,47 @@
 
 	"pattern": [
 
-		[["./resources/terrain/rooms/medium_2_3"], ["./resources/terrain/corridors/straight_horizontal"], ["./resources/terrain/rooms/l_right_down_5_8"], ["./resources/terrain/corridors/l_up_right"], ["./resources/terrain/corridors/l_right_down"]],
-		[["./resources/terrain/corridors/t_left"], ["./resources/terrain/rooms/pipe_right_2_6"], ["./resources/terrain/corridors/l_right_up_1_3_6"], ["./resources/terrain/rooms/large_1_4"], ["./resources/terrain/rooms/final"]],
-		[["./resources/terrain/rooms/l_up_right_1_6"], ["./resources/terrain/rooms/large_3"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/large_2_3"], ["./resources/terrain/rooms/pipe_down_1_5_6"]],
-		[["./resources/terrain/corridors/l_down_right"], ["./resources/terrain/corridors/intersection"], ["./resources/terrain/rooms/l_right_up_3_6"], ["./resources/terrain/corridors/t_down"], ["./resources/terrain/corridors/l_right_up_1_6"]],
-		[["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/pipe_up_1"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/empty"], ["./resources/terrain/rooms/empty"]]
+		[
+            ["./resources/terrain/rooms/medium_2_3"],
+            ["./resources/terrain/corridors/straight_horizontal", "./resources/terrain/rooms/pipe_right_2_6"],
+            ["./resources/terrain/rooms/l_right_down_5_8"],
+            ["./resources/terrain/corridors/l_up_right", "./resources/terrain/rooms/medium_2_3"],
+            ["./resources/terrain/corridors/l_right_down"]
+		],
+		[
+            ["./resources/terrain/corridors/t_left"],
+            ["./resources/terrain/corridors/l_right_up_1_6", "./resources/terrain/corridors/straight_horizontal", "./resources/terrain/rooms/pipe_right_2_6"],
+            ["./resources/terrain/corridors/l_right_up_1_3_6"],
+            ["./resources/terrain/rooms/large_1_4"],
+            ["./resources/terrain/rooms/final"]
+		],
+		[
+		    ["./resources/terrain/rooms/l_up_right_1_6"],
+		    ["./resources/terrain/rooms/large_3"],
+		    ["./resources/terrain/rooms/empty"],
+		    ["./resources/terrain/rooms/large_2_3"],
+		    ["./resources/terrain/rooms/pipe_down_1_5_6"]
+		    ],
+		[
+		    ["./resources/terrain/corridors/l_down_right"],
+		    ["./resources/terrain/corridors/intersection"],
+		    ["./resources/terrain/rooms/l_right_up_3_6"],
+		    ["./resources/terrain/corridors/t_down"],
+		    ["./resources/terrain/corridors/l_right_up_1_6", "./resources/terrain/corridors/straight_horizontal", "./resources/terrain/rooms/pipe_right_2_6"]
+		    ],
+		[
+		    ["./resources/terrain/rooms/empty"],
+		    ["./resources/terrain/rooms/pipe_up_1"],
+		    ["./resources/terrain/rooms/empty"],
+		    ["./resources/terrain/rooms/empty"],
+		    ["./resources/terrain/rooms/empty"]
+		    ]
 
 	],
 
 	"metadata": {
 
-		"spawn": "1@4"
+		"spawn": "0@0"
 
 	}
 
