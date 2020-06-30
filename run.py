@@ -27,7 +27,7 @@ pygame.font.init()
 
 
 if True:
-
+	# Init vars
 	DEBUG_MODE = False
 
 	FONT = pygame.font.Font('./resources/texts/fonts/base.ttf', 20)
@@ -342,15 +342,17 @@ def throw_popup(popup, stay=-1):
 
 	if not GAME_POPUP[popup]['displayed']:
 		GAME_POPUP[popup]['displayed'] = True
-		GAME_POPUP[popup]['step'] = 0
-		GAME_POPUP[popup]['tick'] = stay
+		GAME_POPUP[popup]['step'] = 0 # coordinates from right border
+		GAME_POPUP[popup]['tick'] = stay # popup will stay displayed this number of tick
+
 
 def grab_popup(popup):
 
 	if GAME_POPUP[popup]['displayed']:
 		GAME_POPUP[popup]['displayed'] = False
-		GAME_POPUP[popup]['step'] = round(125 * 1.5)
-		GAME_POPUP[popup]['tick'] = -1
+		GAME_POPUP[popup]['step'] = round(125 * 1.5) # coordinates for right border
+		GAME_POPUP[popup]['tick'] = -1 # popup will stay forever
+
 
 def show_basic():
 
@@ -363,9 +365,11 @@ def show_basic():
 	OBJ_terrain.display_props(OBJ_canvas)
 	OBJ_terrain.display_entities(OBJ_canvas)
 
+
 def distance(source, target):
 
-	return math.sqrt(abs(source[0] - target[0])**2 + abs(source[1] - target[1])**2)
+	return math.sqrt(abs(source[0] - target[0])**2 + abs(source[1] - target[1])**2)  # Pythagore
+
 
 def get_selected_item():
 
@@ -377,6 +381,7 @@ def get_selected_item():
 
 		if i == GAMEVAR_INVENTORY_SELECTED_ITEM:
 			return item
+
 
 def get_inventory_total_useful_slots():
 
@@ -392,20 +397,11 @@ def get_inventory_total_useful_slots():
 
 	return total
 
-def get_uid(size):
-
-	chars = string.ascii_lowercase + string.digits
-	uuid = ""
-
-	for i in range(size):
-
-		uuid += random.choice(chars)
-
-	return uuid
 
 def parse_location(point):
 
-	return math.floor(point / CANVAS_RATE)
+	return math.floor(point / CANVAS_RATE)  # fonction that definitively need to be reused, return pixel to case
+
 
 def mouse_global_case():
 
@@ -414,6 +410,7 @@ def mouse_global_case():
 	y = parse_location(y)
 
 	return (x, y)
+
 
 def display_ui(surface):
 
@@ -486,14 +483,14 @@ def display_ui(surface):
 
 	for popup in GAME_POPUP:
 
-		if GAME_POPUP[popup]['displayed']:
+		if GAME_POPUP[popup]['displayed']: # if throw_popup() called
 
-			if GAME_POPUP[popup]['step'] <= round(125 * 1.5):
+			if GAME_POPUP[popup]['step'] <= round(125 * 1.5): # distance fully displayed
 				GAME_POPUP[popup]['step'] += 24
 
 			else:
 
-				if GAME_POPUP[popup]['tick'] != -1:
+				if GAME_POPUP[popup]['tick'] != -1: # if time isn't infinite 
 					if GAME_POPUP[popup]['tick'] > 0:
 						GAME_POPUP[popup]['tick'] -= 1
 					else:
@@ -501,17 +498,14 @@ def display_ui(surface):
 
 			surface.blit(GAME_POPUP[popup]['image'], (CANVAS_WIDTH - GAME_POPUP[popup]['step'], CANVAS_HEIGHT - (CANVAS_HEIGHT - (50 * offset))))
 
-		else:
+		else: # if grab_popup() called
 
 			if GAME_POPUP[popup]['step'] >= 0:
 				GAME_POPUP[popup]['step'] -= 24
 
 				surface.blit(GAME_POPUP[popup]['image'], (CANVAS_WIDTH - GAME_POPUP[popup]['step'], CANVAS_HEIGHT - (CANVAS_HEIGHT - (50 * offset))))
 
-		offset += 1
-
-
-
+		offset += 1 # to avoid superposition 
 
 
 class ThreadedCalculator(threading.Thread):
@@ -530,17 +524,21 @@ class ThreadedCalculator(threading.Thread):
 		while RUN:
 
 			if not RUN:
-				sys.exit(0)
+				sys.exit(0) # 0 = kill current thread
 
 			time.sleep(0.001)
 
 			self.x_case, self.y_case = mouse_global_case()
 
+			# props store format:  ((map_x, map_y), (x, y), facing, is_pickable)
+
 			for type in GAME_PROPS:
 				for prop in GAME_PROPS[type]:
-					if prop[3]:
-						if prop[0][0] == OBJ_player.map_x and prop[0][1] == OBJ_player.map_y:
+					if prop[3]: # if props is pickable
+						if prop[0][0] == OBJ_player.map_x and prop[0][1] == OBJ_player.map_y: # check if the prop is in the player's current room
+							# if distance between player's foot and props < 2 cases:
 							if distance((math.floor((OBJ_player.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][OBJ_player.facing]['x']) / CANVAS_RATE), math.floor((OBJ_player.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][OBJ_player.facing]['y']) / CANVAS_RATE)), (prop[1][0], prop[1][1])) < 2:
+								
 								if type == 'GRENADE':
 									WEAPONS['GRENADE']['ammos'] += 1
 									GAME_PROPS[type].remove(prop)
@@ -551,10 +549,9 @@ class ThreadedCalculator(threading.Thread):
 									GAMEVAR_INVENTORY['STIMS'] += 1
 									GAME_PROPS[type].remove(prop)
 
-
 	def get_mouse_case(self):
 
-		return (self.x_case, self.y_case)
+		return (self.x_case, self.y_case)  # return the calculated case every 0.001 seconds
 
 
 class Bullet(threading.Thread):
@@ -570,7 +567,6 @@ class Bullet(threading.Thread):
 
 		self.bullets.append(
 			{
-				"uid": get_uid(10),
 				"source": source,
 				"target": target,
 				"tick": 1
@@ -602,7 +598,7 @@ class Player(threading.Thread):
 
 	def __init__(self, coordinates):
 
-		self.coordinates = coordinates
+		self.coordinates = coordinates  # map_x@map_y//x@y
 		self.facing = "east"
 		self.is_running = False
 		self.in_combat = False
@@ -637,7 +633,7 @@ class Player(threading.Thread):
 
 		global OBJ_terrain, OBJ_player, OBJ_bullet, OBJ_calculator, RUN, GAME_ENTITIES, UI_GAMEOVER
 
-		self.is_dead_docker = True
+		self.is_dead_docker = True  # to avoid problems with monsters that are trying to move on a new terrain
 
 		CONTINUE = True
 
@@ -650,6 +646,7 @@ class Player(threading.Thread):
 			OBJ_window.fill((0, 0, 0))  # Erase pixels on canvas
 			OBJ_window.blit(OBJ_canvas, (0, 0))
 			pygame.display.flip()
+			# display the gameover menu
 
 			for e in pygame.event.get():
 
@@ -710,6 +707,8 @@ class Player(threading.Thread):
 		self.x = int(_temp[1].split('@')[0]) * CANVAS_RATE
 		self.y = int(_temp[1].split('@')[1]) * CANVAS_RATE
 
+		# full coordinates = map_x@map_y//x@y
+
 		del _temp
 
 	def run(self):
@@ -730,6 +729,7 @@ class Player(threading.Thread):
 				self.side_chars['down'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0], pos[1] + 1)
 				self.side_chars['right'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] + 1, pos[1])
 				self.side_chars['left'] = OBJ_terrain.get_char(self.map_x, self.map_y, pos[0] - 1, pos[1])
+				# loop that check all characters around the player
 			except:
 				sys.exit(0)
 
@@ -737,12 +737,12 @@ class Player(threading.Thread):
 
 			for char in self.side_chars:
 
-				if self.side_chars[char] in ["^", "*", "<", ">", "v", "V"]:
+				if self.side_chars[char] in ["^", "*", "<", ">", "v", "V"]: # if the char is a door
 					self.side_doors[char] = True
 				else:
 					self.side_doors[char] = False
 
-				if self.side_chars[char] in ["$", "&"] and not self.side_stairs:
+				if self.side_chars[char] in ["$", "&"] and not self.side_stairs: # if the char is a stair
 					self.side_stairs = True
 
 		sys.exit(0)
@@ -752,21 +752,18 @@ class Player(threading.Thread):
 		global OBJ_terrain
 		global SPRITE_PLAYER_LASER
 
-		a = self.get_position()
-
-
-		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (round(self.x), round(self.y)))
+		surface.blit(SPRITE_PLAYER_LASER[self.facing]['frame_1'], (round(self.x), round(self.y)))  # display the character on his coordinates
 
 		if DEBUG_MODE:
 			pygame.draw.rect(surface, (0, 0, 255), (
 				self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x'],
-				self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'], 10, 10))
-			pygame.draw.rect(surface, (255, 0, 0), (round(self.x), round(self.y), 10, 10))
+				self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'], 10, 10))  # display a blue square on the feets of the character
+			pygame.draw.rect(surface, (255, 0, 0), (round(self.x), round(self.y), 10, 10))  # display a red square on the top left of the player sprite
 
 	def distance(self, target):
 
 		global SPRITE_PLAYER_LASER
-
+		# Pythagore, return the distance between the player and the target ( in pixel )
 		return math.sqrt(abs(target[0] - (self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x']))**2 + abs(target[1] - (self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y']))**2)
 
 	def right(self):
@@ -774,20 +771,20 @@ class Player(threading.Thread):
 		global GAME_ENTITIES
 
 		a = self.get_position()
-		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1])
+		char = OBJ_terrain.get_char(self.map_x, self.map_y, a[0] + 1, a[1])  # get the character at the current player position
 
-		if not char in ["-", "|", ">", "<", "v", "^", "/", "_", "*", "V"]:
+		if not char in ["-", "|", ">", "<", "v", "^", "/", "_", "*", "V"]:  # if the char is not an forbidden one
 
 			collide = False
-			for type in GAME_ENTITIES:
-				for entity in GAME_ENTITIES[type]:
-					if entity.in_room(self.map_x, self.map_y):
-						if entity.collide((a[0] + 1, a[1])):
+			for type in GAME_ENTITIES:  # for each type of entities
+				for entity in GAME_ENTITIES[type]:  # for each entities in the type
+					if entity.in_room(self.map_x, self.map_y): # if the entity is in the same room that the player
+						if entity.collide((a[0] + 1, a[1])):  # if there is a single colision between the player and the entity, the player doesn't move
 							collide = True
 							break
 			if not collide:
-				self.facing = "east"
-				self.x += CANVAS_RATE
+				self.facing = "east"  # facing him to east, because he went right
+				self.x += CANVAS_RATE  # moving the player to the new location
 		else:
 			self.facing = "east"
 
@@ -847,7 +844,7 @@ class Player(threading.Thread):
 				self.y += CANVAS_RATE
 
 	def fire(self, target):
-
+		# unused for the moment
 		global OBJ_bullet
 		global SPRITE_PLAYER_LASER
 
@@ -856,7 +853,7 @@ class Player(threading.Thread):
 			OBJ_bullet.fire((self.x + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['x'], self.y + SPRITE_PLAYER_LASER['metadata']['weapon']['offset'][self.facing]['y']), target)
 
 	def get_position(self):
-
+		# return the player position ( in case )
 		return (
 			math.floor(
 				(self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x']) / CANVAS_RATE),
@@ -886,7 +883,7 @@ class Player(threading.Thread):
 
 		if self.side_stairs:
 
-			self.is_dead_docker = True
+			self.is_dead_docker = True  # prevent problems due to monsters moving while terrain isn't generated
 
 			CONTINUE = True
 
@@ -899,6 +896,8 @@ class Player(threading.Thread):
 				OBJ_window.fill((0, 0, 0))  # Erase pixels on canvas
 				OBJ_window.blit(OBJ_canvas, (0, 0))
 				pygame.display.flip()
+
+				# display the end menu
 
 				for e in pygame.event.get():
 
@@ -925,18 +924,18 @@ class Player(threading.Thread):
 
 							for type in GAME_ENTITIES:
 								for entity in GAME_ENTITIES[type]:
-									entity.clear_cache()
+									entity.clear_cache()  # clear all entities cache to reset them
 
-							OBJ_terrain.restart()
-							OBJ_terrain = Terrain()
+							OBJ_terrain.restart()  # reset all vars
+							OBJ_terrain = Terrain()  # create a new terrain
 
 							RUN = True
 
-							OBJ_terrain.generate()
-							OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')
-							OBJ_bullet = Bullet()
-							OBJ_bullet.start()
-							OBJ_player.start()
+							OBJ_terrain.generate()  # generate a new terrain
+							OBJ_player = Player(f'{OBJ_terrain.get_spawn()}')  # set the player coordinates on the spawn
+							OBJ_bullet = Bullet()  # create object bullet ( useless )
+							OBJ_bullet.start()  # start bullet
+							OBJ_player.start()  # start player
 
 							OBJ_calculator = ThreadedCalculator()
 							OBJ_calculator.start()
@@ -947,18 +946,14 @@ class Player(threading.Thread):
 							CONTINUE = False
 							sys.exit(0)
 
-
-		#if self.side_stairs:
-
-		#	OBJ_terrain.down_stair()
-
 	def set_room(self, room):
-
+        # update the current room to a new room
 		self.map_x = int(room.split('@')[0])
 		self.map_y = int(room.split('@')[1])
 
 	def set_position(self, position):
 
+		# update the new position of the player ( to the center of his hitbox )
 		self.x = round((int(position.split('@')[0]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 		self.y = round((int(position.split('@')[1]) * CANVAS_RATE) - (CANVAS_RATE * 4 / 2))
 
@@ -968,40 +963,40 @@ class Player(threading.Thread):
 		global GAMEVAR_INFIGHT
 		global GAMEVAR_YOURTURN
 
-		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:
+		if (GAMEVAR_INFIGHT and self.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < 200) or not GAMEVAR_INFIGHT:  # if (the player is in fight and in a radius of 5 ceses ) or the player isn't in fight
 
-			if OBJ_terrain.can_go_at(x, y):
+			if OBJ_terrain.can_go_at(x, y):  # if the player can go at the new location
 
-				if x * CANVAS_RATE - self.x >= 0:
+				if x * CANVAS_RATE - self.x >= 0:  # if going right
 
 					self.facing = "east"
-				else:
+				else:  # if going left
 					self.facing = "west"
 
-				if GAMEVAR_INFIGHT:
+				if GAMEVAR_INFIGHT:  # if in a fight
 
-					if self.nb_Actions <= self.max_Actions:
+					if self.nb_Actions <= self.max_Actions:  # if the player is able to act
 
-						playerX, playerY = self.get_position()
+						playerX, playerY = self.get_position()  # get the player position in case
 
 						path = OBJ_terrain.gen_path(
 							(playerX, playerY),
 							(x, y)
-						)
+						)  # generate a path between the player and his destination
 
-						for case in path:
+						for case in path:  # for each case within the path
 
-							self.nb_Actions += 1
+							self.nb_Actions += 1  # increase the number of executed actions by one
 
 							try:
 
 								time.sleep(0.0075)
 
-								self.x = (case[0] - 1) * CANVAS_RATE
-								self.y = (case[1] - 3) * CANVAS_RATE
+								self.x = (case[0] - 1) * CANVAS_RATE  # move the player to the x case ( adapted )
+								self.y = (case[1] - 3) * CANVAS_RATE  # move the player to the y case ( adapted )
 
 								OBJ_canvas.fill((0, 0, 0))
-
+								# update the screen
 								OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
 								OBJ_terrain.display_walls(OBJ_canvas)
 								OBJ_terrain.display_props(OBJ_canvas)
@@ -1018,31 +1013,32 @@ class Player(threading.Thread):
 							except:
 								pass
 
-							if self.nb_Actions >= self.max_Actions:
-								GAMEVAR_YOURTURN = False
-								self.nb_Actions = 0
+							if self.nb_Actions >= self.max_Actions:  # if the number of actions is more or equal to the max number of actions
+								GAMEVAR_YOURTURN = False  # it's not your turn anymore
+								self.nb_Actions = 0  # reset the number of actions
 								break
 					else:
-						GAMEVAR_YOURTURN = False
-						self.nb_Actions = 0
+						GAMEVAR_YOURTURN = False  # it's not your turn anymore
+						self.nb_Actions = 0  # reset the number of actions
 
-				else:
+				else:  # if you are not in fight
 
-					playerX, playerY = self.get_position()
+					playerX, playerY = self.get_position()  # get the player position in case
 
 					path = OBJ_terrain.gen_path(
 						(playerX, playerY),
 						(x, y)
-					)
+					)  # generate a path between the player and his destination
 
-					for case in path:
+					for case in path:  # for each case within the path
 
-						self.x = (case[0] - 1) * CANVAS_RATE
-						self.y = (case[1] - 3) * CANVAS_RATE
+						self.x = (case[0] - 1) * CANVAS_RATE  # move the player to the x case ( adapted )
+						self.y = (case[1] - 3) * CANVAS_RATE  # move the player to the y case ( adapted )
 
 						time.sleep(0.0075)
 
 						OBJ_canvas.fill((0, 0, 0))
+						# update the screen
 						OBJ_terrain.display_ground(
 							OBJ_canvas)  # Display the terrain and generates entities on the canvas
 						OBJ_terrain.display_walls(OBJ_canvas)
@@ -1055,9 +1051,9 @@ class Player(threading.Thread):
 
 						time.sleep(0.0075)
 
-					self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))
+					self.update_life(heal=(1 if random.randint(0, 3) == 3 else 0))  # randomly update the life of the player
 
-		return (self.x / CANVAS_RATE), (self.y / CANVAS_RATE)
+		return (self.x / CANVAS_RATE), (self.y / CANVAS_RATE)  # return the new position of the player
 
 	def can_attack(self):
 
@@ -1072,50 +1068,49 @@ class Player(threading.Thread):
 			for entity in GAME_ENTITIES[type]:
 				if entity.in_room(self.map_x, self.map_y):
 
-					if entity.in_radius_of_player(GAMEVAR_CURRENT_WEAPON["range"]):
-						inRangeEnnemies += 1
-						enemies[entity] = (entity.x, entity.y)
+					if entity.in_radius_of_player(GAMEVAR_CURRENT_WEAPON["range"]):  # if the entity is in range of the weapon of the player
+						inRangeEnnemies += 1  # add 1 ennemy in range
+						enemies[entity] = (entity.x, entity.y)  # create a new value of the dictionnary with the coordinates of the entity
 
 		if inRangeEnnemies <= 0:
-			throw_popup('NO_ENEMIES', stay=100)
+			throw_popup('NO_ENEMIES', stay=100)  # display a popup that will stay 100 ticks
 
 		elif inRangeEnnemies == 1:
 
 			for e in enemies:
 				selected = e
-				d = distance((math.floor(OBJ_player.x / CANVAS_RATE), math.floor(OBJ_player.y / CANVAS_RATE)), (enemies[e][0], enemies[e][0]))
+				d = distance((math.floor(OBJ_player.x / CANVAS_RATE), math.floor(OBJ_player.y / CANVAS_RATE)), (enemies[e][0], enemies[e][0]))  # distance between the player and the ennemy
 
+			if GAMEVAR_CURRENT_WEAPON['name'] == 'GRENADE':  # if your weapon is a grenade
 
-
-			if GAMEVAR_CURRENT_WEAPON['name'] == 'GRENADE':
-
-				for frame in SPRITE_EXPLODE:
+				for frame in SPRITE_EXPLODE:  # display each frame to create an explosion animation
 					show_basic()
 					OBJ_canvas.blit(SPRITE_EXPLODE[frame], (((round(selected.x - 1.5) * CANVAS_RATE), round((selected.y - 1.5) * CANVAS_RATE))))
 
 					self.display(OBJ_canvas)
 					OBJ_terrain.display_overwalls(OBJ_canvas)
 					OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
-
+					# update the screen
 					pygame.display.flip()
 
 					time.sleep(0.05)
 
-			selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
+				OBJ_player.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d + 0.25) if d + 0.25 > 0 else GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the player according to the distance of the explosion
 
-			GAMEVAR_YOURTURN = False
+			selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the ennemy
 
-			OBJ_player.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d - 0.25) if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"])
+			GAMEVAR_YOURTURN = False  # it's not your turn anymore
 
-			if GAMEVAR_CURRENT_WEAPON['name'] in ['GRENADE']:
+			if GAMEVAR_CURRENT_WEAPON['name'] in ['GRENADE', 'AR']:  # remove an ammo in the current weapon
 				GAMEVAR_CURRENT_WEAPON["ammos"] -= 1
-			if GAMEVAR_CURRENT_WEAPON["ammos"] < 1:
+			if GAMEVAR_CURRENT_WEAPON["ammos"] < 1:  # if you no longer have ammo, you switch to your knife
 				GAMEVAR_CURRENT_WEAPON = WEAPONS['KNIFE']
 
-		elif inRangeEnnemies > 1:
+		elif inRangeEnnemies > 1:  # if there is more than one hostiles in range
+
 			choose = False
 
-			throw_popup('CHOOSE_AN_ENEMY')
+			throw_popup('CHOOSE_AN_ENEMY')  # show a popup saying to choose an enemy
 
 			while not choose:
 
@@ -1126,35 +1121,38 @@ class Player(threading.Thread):
 				OBJ_terrain.display_entities(OBJ_canvas)
 				self.display(OBJ_canvas)
 				OBJ_terrain.display_overwalls(OBJ_canvas)
-				x, y = OBJ_calculator.get_mouse_case()
+				# update the screen
+
+				x, y = OBJ_calculator.get_mouse_case()  # get the case of the mouse
 
 				selected = None
 
-				for entity in enemies:
+				for entity in enemies:  # for entity in the enemies
 
-					if entity.collide((x, y)):
+					if entity.collide((x, y)):  # if there is a single collision between the player and the entity
 
-						entity.glow(OBJ_canvas)
-						selected = entity
+						entity.glow(OBJ_canvas)  # display a blue square on the entities
+						selected = entity  # the entity is now the one selected
 						break
 
 				for e in pygame.event.get():
-					if e.type == MOUSEBUTTONDOWN:
+					if e.type == MOUSEBUTTONDOWN:  # if the user click
 
-						if selected != None:
+						if selected != None: # if there is a monster selected
 							choose = True
 
 							break
+
 				display_ui(OBJ_canvas)
 				OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
 				pygame.display.flip()  # Flip/Update the screen
 
-			grab_popup('CHOOSE_AN_ENEMY')
+			grab_popup('CHOOSE_AN_ENEMY')  # display a popup saying to choose an enemy
 
-			if GAMEVAR_CURRENT_WEAPON['name'] == 'GRENADE':
+			if GAMEVAR_CURRENT_WEAPON['name'] == 'GRENADE':  # if your weapon is a grenade
 
-				for frame in SPRITE_EXPLODE:
+				for frame in SPRITE_EXPLODE:  # display each frame to create an explosion animation
 					show_basic()
 					OBJ_canvas.blit(SPRITE_EXPLODE[frame], (((round(selected.x - 1.5) * CANVAS_RATE), round((selected.y - 1.5) * CANVAS_RATE))))
 
@@ -1162,33 +1160,32 @@ class Player(threading.Thread):
 					OBJ_terrain.display_overwalls(OBJ_canvas)
 					display_ui(OBJ_canvas)
 					OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
-
+					# update the screen
 					pygame.display.flip()
 
 					time.sleep(0.05)
 
 				for type in GAME_ENTITIES:
 					for entity in GAME_ENTITIES[type]:
-						if entity.in_room(self.map_x, self.map_y) and entity != selected:
+						if entity.in_room(self.map_x, self.map_y) and entity != selected:  # if the entity is in the room and insn't selected
 
-							d = distance((selected.x, selected.y), (entity.x, entity.y))
+							d = distance((selected.x, selected.y), (entity.x, entity.y))  # distance between the selected monster and the other one
 
-							if d <= 4:
-								entity.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d) if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"])
+							if d <= 4:  # if the distance is under 4 cases
+								entity.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d) if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"])  # udpate the life of the entity
 
-			d = distance((selected.x, selected.y), (entity.x, entity.y))
-			selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])
-			OBJ_player.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d - 0.25) if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"])
+			selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the selected enemy
+			OBJ_player.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d + 0.25) if d + 0.25 > 0 else GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the player according to the distance of the explosion
 
 			GAMEVAR_YOURTURN = False
 
-			if GAMEVAR_CURRENT_WEAPON['name'] in ['GRENADE']:
+			if GAMEVAR_CURRENT_WEAPON['name'] in ['GRENADE']:  # remove an ammo in the current weapon
 				GAMEVAR_CURRENT_WEAPON["ammos"] -= 1
-			if GAMEVAR_CURRENT_WEAPON["ammos"] < 1:
+			if GAMEVAR_CURRENT_WEAPON["ammos"] < 1:  # if you no longer have ammo, you switch to your knife
 				GAMEVAR_CURRENT_WEAPON = WEAPONS['KNIFE']
 
 	def is_dead(self):
-
+		# return the curent state of the player
 		return self.is_dead_docker
 
 	def update_life(self, heal=0, damages=0, armor=0, boost=0):
@@ -1207,8 +1204,8 @@ class Player(threading.Thread):
 				self.health -= damages
 			else:
 				self.health = 0
-				self.kill()
-
+				self.kill()  # kill the player if the damages are supposed to kil you
+			# create a random blood sprite on the ground
 			OBJ_terrain.create_props(random.choice(['BLOOD_1', 'BLOOD_2', 'BLOOD_3']), ((self.map_x, self.map_y), (math.floor((self.x + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['x'] + random.uniform(-20, 20)) / CANVAS_RATE), math.floor((self.y + SPRITE_PLAYER_LASER['metadata']['foot']['offset'][self.facing]['y'] + random.uniform(-20, 20))  / CANVAS_RATE)), self.facing, False))
 
 		elif self.health == GAMEVAR_MAX_HEALTH:
@@ -1220,13 +1217,13 @@ class Player(threading.Thread):
 
 		if object == 'door':
 
-			for p in self.side_doors:
-				if self.side_doors[p] == True:
+			for p in self.side_doors:  # for each char in the side doors
+				if self.side_doors[p]:  # if the char is a door
 					result = True
 					break
-			if not result:
+			if not result:  # if there is no doors
 				for p in self.side_chars:
-					if self.side_chars[p] in ['$', '&']:
+					if self.side_chars[p] in ['$', '&']:  # if there is a stairs
 						result = True
 						break
 
