@@ -947,7 +947,7 @@ class Player(threading.Thread):
 							sys.exit(0)
 
 	def set_room(self, room):
-        # update the current room to a new room
+		# update the current room to a new room
 		self.map_x = int(room.split('@')[0])
 		self.map_y = int(room.split('@')[1])
 
@@ -1255,7 +1255,7 @@ class Minion(threading.Thread):
 
 		global RUN
 
-		while RUN and self.alive:
+		while RUN and self.alive:  # to kill the thread when dead
 
 			time.sleep(0.15)
 
@@ -1268,7 +1268,7 @@ class Minion(threading.Thread):
 
 		if not no_animation:
 
-			for i in range(1, 8):
+			for i in range(1, 8):  # animation of the minion death
 
 				OBJ_canvas.fill((0, 0, 0))
 				OBJ_terrain.display_ground(OBJ_canvas)  # Display the terrain and generates entities on the canvas
@@ -1284,39 +1284,37 @@ class Minion(threading.Thread):
 
 				time.sleep(0.05)
 
-			OBJ_terrain.create_props('MINIONS_CORPSE', ((self.map_x, self.map_y), (self.x - 1, self.y - 1), self.facing, False))
+			OBJ_terrain.create_props('MINIONS_CORPSE', ((self.map_x, self.map_y), (self.x - 1, self.y - 1), self.facing, False))  # creating a dead body
 
-			GAME_ENTITIES["MINIONS"].remove(self)
+			GAME_ENTITIES["MINIONS"].remove(self)  # removing the monster from the monster list
 
 		self.clear_cache()
 
-		self.alive = False
-
+		self.alive = False  # to kill the thread
 
 	def display(self, surface, state='alive', frame=1):
 
 		global SPRITE_MINION
 
-		if self.x > 0 and self.x <= CANVAS_RATE:
-			if self.y > 0 and self.y <= CANVAS_RATE:
-				surface.blit(SPRITE_MINION[state][self.facing][f'frame_{frame}'], (round((self.x * CANVAS_RATE) - CANVAS_RATE), round((self.y * CANVAS_RATE) - CANVAS_RATE)))
-				surface.blit(UI_HEALTH_BAR_MOB[str(math.floor(self.health / ((5 + (GAMEVAR_DIFFICULTY * 1.25)) / 50)))], (round((self.x - 0.75) * CANVAS_RATE), round((self.y - 0.95) * CANVAS_RATE)))
+		if self.x > 0 and self.x <= CANVAS_RATE:  # if minion is on the 32 x cases available
+			if self.y > 0 and self.y <= CANVAS_RATE:  # if minion is on the 32 y cases available
+				surface.blit(SPRITE_MINION[state][self.facing][f'frame_{frame}'], (round((self.x * CANVAS_RATE) - CANVAS_RATE), round((self.y * CANVAS_RATE) - CANVAS_RATE)))  # display the monster
+				surface.blit(UI_HEALTH_BAR_MOB[str(math.floor(self.health / ((5 + (GAMEVAR_DIFFICULTY * 1.25)) / 50)))], (round((self.x - 0.75) * CANVAS_RATE), round((self.y - 0.95) * CANVAS_RATE)))  # display the monster health bar
 
 				if DEBUG_MODE:
 
-
-					pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)
+					pygame.draw.circle(surface, (255, 0, 0), (self.x * CANVAS_RATE, self.y * CANVAS_RATE), self.collide_radius)  # the hitbox of the mob
 					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
 						(self.x * CANVAS_RATE, self.y * CANVAS_RATE),
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE),
 						(self.x * CANVAS_RATE + CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE),
-						(self.x * CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE)), 2)
-					surface.blit(FONT.render(str(self.health), True, (255, 255, 255)), (self.x * CANVAS_RATE, self.y * CANVAS_RATE))
+						(self.x * CANVAS_RATE, self.y * CANVAS_RATE + CANVAS_RATE)), 2)  # display on bloc of the monster hitbox ( right down )
+					surface.blit(FONT.render(str(self.health), True, (255, 255, 255)), (self.x * CANVAS_RATE, self.y * CANVAS_RATE))  # display the number of HP
 
 	def in_room(self, map_x, map_y):
 
 		try:
-			if map_x == self.map_x and map_y == self.map_y:
+			if map_x == self.map_x and map_y == self.map_y:  # if this monster is in the same room that the parameters
 				return True
 			else:
 				return False
@@ -1328,18 +1326,15 @@ class Minion(threading.Thread):
 		global SPRITE_MINION
 		global CANVAS_RATE
 
-		player_x = position[0] * CANVAS_RATE + CANVAS_RATE_HALF
-		player_y = position[1] * CANVAS_RATE + CANVAS_RATE_HALF
-
+		player_x = position[0] * CANVAS_RATE + CANVAS_RATE_HALF  # position of the player = his x ( pixel ) * CANVAS_RATE to transform into case + CANVAS_RATE_HALF to get the foot coordinates
+		player_y = position[1] * CANVAS_RATE + CANVAS_RATE_HALF  # position of the player = his y ( pixel ) * CANVAS_RATE to transform into case + CANVAS_RATE_HALF to get the foot coordinates
 
 		mob_x = round(self.x * CANVAS_RATE) + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['x']
 		mob_y = round(self.y * CANVAS_RATE) + SPRITE_MINION['metadata']['middle']['offset'][self.facing]['y']
+		# mob coordinates loaded from his metatadas
+		distance = math.sqrt((abs(mob_x - player_x))**2 + (mob_y - player_y)**2)  # Pythagore
 
-
-		distance = math.sqrt((abs(mob_x - player_x))**2 + (mob_y - player_y)**2)
-
-
-		if distance > self.collide_radius:
+		if distance > self.collide_radius:  # if the player is in the collide radius of the mob
 			return False
 		else:
 
@@ -1352,7 +1347,7 @@ class Minion(threading.Thread):
 			((self.x + 1) * CANVAS_RATE, (self.y - 1) * CANVAS_RATE),
 			((self.x + 1) * CANVAS_RATE, (self.y + 1) * CANVAS_RATE),
 			((self.x - 1) * CANVAS_RATE, (self.y + 1) * CANVAS_RATE)), 2
-		)
+		)  # draw a blue circle on the mob hitbox
 
 	def update_life(self, heal=0, damages=0, armor=0, boost=0):
 
@@ -1379,21 +1374,20 @@ class Minion(threading.Thread):
 
 		global CANVAS_RATE
 
-		if OBJ_player.distance((self.x * 32, self.y * 32)) <= 100:
+		if OBJ_player.distance((self.x * 32, self.y * 32)) <= 64:  # if player is in range
 
-			OBJ_player.update_life(damages=self.damage)
+			OBJ_player.update_life(damages=self.damage)  # deal damages to player
 
-		else:
+		else:  # if player is not in range
 
 			path = OBJ_terrain.gen_path(
 				(self.x, self.y),
 				OBJ_player.get_position(),
 				[(self.x - 1, self.y - 1), (self.x, self.y - 1), (self.x, self.y), (self.x - 1, self.y)]
-			)
+			)  # generate a path from current position to player position
 
 			tp = None
 			tp_case = 0
-
 
 			for case in path:
 
@@ -1418,14 +1412,14 @@ class Minion(threading.Thread):
 					display_ui(OBJ_canvas)
 					OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 					pygame.display.flip()  # Flip/Update the screen
-
+					# update the screen
 					time.sleep(0.015)
 
 				except:
 					pass
 
 	def clear_cache(self):
-
+		# delete all variables
 		del self.coordinates
 		del self.speed
 		del self.health
@@ -1496,18 +1490,18 @@ class Terrain():
 
 		global GAME_ENTITIES
 
-		self.pattern = random.choice(os.listdir('./resources/terrain/paths'))
+		self.pattern = random.choice(os.listdir('./resources/terrain/paths'))  # choose a random pattern from the list
 
 		with open(f'./resources/terrain/paths/{self.pattern}', 'r') as f:
 
 			self.pattern_data = json.load(f)
 
-		for row in range(5):
+		for row in range(5):  # for the x axis
 
-			for room in range(5):
+			for room in range(5):  # for the y axis
 
 
-				self.terrain[row][room] = self.get_pattern(random.choice(self.pattern_data['pattern'][row][room]))
+				self.terrain[row][room] = self.get_pattern(random.choice(self.pattern_data['pattern'][row][room]))  # append a room to the terrain
 				ground = []
 				y = 0
 				for line in self.terrain[row][room]:
@@ -1516,22 +1510,22 @@ class Terrain():
 
 						if char == "+":
 
-							ground.append(f'{row}@{room}//{x}@{y}') # Coordinates format: row@room//x@y => ex: 0@0//10@5
+							ground.append(f'{row}@{room}//{x}@{y}')  # Coordinates format: row@room//x@y => ex: 0@0//10@5  # append all the coordinates where the player can walk
 						x += 1
 					y += 1
 
 				if ground != []:
 
-					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:
+					if f'{row}@{room}' != self.pattern_data['metadata']['spawn']:  # if the room isn't the spawn
 
-						for i in range(random.randint(0, 4)):
+						for i in range(random.randint(0, 4)):  # randomly spawn a monster
 
 							sub_instance = Minion(random.choice(ground))
 							sub_instance.start()
 
 							GAME_ENTITIES['MINIONS'].append(sub_instance)
 
-					for i in range(random.randint(0, 2)):
+					for i in range(random.randint(0, 2)):  # randomly spwan an item
 
 						case = random.choice(ground)
 
@@ -1566,11 +1560,11 @@ class Terrain():
 
 				for i in range(CANVAS_RATE):
 
-					l = [r[0][i], r[1][i], r[2][i], r[3][i], r[4][i]]
+					l = [r[0][i], r[1][i], r[2][i], r[3][i], r[4][i]]  #  add all row from the whole terrain
 
 					l = " ".join(l)
 
-					f.write(l + '\n')
+					f.write(l + '\n')  # write it on the file
 
 				f.write('\n')
 
@@ -1590,12 +1584,12 @@ class Terrain():
 
 			for l in f.read().split('\n'):
 
-				pattern.append(l)
+				pattern.append(l)  # append each line of the pattern to l
 
 		with open(f'{path}.metadata', 'r') as f:
 
 			pattern.append(json.load(f))
-		return pattern
+		return pattern  # return the pattern + his metadata
 
 	def has_any_mob_at(self, x, y):
 
@@ -1615,10 +1609,8 @@ class Terrain():
 		global SPRITES_GROUND
 		global CANVAS_RATE
 
-
 		y = 0
-
-		for line in self.terrain[self.map_x][self.map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:  # for each line on the terrain, except the metadatas
 
 			x = 0
 
@@ -1626,27 +1618,26 @@ class Terrain():
 
 				if box in ['+', 'x']:
 
-					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
-
+					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))  # add the base ground sprite
 
 				if DEBUG_MODE:
-					surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))
+					surface.blit(FONT.render(box, True, (0, 255, 0)), (x * CANVAS_RATE, y * CANVAS_RATE))  # display the char that is supposed to be on the case
 				x += 1
 			y += 1
 
 		y = 0
 
-		for line in self.terrain[self.map_x][self.map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:  # for each line on the terrain, except the metadatas
 
 			x = 0
 
-			for box in list(line):
+			for box in list(line):  # for each case on the line
 
-				if box in ['+', 'x']:
+				if box in ['+', 'x']:  # if the box is ground
 
 					try:
 						self.texture_map[f'{x}@{y}']
-					except:
+					except:  # if there is no texture on this case, randomly add one ( or not )
 						LIST = [
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][1], (64, 64)), random.randint(0, 360)),
 							pygame.transform.rotate(pygame.transform.scale(SPRITES_GROUND['base'][2], (64, 64)), random.randint(0, 360)),
@@ -1663,7 +1654,7 @@ class Terrain():
 						]
 
 						self.texture_map[f'{x}@{y}'] = random.choice(LIST)
-					if self.texture_map[f'{x}@{y}'] != None:
+					if self.texture_map[f'{x}@{y}'] != None:  # if there is a texture, display it
 						surface.blit(self.texture_map[f'{x}@{y}'], (x * CANVAS_RATE, y * CANVAS_RATE))
 				if box == "/":
 					pygame.draw.rect(surface, (0, 0, 0), (x * CANVAS_RATE, y * CANVAS_RATE, CANVAS_RATE, CANVAS_RATE))
@@ -1679,17 +1670,17 @@ class Terrain():
 
 		y = 0
 
-		for line in self.terrain[self.map_x][self.map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:  # for each line on the terrain, except the metadatas
 
 			x = 0
 
-			for box in list(line):
+			for box in list(line):  # for each case in the line
 
-				if box == "_":
+				if box == "_":  # if the case is a down wall, display the down wall
 
 					surface.blit(SPRITES_WALLS['horizontal']['normal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
 
-				elif box == "!":
+				elif box == "!":  # else if the case is a side wall, display the side wall
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 					surface.blit(SPRITES_WALLS['vertical']['normal'], (x * CANVAS_RATE, y * CANVAS_RATE))
@@ -1704,28 +1695,28 @@ class Terrain():
 
 		y = 0
 
-		for line in self.terrain[self.map_x][self.map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:  # for each line on the terrain, except the metadatas
 
 			x = 0
 
-			for box in list(line):
+			for box in list(line):  # for each case in the line
 
-				if box == "-":
+				if box == "-":  # if the case is an overwall, display an overwall
 
 					surface.blit(SPRITES_WALLS['horizontal']['normal'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
 
 
-				elif box == "|":
+				elif box == "|":  # if the case is a side wall, display a side wall
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 					surface.blit(SPRITES_WALLS['vertical']['normal'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box == "2":
+				elif box == "2":  # if the case is a special side wall, display a special side wall
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 					surface.blit(SPRITES_WALLS['vertical']['highter'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box == "1":
+				elif box == "1":  # if the case is a special side wall, display a special side wall
 
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 					surface.blit(SPRITES_WALLS['horizontal']['smaller'], (x * CANVAS_RATE, (y * CANVAS_RATE) - CANVAS_RATE))
@@ -1740,61 +1731,57 @@ class Terrain():
 
 		y = 0
 
-		for line in self.terrain[self.map_x][self.map_y][:-1]:
+		for line in self.terrain[self.map_x][self.map_y][:-1]:  # for each line on the terrain, except the metadatas
 
 			x = 0
 
-			for box in list(line):
+			for box in list(line):  # for each case in line
 
-				if box in ['<', '>', 'v', 'V', '^', '*']:
+				if box in ['<', '>', 'v', 'V', '^', '*']:  # if the char is a door, display ground first
 					surface.blit(SPRITES_GROUND['base'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				if box in ['<', '>']:
+				if box in ['<', '>']:  # if the char is a side door, display the side door
 
 					surface.blit(SPRITES_DOORS['vertical'], (x * CANVAS_RATE, y * CANVAS_RATE))
 
-				elif box in ['v']:
+				elif box in ['v']:  # if the char is a down door, display a down door
 
 					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
-				elif box in ['V']:
+				elif box in ['V']:  # if the char is the other down door, display the other down door
 
 					surface.blit(SPRITES_DOORS['horizontal']['down']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
-				elif box in ['^']:
+				elif box in ['^']:  # if the char is a up door, display a up door
 
 					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_left'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
-				elif box in ['*']:
+				elif box in ['*']:  # if the char is the other up door, display the other up door
 
 					surface.blit(SPRITES_DOORS['horizontal']['up']['horizontal_right'], (x * CANVAS_RATE, y * CANVAS_RATE - CANVAS_RATE))
 
-
-				elif box in ['$']:
+				elif box in ['$']:  # if the char is a stair, display a stair
 					surface.blit(SPRITES_GROUND['stairs'][0], (x * CANVAS_RATE, y * CANVAS_RATE))
 
 				x += 1
 			y += 1
 
 
-		for props_type in GAME_PROPS:
+		for props_type in GAME_PROPS:  # for each prop type in the props
 
-			for prop in GAME_PROPS[props_type]:
+			for prop in GAME_PROPS[props_type]:  # for each props in the prop type
 
-				if prop[0] == (self.map_x, self.map_y):
+				if prop[0] == (self.map_x, self.map_y):  # if the prop is in the room
 
-					surface.blit(PROPS[props_type][prop[2]], (prop[1][0] * CANVAS_RATE, prop[1][1] * CANVAS_RATE))
+					surface.blit(PROPS[props_type][prop[2]], (prop[1][0] * CANVAS_RATE, prop[1][1] * CANVAS_RATE))  # diplay the prop
 
 	def display_entities(self, surface, non_displayed=None):
 
-		count = 0
-
-		for type in GAME_ENTITIES:
-			for e in GAME_ENTITIES[type]:
-				if e.in_room(self.map_x, self.map_y):
-					if not non_displayed:
-						e.display(surface)
-						count += 1
+		for type in GAME_ENTITIES:  # for each type of entities
+			for e in GAME_ENTITIES[type]:  # for each entities in the type
+				if e.in_room(self.map_x, self.map_y):  # if the entitie is in the current room
+					if not non_displayed:  # if everybody can be displayed
+						e.display(surface)  # if the entity can be displayed, display it
 
 					elif non_displayed:
 						if e == non_displayed:
@@ -1802,7 +1789,7 @@ class Terrain():
 
 						else:
 							e.display(surface)
-							count += 1
+
 
 	def get_spawn(self):
 
