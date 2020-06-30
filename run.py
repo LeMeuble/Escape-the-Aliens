@@ -1173,9 +1173,9 @@ class Player(threading.Thread):
 
 							if d <= 4:  # if the distance is under 4 cases
 								entity.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d) if d > 0 else GAMEVAR_CURRENT_WEAPON["damages"])  # udpate the life of the entity
-
+				OBJ_player.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d + 0.25) if d + 0.25 > 0 else GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the player according to the distance of the explosion
 			selected.update_life(damages=GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the selected enemy
-			OBJ_player.update_life(damages=round(GAMEVAR_CURRENT_WEAPON["damages"] / d + 0.25) if d + 0.25 > 0 else GAMEVAR_CURRENT_WEAPON["damages"])  # update the life of the player according to the distance of the explosion
+
 
 			GAMEVAR_YOURTURN = False
 
@@ -1783,25 +1783,22 @@ class Terrain():
 					if not non_displayed:  # if everybody can be displayed
 						e.display(surface)  # if the entity can be displayed, display it
 
-					elif non_displayed:
-						if e == non_displayed:
+					elif non_displayed:  # if there is an entity that is not supposed to be displayed
+						if e == non_displayed:  # if this entity is not supposed to be displayed, don't do it
 							continue
 
-						else:
+						else:  # else, display the entity
 							e.display(surface)
-
 
 	def get_spawn(self):
 
 		x = int(self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][32]['spawns']['main']['x_case'])
 		y = int(self.terrain[int(self.current_room.split('@')[0])][int(self.current_room.split('@')[1])][32]['spawns']['main']['y_case'])
-
-		return f"{self.pattern_data['metadata']['spawn']}//{x}@{y}"
+		return f"{self.pattern_data['metadata']['spawn']}//{x}@{y}"  # return the coordinates where the player is supposed to spawn ( from the metadatas )
 
 	def go_right(self):
 
-		global OBJ_player
-
+		# make the player go to 1 room to the right
 		row = self.map_x
 		room = self.map_y + 1
 
@@ -1818,8 +1815,9 @@ class Terrain():
 
 	def go_left(self):
 
+		# make the player go to 1 room to the left
 		row = self.map_x
-		room =  self.map_y - 1
+		room = self.map_y - 1
 
 		self.current_room = f'{row}@{room}'
 		OBJ_player.set_room(f'{row}@{room}')
@@ -1834,6 +1832,7 @@ class Terrain():
 
 	def go_up(self):
 
+		# make the player go to 1 room up
 		row = self.map_x - 1
 		room = self.map_y
 
@@ -1850,6 +1849,7 @@ class Terrain():
 
 	def go_down(self):
 
+		# make the player go to 1 room down
 		row = self.map_x + 1
 		room = self.map_y
 
@@ -1868,20 +1868,16 @@ class Terrain():
 
 		global OBJ_player
 
-		if not self.get_char_in_current_room_at(x, y) in ['^', '<', 'v', 'V', '>', '*', '|', '-', '_', '/']:
+		if not self.get_char_in_current_room_at(x, y) in ['^', '<', 'v', 'V', '>', '*', '|', '-', '_', '/']:  # if the char isn't in the forbidden chars
 
-			if not GAMEVAR_INFIGHT and not self.has_any_mob_at(x, y):
-				if OBJ_player.get_position() != (x, y):
+			if not GAMEVAR_INFIGHT and not self.has_any_mob_at(x, y):  # if it's not a fight and there is no mobs to the case
+				if OBJ_player.get_position() != (x, y):  # if the case is not the actual case
 					return True
 			else:
+				# if the number of actions of the player allow him to go here
 				if (OBJ_player.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < (OBJ_player.max_Actions - OBJ_player.nb_Actions) * CANVAS_RATE) and ((round(OBJ_player.x + 1) >= x) or (round(OBJ_player.y + 3) >= y)):
-					if not self.has_any_mob_at(x, y):
-						if OBJ_player.get_position() != (x, y):
-							return True
-
-				elif OBJ_player.distance((x * CANVAS_RATE, y * CANVAS_RATE)) < (OBJ_player.max_Actions - OBJ_player.nb_Actions) * CANVAS_RATE + CANVAS_RATE:
-					if not self.has_any_mob_at(x, y):
-						if OBJ_player.get_position() != (x, y):
+					if not self.has_any_mob_at(x, y):  # if it's not a fight and there is no mobs to the case
+						if OBJ_player.get_position() != (x, y):  # if the case is not the actual case
 							return True
 
 		return False
@@ -1899,10 +1895,10 @@ class Terrain():
 		path_finded = False
 
 		possible = {}
-		for i in range(32):
+		for i in range(32):  # create an empty dictionnary of all possibles cases
 			possible[i] = {}
 
-		checked = {}
+		checked = {}  # create an empty dictionnary of all checked cases
 		for i in range(32):
 			checked[i] = {}
 
@@ -1913,20 +1909,21 @@ class Terrain():
 
 		not_possible = []
 
-		for type in GAME_ENTITIES:
-			for entity in GAME_ENTITIES[type]:
-				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+		for type in GAME_ENTITIES:  # for each type of entity
+			for entity in GAME_ENTITIES[type]:  # for each entity in each type
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):  # if the entity is in the room
 					not_possible.append((entity.x - 1, entity.y - 1))
 					not_possible.append((entity.x, entity.y - 1))
 					not_possible.append((entity.x, entity.y))
 					not_possible.append((entity.x - 1, entity.y))
+					# store in not_possible that those cases are unavailable
 
 		for f in forced_cases:
-			not_possible.remove(f)
+			not_possible.remove(f)  # remove the minions cases, otherwise he blocks himself
 
 		for i in range(32):
 			for j in range(32):
-				if self.get_char_in_current_room_at(j, i) in ['+', 'x']:
+				if self.get_char_in_current_room_at(j, i) in ['+', 'x']:  # for all ground cases, if the char is + or x, you can go here
 					if (j, i) in not_possible:
 						possible[i][j] = False
 					else:
@@ -1935,46 +1932,51 @@ class Terrain():
 					possible[i][j] = False
 				checked[i][j] = False
 
-		if sx <= tx:
-			if sy <= ty:
-				moves_patterns = ['r', 'd', 'u', 'l']
-			elif sy > ty:
-				moves_patterns = ['r', 'u', 'd', 'l']
+		# select the best detection pattern
+		if sx <= tx:  # if the source is <= of the target
+			if sy <= ty:  # if the source y is <= of the target
+				moves_patterns = ['r', 'd', 'u', 'l']  # better path
+			elif sy > ty:  # if the source y is >= of the target
+				moves_patterns = ['r', 'u', 'd', 'l']  # better path
 
-		else:
-			if sy <= ty:
-				moves_patterns = ['l', 'u', 'd', 'r']
-			else:
-				moves_patterns = ['l', 'd', 'u', 'r']
+		else:  # if the source is >= of the target
+			if sy <= ty:  # if the source y is <= of the target
+				moves_patterns = ['l', 'u', 'd', 'r']  # better path
+			else:  # if the source y is >= of the target
+				moves_patterns = ['l', 'd', 'u', 'r']  # better path
 
 		margin = 0
 		total_IT = 0
 
-		while not path_finded:
+		while not path_finded: # while path isn't found
 
-			r = random.randint(0, 255)
-			g = random.randint(0, 255)
-			b = random.randint(0, 255)
+			if DEBUG_MODE:
+				r = random.randint(0, 255)
+				g = random.randint(0, 255)
+				b = random.randint(0, 255)
 
-			if margin <= 0:
-				margin = 4
-				if px < tx:
-					x_state = "right"
-					if py < ty:
+			if margin <= 0:  # error margin
+				margin = 4  # 4 loop error margin
+
+				if px < tx:  # if the current case is left to the target
+					x_state = "right"  # go right
+					if py < ty:  # if the current case is above the target
+						y_state = "down"  # go down
+					elif py == ty:  # if the current case is on the same y level that the target
+						y_state = "same"  # stay on the same y level
+					else:  # if the current case is above the target
+						y_state = "up"  # go up
+
+				elif px == tx: # if the current case is on the same x level that the target
+					x_state = "same"  # stay on the same x level
+					if py < ty:  # if the current case is above the target
 						y_state = "down"
-					elif py == ty:
+					elif py == ty:  # if the current case is on the same y level that the target
 						y_state = "same"
-					else:
-						y_state = "up"
-				elif px == tx:
-					x_state = "same"
-					if py < ty:
-						y_state = "down"
-					elif py == ty:
-						y_state = "same"
-					else:
-						y_state = "up"
-				else:
+					else:  # if the current case is above the target
+						y_state = "up"  # go up
+
+				else: # if the current case is left to the target
 					x_state = "left"
 					if py < ty:
 						y_state = "down"
