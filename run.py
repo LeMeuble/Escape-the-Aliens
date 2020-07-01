@@ -1370,7 +1370,7 @@ class Minion(threading.Thread):
 		elif self.health == GAMEVAR_MAX_HEALTH:
 			pass
 
-	def IA(self):
+	def AI(self):
 
 		global CANVAS_RATE
 
@@ -1437,6 +1437,7 @@ class Minion(threading.Thread):
 			return True
 		else:
 			return False
+
 
 """
 	
@@ -1932,23 +1933,23 @@ class Terrain():
 					possible[i][j] = False
 				checked[i][j] = False
 
-		# select the best detection pattern
+		# select the best movement pattern
 		if sx <= tx:  # if the source is <= of the target
 			if sy <= ty:  # if the source y is <= of the target
-				moves_patterns = ['r', 'd', 'u', 'l']  # better path
+				moves_patterns = ['r', 'd', 'u', 'l']  # better path #
 			elif sy > ty:  # if the source y is >= of the target
-				moves_patterns = ['r', 'u', 'd', 'l']  # better path
+				moves_patterns = ['r', 'u', 'd', 'l']  # better path #
 
 		else:  # if the source is >= of the target
-			if sy <= ty:  # if the source y is <= of the target
-				moves_patterns = ['l', 'u', 'd', 'r']  # better path
-			else:  # if the source y is >= of the target
-				moves_patterns = ['l', 'd', 'u', 'r']  # better path
+			if sy <= ty:  # if the source y is above the target
+				moves_patterns = ['l', 'd', 'u', 'r']  # better path #
+			else:  # if the source y is under the target
+				moves_patterns = ['l', 'u', 'd', 'r']  # better path #
 
 		margin = 0
 		total_IT = 0
 
-		while not path_finded: # while path isn't found
+		while not path_finded:  # while path isn't found
 
 			if DEBUG_MODE:
 				r = random.randint(0, 255)
@@ -1970,20 +1971,20 @@ class Terrain():
 				elif px == tx: # if the current case is on the same x level that the target
 					x_state = "same"  # stay on the same x level
 					if py < ty:  # if the current case is above the target
-						y_state = "down"
+						y_state = "down"  # go down
 					elif py == ty:  # if the current case is on the same y level that the target
-						y_state = "same"
+						y_state = "same"  # stay on the same y level
 					else:  # if the current case is above the target
 						y_state = "up"  # go up
 
-				else: # if the current case is left to the target
-					x_state = "left"
-					if py < ty:
-						y_state = "down"
-					elif py == ty:
-						y_state = "same"
-					else:
-						y_state = "up"
+				else:  # if the current case is left to the target
+					x_state = "left"  # go left
+					if py < ty:  # if the current case is above the target
+						y_state = "down"  # go down
+					elif py == ty:  # if the current case is on the same y level that the target
+						y_state = "same"  # stay on the same y level
+					else:  # if the current case is above the target
+						y_state = "up"  # go up
 
 			else:
 				margin -= 1
@@ -2000,7 +2001,6 @@ class Terrain():
 					(a[0] * CANVAS_RATE + CANVAS_RATE, a[1] * CANVAS_RATE + CANVAS_RATE),
 					(a[0] * CANVAS_RATE, a[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
-
 			done = False
 
 			if DEBUG_MODE:
@@ -2011,90 +2011,91 @@ class Terrain():
 			if DEBUG_MODE:
 				time.sleep(0.08)
 
-			if px == tx and py == ty:
+			if px == tx and py == ty:  # if the current position and the destination are the same
 
 				checked[py][px] = True
-				path_finded = True
+				path_finded = True  #exit the loop
 				done = True
 
 				for i in checked:
 					for j in checked[i]:
-						possible[i][j] = checked[i][j]
+						possible[i][j] = checked[i][j]  # all those case are possibles
 						checked[i][j] = False
 
-				break
+				break  #  return the path
 
-			if px == tx:
-				if y_state == 'up':
-					if possible[py - 1][px] and not checked[py - 1][px]:
-						checked[py][px] = True
-						py -= 1
+			if px == tx:  # if on the same x level
+				if y_state == 'up':  # if supposed to go up
+					if possible[py - 1][px] and not checked[py - 1][px]:  #if the upper case is possible and not yet checked
+						checked[py][px] = True  # set this case to checked, because it's possible to move after
+						py -= 1  # set the new y pos
 						done = True
-						path.append((px, py))
+						path.append((px, py))  # add this case to the path
 						continue
 
-				elif y_state == 'down':
-					if possible[py + 1][px] and not checked[py + 1][px]:
-						checked[py][px] = True
-						py += 1
+				elif y_state == 'down':  # if supposed to go down
+					if possible[py + 1][px] and not checked[py + 1][px]:  #if the case under is possible and not yet checked
+						checked[py][px] = True  # set this case to checked, because it's possible to move after
+						py += 1  # set the new y pos
 						done = True
-						path.append((px, py))
+						path.append((px, py))  # add this case to the path
 						continue
 
-			if py == ty:
-				if x_state == 'right':
-					if possible[py][px + 1] and not checked[py][px + 1]:
-						checked[py][px] = True
-						px += 1
+			if py == ty:  # if on the same y level
+				if x_state == 'right':  # if supposed to go right
+					if possible[py][px + 1] and not checked[py][px + 1]:  #if the right case is possible and not yet checked
+						checked[py][px] = True  # set this case to checked, because it's possible to move after
+						px += 1  # set the new x pos
 						done = True
-						path.append((px, py))
+						path.append((px, py))  # add this case to the path
 						continue
 
-				elif x_state == 'left':
-					if possible[py][px - 1] and not checked[py][px - 1]:
-						checked[py][px] = True
-						px -= 1
+				elif x_state == 'left':  # if supposed to go left
+					if possible[py][px - 1] and not checked[py][px - 1]:  # if the left case is possible and not yet checked
+						checked[py][px] = True  # set this case to checked, because it's possible to move after
+						px -= 1  # set the new x pos
 						done = True
-						path.append((px, py))
+						path.append((px, py))  # add this case to the path
 						continue
 
-			if y_state == 'up':
-				if possible[py - 1][px] and not checked[py - 1][px]:
-					checked[py][px] = True
-					py -= 1
+			if y_state == 'up':  # if supposed to go up
+				if possible[py - 1][px] and not checked[py - 1][px]:  #if the upper case is possible and not yet checked
+					checked[py][px] = True  # set this case to checked, because it's possible to move after
+					py -= 1  # set the new y pos
 					done = True
-					path.append((px, py))
+					path.append((px, py))  # add this case to the path
 
 					continue
 
-			elif y_state == 'down':
-				if possible[py + 1][px] and not checked[py + 1][px]:
-					checked[py][px] = True
-					py += 1
+			elif y_state == 'down':  # if supposed to go down
+				if possible[py + 1][px] and not checked[py + 1][px]:  #if the case under is possible and not yet checked
+					checked[py][px] = True  # set this case to checked, because it's possible to move after
+					py += 1  # set the new x pos
 					done = True
-					path.append((px, py))
+					path.append((px, py))  # add this case to the path
 
 					continue
 
-			if x_state == 'right':
-				if possible[py][px + 1] and not checked[py][px + 1]:
-					checked[py][px] = True
-					px += 1
+			if x_state == 'right':  # if supposed to go right
+				if possible[py][px + 1] and not checked[py][px + 1]:  #if the right case is possible and not yet checked
+					checked[py][px] = True  # set this case to checked, because it's possible to move after
+					px += 1  # set the new x pos
 					done = True
-					path.append((px, py))
+					path.append((px, py))  # add this case to the path
 
 					continue
 
-			elif x_state == 'left':
-				if possible[py][px - 1] and not checked[py][px - 1]:
-					checked[py][px] = True
-					px -= 1
+			elif x_state == 'left':  # if supposed to go left
+				if possible[py][px - 1] and not checked[py][px - 1]:  #if the right case is possible and not yet checked
+					checked[py][px] = True  # set this case to checked, because it's possible to move after
+					px -= 1  # set the new x pos
 					done = True
-					path.append((px, py))
+					path.append((px, py))  # add this case to the path
 
 					continue
 
-			for move in moves_patterns:
+			# if the first try doesn't succeed because of a wall
+			for move in moves_patterns:  # basically the same thing, but to prevent bug when on the same x or y axis and a wall
 
 				if move == 'r':
 
@@ -2104,10 +2105,9 @@ class Terrain():
 						done = True
 						path.append((px, py))
 
-						break
+						break  # retry the first loop
 					else:
 						continue
-
 
 				elif move == 'd':
 
@@ -2119,7 +2119,6 @@ class Terrain():
 						break
 					else:
 						continue
-
 
 				elif move == 'l':
 
@@ -2143,24 +2142,25 @@ class Terrain():
 					else:
 						continue
 
-			if not done:
+			if not done:  # if the pathfinding is trapped
 
 				total_IT += 1
-				if total_IT > 10:
+				if total_IT > 10:  # max 10 try
 					break
-				possible[py][px] = False
-				px, py = sx, sy
+				possible[py][px] = False  # the last case of the path isn't possible, since he can't move anymore
+				px, py = sx, sy  # reset the coordinates
 
 				checked = {}
 				for i in range(32):
 					checked[i] = {}
 					for j in range(32):
-						checked[i][j] = False
+						checked[i][j] = False  # reset all the checked cases
 
-				path = []
+				path = []  # reset the path
 
 				continue
 
+		# if the path has been found, return it
 		return path
 
 	def down_stair(self):
@@ -2170,8 +2170,9 @@ class Terrain():
 
 		for type in GAME_ENTITIES:
 			for e in GAME_ENTITIES[type]:
-				e.kill(no_animation=True)
+				e.kill(no_animation=True)  # kill every entities thread
 
+		# clear all dictionnary containing entities
 		GAME_ENTITIES = {}
 		GAME_ENTITIES['MINIONS'] = []
 		GAME_ENTITIES['ARCHEROS'] = []
@@ -2193,7 +2194,7 @@ class Terrain():
 		GAME_PROPS['LASER'] = []
 
 	def restart(self):
-
+		# reset all variables to their default state
 		global RUN
 		global DEBUG_MODE
 		global WINDOW_WIDTH
@@ -2319,8 +2320,10 @@ class Terrain():
 
 		global GAME_PROPS
 
-		GAME_PROPS[type].append(location)
+		GAME_PROPS[type].append(location)  # add a prop and his location
 
+
+# create all the objects and all their instances
 OBJ_terrain = Terrain()
 OBJ_terrain.generate()
 OBJ_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))  # pygame.FULLSCREEN
@@ -2345,18 +2348,18 @@ plist = {}
 
 go_to_beginning = False
 
-while RUN:
+while RUN:  # main loop
 
-	if not GAMEVAR_MAIN_SCREEN:
+	if not GAMEVAR_MAIN_SCREEN:  # if not on the main screen
 
 		caseHasMob = []
 		mobsCoordinates = []
 		has_mob = False
 		for type in GAME_ENTITIES:
 			for entity in GAME_ENTITIES[type]:
-				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):
+				if entity.in_room(OBJ_player.map_x, OBJ_player.map_y):  #check if there is mobs in the current room
 					has_mob = True
-					#mobsCoordinates.append((entity.x, entity.y))
+					break
 
 		if has_mob:
 			GAMEVAR_INFIGHT = True
@@ -2364,14 +2367,12 @@ while RUN:
 		else:
 			GAMEVAR_INFIGHT = False
 
-		witness = datetime.datetime.now()
-
-		if (datetime.datetime.now() - fps_timer).seconds >= 1:
-			fps_timer = datetime.datetime.now()
-			if DEBUG_MODE:
+		# fps calculator
+		if DEBUG_MODE:
+			if (datetime.datetime.now() - fps_timer).seconds >= 1:  # if a second just passed
+				fps_timer = datetime.datetime.now()
 				print('FPS: ' + str(fps_counter))
-			fps_counter = 0
-
+				fps_counter = 0
 
 		fps_counter += 1
 
@@ -2384,10 +2385,11 @@ while RUN:
 		OBJ_terrain.display_walls(OBJ_canvas)
 		OBJ_terrain.display_props(OBJ_canvas)
 		OBJ_terrain.display_entities(OBJ_canvas)
+		# display the objects by layer
 
 		x, y = OBJ_calculator.get_mouse_case()
 
-		for coordinates in mobsCoordinates:
+		for coordinates in mobsCoordinates:  # create a hitbox for each mob
 			if (x, y) == coordinates:
 				caseHasMob.append((x, y))
 			elif (x+1, y) == coordinates:
@@ -2397,33 +2399,34 @@ while RUN:
 			elif (x+1, y+1) == coordinates:
 				caseHasMob.append((x+1, y+1))
 
-		if GAMEVAR_MENU_SELECTED_ITEM == 1 or not GAMEVAR_INFIGHT:
+		if GAMEVAR_MENU_SELECTED_ITEM == 1 or not GAMEVAR_INFIGHT:  # if menu = movement
 			if GAMEVAR_INFIGHT:
-				throw_popup('CLICK_TO_MOVE')
+				throw_popup('CLICK_TO_MOVE')  # display a popup saying "move"
 			else:
-				grab_popup('CLICK_TO_MOVE')
+				grab_popup('CLICK_TO_MOVE')  # remove the popup saying "move"
+
 			if OBJ_terrain.can_go_at(x, y) or (not GAMEVAR_INFIGHT and OBJ_terrain.can_go_at(x, y)):
-				if caseHasMob == (x, y):
+				if caseHasMob == (x, y):  # if the mouse case have a mob, draw a red box
 					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
 						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
 						(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
 						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
-				else:
+				else:  # else draw a yellow box
 					pygame.draw.lines(OBJ_canvas, (255, 255, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
-			elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:
+			elif OBJ_terrain.get_char_in_current_room_at(x, y) not in ['/', '|', '-', '_']:  # if the case is not a frobidden case
 
-				if caseHasMob == (x, y):
+				if caseHasMob == (x, y):  # if the case has mob, draw a blue box
 					pygame.draw.lines(OBJ_canvas, (0, 0, 255), True, (
 						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE), (caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1]* CANVAS_RATE),
 						(caseHasMob[0] * CANVAS_RATE + CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE),
 						(caseHasMob[0] * CANVAS_RATE, caseHasMob[1] * CANVAS_RATE + CANVAS_RATE)), 2)
-				else:
+				else:  # else draw a red box
 					pygame.draw.lines(OBJ_canvas, (255, 0, 0), True, ((x * CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE), (x * CANVAS_RATE + CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE), (x * CANVAS_RATE, y * CANVAS_RATE + CANVAS_RATE)), 2)
 
 		else:
 
-			grab_popup('CLICK_TO_MOVE')
+			grab_popup('CLICK_TO_MOVE')  # remove the popup
 
 		for e in pygame.event.get():
 
@@ -2452,7 +2455,6 @@ while RUN:
 						OBJ_player.go_through_door()
 						OBJ_player.go_through_stairs()
 
-
 				elif e.type == MOUSEBUTTONDOWN:
 
 					OBJ_player.mouse_movement(x, y)
@@ -2460,8 +2462,9 @@ while RUN:
 						plist = OBJ_terrain.gen_path(OBJ_player.get_position(), (x, y))
 
 			if e.type == pygame.KEYDOWN:
-				if e.key == 104:
-					OBJ_player.update_life(heal=1)
+				if DEBUG_MODE:
+					if e.key == 104:
+						OBJ_player.update_life(heal=1)
 
 				if e.key == pygame.K_p:
 
@@ -2473,40 +2476,42 @@ while RUN:
 			if GAMEVAR_INFIGHT:
 				if GAMEVAR_YOURTURN:
 					if GAMEVAR_MENU_SELECTED_ITEM == 1:
-						if e.type == MOUSEBUTTONDOWN:
-							playerX, playerY = OBJ_player.mouse_movement(x, y)
+						if e.type == MOUSEBUTTONDOWN:  # if a click happend when : the selected menu is 1, you are in fight and it's your turn
+							playerX, playerY = OBJ_player.mouse_movement(x, y)  # move the player
 						elif e.type == pygame.KEYDOWN:
 
 							if e.key == pygame.K_f:
 								OBJ_player.go_through_door()
 								OBJ_player.go_through_stairs()
 
-					elif GAMEVAR_MENU_SELECTED_ITEM == 2:
+					elif GAMEVAR_MENU_SELECTED_ITEM == 2:  # if in inventory
 						if e.type == pygame.KEYDOWN:
 
-							if GAMEVAR_IN_INVENTORY:
+							if GAMEVAR_IN_INVENTORY:  # if inside the inventory
 
 								if e.key == pygame.K_LEFT:
+									# go left while not first case, else go at last case
 									GAMEVAR_INVENTORY_SELECTED_ITEM += -1 if GAMEVAR_INVENTORY_SELECTED_ITEM > 0 else get_inventory_total_useful_slots()
 
 								if e.key == pygame.K_RIGHT:
+									# go right while not last case, else go at first case
 									GAMEVAR_INVENTORY_SELECTED_ITEM += 1 if GAMEVAR_INVENTORY_SELECTED_ITEM < get_inventory_total_useful_slots() else - get_inventory_total_useful_slots()
 
 								if e.key == pygame.K_UP:
 
-									if get_inventory_total_useful_slots() >= 6:
+									if get_inventory_total_useful_slots() >= 6:  # if 2 lines
 
-										if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:
-											if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_useful_slots():
+										if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:  # if in the upper line
+											if GAMEVAR_INVENTORY_SELECTED_ITEM + 6 <= get_inventory_total_useful_slots():  # if the acual case + 6 ( go under it ) exist
 												GAMEVAR_INVENTORY_SELECTED_ITEM += 6
 											else:
-												GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_useful_slots()
-										else:
-											if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:
+												GAMEVAR_INVENTORY_SELECTED_ITEM = get_inventory_total_useful_slots()  # last case
+										else:  # if in the under line
+											if GAMEVAR_INVENTORY_SELECTED_ITEM - 6 >= 0:  # if if the actual case - 6 exist
 												GAMEVAR_INVENTORY_SELECTED_ITEM -= 6
 
 								if e.key == pygame.K_DOWN:
-
+									# exactly the same code
 									if get_inventory_total_useful_slots() >= 6:
 
 										if GAMEVAR_INVENTORY_SELECTED_ITEM < 6:
@@ -2521,55 +2526,54 @@ while RUN:
 
 								if e.key == pygame.K_RETURN:
 
-									object = get_selected_item()
+									object = get_selected_item()  # set the enw object to the one selected
 
-									if object == "GRENADE":
-										GAMEVAR_CURRENT_WEAPON = WEAPONS["GRENADE"]
-										OBJ_player.can_attack()
+									if object == "GRENADE":  # if the object is a grenade
+										GAMEVAR_CURRENT_WEAPON = WEAPONS["GRENADE"]  # set the new weapon as grenade
+										OBJ_player.can_attack()  # the player attack
 
-									elif object == 'MEDKIT':
+									elif object == 'MEDKIT':  # if the object is a medkit
 
-										OBJ_player.update_life(heal=10)
-										GAMEVAR_INVENTORY['MEDKIT'] -= 1
+										OBJ_player.update_life(heal=10)  # heal the player by 10 hp
+										GAMEVAR_INVENTORY['MEDKIT'] -= 1  # remove a medkit from the inventory
 
-										GAMEVAR_YOURTURN = False
+										GAMEVAR_YOURTURN = False  # it's not your turn anymore
 
+									elif object == 'STIMS':  # if the object is a stim
 
-									elif object == 'STIMS':
+										OBJ_player.update_life(heal=5)  # heal the player by 5 hp
+										GAMEVAR_INVENTORY['STIMS'] -= 1  # remove a stim from the inventory
 
-										OBJ_player.update_life(heal=5)
-										GAMEVAR_INVENTORY['STIMS'] -= 1
-
-										GAMEVAR_YOURTURN = False
-
+										GAMEVAR_YOURTURN = False  # it's not your turn anymore
 
 								if e.key == 8:
-									GAMEVAR_IN_INVENTORY = False
+									GAMEVAR_IN_INVENTORY = False  # go back to the menu
 
 							else:
 
 								if e.key == 13:
-									GAMEVAR_IN_INVENTORY = True
+									GAMEVAR_IN_INVENTORY = True  # go in the inventory
 
 					if e.type == pygame.KEYDOWN:
-						if not GAMEVAR_IN_INVENTORY:
+						if not GAMEVAR_IN_INVENTORY:  # if not in inventory
 							if e.key == pygame.K_UP:
-								GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2
+								GAMEVAR_MENU_SELECTED_ITEM += -1 if GAMEVAR_MENU_SELECTED_ITEM > 0 else 2  # if current selected item + 1 exists
 							if e.key == pygame.K_DOWN:
-								GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2
+								GAMEVAR_MENU_SELECTED_ITEM += 1 if GAMEVAR_MENU_SELECTED_ITEM < 2 else -2  # if current selected item - 1 exists
 
 						if e.key == pygame.K_RETURN:
-							if GAMEVAR_MENU_SELECTED_ITEM == 0:
-								OBJ_player.can_attack()
+							if GAMEVAR_MENU_SELECTED_ITEM == 0:  # if selected item is 'fight'
+								OBJ_player.can_attack() # fight
 
-				elif not GAMEVAR_YOURTURN:
+				elif not GAMEVAR_YOURTURN:  # if it isn't the turn of the player
 
 					for type in GAME_ENTITIES:
 						for e in GAME_ENTITIES[type]:
 							if e.in_room(OBJ_player.map_x, OBJ_player.map_y):
 								if not OBJ_player.is_dead():
-									e.IA()
+									e.AI()  # play the AI of all  ennemies
 
+					# reset menu vars
 					GAMEVAR_MENU_SELECTED_ITEM = 0
 					GAMEVAR_INVENTORY_SELECTED_ITEM = 0
 					GAMEVAR_IN_INVENTORY = False
@@ -2596,8 +2600,9 @@ while RUN:
 		OBJ_bullet.display(OBJ_canvas)
 
 		display_ui(OBJ_canvas)
-
+		# display the last images
 		if DEBUG_MODE:
+			# display the path when in debug mode
 			r, g, b = 0, 0, 0
 			for i in plist:
 				r += 5
@@ -2606,14 +2611,14 @@ while RUN:
 
 				pygame.draw.lines(OBJ_canvas, (r if r <= 255 else 0, g if g <= 255 else 0, b if b <= 255 else 0), True, ((i[0] * CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE), (i[0] * CANVAS_RATE + CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE), (i[0] * CANVAS_RATE, i[1] * CANVAS_RATE + CANVAS_RATE)), 2)
 
-	else:
+	else:  # if on the main screen
 
 		for e in pygame.event.get():
 			if e.type == pygame.QUIT:
 				RUN = False
 				sys.exit(0)
 
-			if e.type == pygame.KEYDOWN or e.type == pygame.MOUSEBUTTONDOWN:
+			if e.type == pygame.KEYDOWN or e.type == pygame.MOUSEBUTTONDOWN:  # go to the game when interaction
 				GAMEVAR_MAIN_SCREEN = False
 
 
@@ -2627,7 +2632,7 @@ while RUN:
 
 	OBJ_window.blit(OBJ_canvas, CANVAS_POSITION)  # Blit  the canvas centered on the main window
 
-	pygame.display.flip() # Flip/Update the screen
+	pygame.display.flip()  # Flip/Update the screen
 
 
 # TODO: Système de combat
